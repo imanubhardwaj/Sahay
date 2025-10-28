@@ -1,0 +1,1556 @@
+{
+  "learningPaths": {
+    "student_fresher": {
+      "title": "Student / Fresher",
+      "description": "Fundamental concepts and hands-on basics for those starting their career.",
+      "domains": {
+        "cs_fundamentals": {
+          "title": "Computer Science Fundamentals",
+          "modules": [
+            {
+              "id": "cs_fresh_01",
+              "title": "Data Structures & Algorithms",
+              "description": "Understand the building blocks of efficient software.",
+              "topics": [
+                "Big O Notation",
+                "Arrays & Strings",
+                "Linked Lists",
+                "Stacks & Queues",
+                "Hash Tables",
+                "Trees (BST)",
+                "Sorting Algorithms (Merge, Quick)",
+                "Graph Basics (BFS, DFS)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is the time complexity of a binary search?",
+                  "options": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+                  "answer": "O(log n)"
+                },
+                {
+                  "question": "Which data structure operates on a Last-In, First-Out (LIFO) basis?",
+                  "options": ["Queue", "Linked List", "Stack", "Array"],
+                  "answer": "Stack"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Reverse a Linked List",
+                  "description": "Write a function that takes the head of a singly linked list and reverses it."
+                },
+                {
+                  "title": "Validate a BST",
+                  "description": "Write a function to determine if a binary tree is a valid binary search tree."
+                }
+              ],
+              "references": [
+                {
+                  "title": "GeeksforGeeks - Data Structures",
+                  "url": "https://www.geeksforgeeks.org/data-structures/"
+                }
+              ]
+            },
+            {
+              "id": "cs_fresh_02",
+              "title": "Databases 101",
+              "description": "Learn how data is stored, managed, and retrieved in modern applications.",
+              "topics": [
+                "Relational vs. Non-Relational Databases",
+                "SQL Basics (SELECT, INSERT, UPDATE, DELETE)",
+                "Primary & Foreign Keys",
+                "Basic Joins (INNER, LEFT)",
+                "Intro to NoSQL (MongoDB)",
+                "Database Normalization (1NF, 2NF, 3NF)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which SQL statement is used to extract data from a database?",
+                  "options": ["GET", "SELECT", "OPEN", "EXTRACT"],
+                  "answer": "SELECT"
+                },
+                {
+                  "question": "What is the primary purpose of a foreign key?",
+                  "options": [
+                    "To uniquely identify a record",
+                    "To link two tables together",
+                    "To speed up queries",
+                    "To store large text"
+                  ],
+                  "answer": "To link two tables together"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Query Employee Data",
+                  "description": "Given two tables, Employees and Departments, write a SQL query to find the names of all employees in the 'Sales' department."
+                }
+              ],
+              "references": [
+                {
+                  "title": "W3Schools SQL Tutorial",
+                  "url": "https://www.w3schools.com/sql/"
+                },
+                {
+                  "title": "MongoDB University",
+                  "url": "https://learn.mongodb.com/"
+                }
+              ]
+            }
+          ]
+        },
+        "web_development": {
+          "title": "Web Development",
+          "frontend": {
+            "title": "Frontend Development",
+            "modules": [
+              {
+                "id": "fe_fresh_01",
+                "title": "HTML & CSS Fundamentals",
+                "description": "Learn the building blocks of the web, including modern layout techniques.",
+                "topics": [
+                  "HTML5 Semantics",
+                  "CSS3 Basics (Selectors, Box Model)",
+                  "Flexbox Layout",
+                  "CSS Grid Layout",
+                  "Responsive Design & Media Queries",
+                  "CSS Variables",
+                  "Basic Animations & Transitions",
+                  "Forms and Validations"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "Which HTML tag is used for the largest heading?",
+                    "options": ["<h1>", "<h6>", "<heading>", "<head>"],
+                    "answer": "<h1>"
+                  },
+                  {
+                    "question": "What property is used to change the background color?",
+                    "options": [
+                      "color",
+                      "bgcolor",
+                      "background-color",
+                      "background"
+                    ],
+                    "answer": "background-color"
+                  },
+                  {
+                    "question": "How do you select an element with id 'header' in CSS?",
+                    "options": [".header", "#header", "header", "*header"],
+                    "answer": "#header"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Build a Personal Portfolio Page",
+                    "description": "Create a static, responsive single-page portfolio using semantic HTML and advanced CSS for layout and styling."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "MDN Web Docs: HTML",
+                    "url": "https://developer.mozilla.org/en-US/docs/Web/HTML"
+                  },
+                  {
+                    "title": "MDN Web Docs: CSS",
+                    "url": "https://developer.mozilla.org/en-US/docs/Web/CSS"
+                  },
+                  {
+                    "title": "CSS-Tricks: A Guide to Flexbox",
+                    "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/"
+                  }
+                ]
+              },
+              {
+                "id": "fe_fresh_02",
+                "title": "JavaScript Core Concepts",
+                "description": "Master the language of the web, from variables to asynchronous programming.",
+                "topics": [
+                  "ES6+ Syntax (let, const, arrows, destructuring)",
+                  "Data Types & Structures",
+                  "DOM Manipulation",
+                  "Events & Event Handling",
+                  "Asynchronous JavaScript (Promises, Async/Await)",
+                  "APIs (Fetch)",
+                  "Error Handling (try...catch)"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "How do you declare a constant variable in JavaScript?",
+                    "options": ["var", "let", "const", "constant"],
+                    "answer": "const"
+                  },
+                  {
+                    "question": "Which method is used to fetch data from a server?",
+                    "options": ["get()", "fetch()", "retrieve()", "post()"],
+                    "answer": "fetch()"
+                  },
+                  {
+                    "question": "What does `JSON.parse()` do?",
+                    "options": [
+                      "Converts a JavaScript object to a JSON string",
+                      "Converts a JSON string to a JavaScript object",
+                      "Fetches data from a JSON file",
+                      "Creates a new JSON object"
+                    ],
+                    "answer": "Converts a JSON string to a JavaScript object"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Simple To-Do List",
+                    "description": "Build an interactive to-do list where users can add and remove tasks. Use JavaScript to handle the logic and DOM manipulation."
+                  },
+                  {
+                    "title": "Weather App",
+                    "description": "Create an application that fetches weather data from a public API (like OpenWeatherMap) and displays it to the user."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "MDN Web Docs: JavaScript",
+                    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+                  },
+                  {
+                    "title": "JavaScript.info",
+                    "url": "https://javascript.info/"
+                  }
+                ]
+              },
+              {
+                "id": "fe_fresh_03",
+                "title": "Introduction to React",
+                "description": "Get started with the most popular frontend library for building user interfaces.",
+                "topics": [
+                  "Thinking in React",
+                  "Components (Functional)",
+                  "JSX",
+                  "State (useState)",
+                  "Props",
+                  "Basic Hooks (useEffect)",
+                  "Conditional Rendering",
+                  "Handling Events",
+                  "Lists and Keys"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is JSX?",
+                    "options": [
+                      "A JavaScript library",
+                      "A syntax extension for JavaScript",
+                      "A CSS preprocessor",
+                      "A database query language"
+                    ],
+                    "answer": "A syntax extension for JavaScript"
+                  },
+                  {
+                    "question": "Which hook is used to manage state in a functional component?",
+                    "options": [
+                      "useEffect",
+                      "useState",
+                      "useContext",
+                      "useReducer"
+                    ],
+                    "answer": "useState"
+                  },
+                  {
+                    "question": "How do you pass data from a parent component to a child component?",
+                    "options": ["State", "Refs", "Props", "Context"],
+                    "answer": "Props"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Build a Counter App",
+                    "description": "Create a simple React application with buttons to increment, decrement, and reset a counter value displayed on the screen."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "React Official Docs",
+                    "url": "https://react.dev/"
+                  }
+                ]
+              },
+              {
+                "id": "fe_fresh_04",
+                "title": "Version Control with Git",
+                "description": "Learn how to manage your code and collaborate with others.",
+                "topics": [
+                  "What is Version Control?",
+                  "Basic Commands (add, commit, push, pull)",
+                  "Branching and Merging",
+                  "Using GitHub/GitLab",
+                  "Handling Merge Conflicts",
+                  "Viewing History (git log)"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "Which command saves your changes to the local repository?",
+                    "options": [
+                      "git push",
+                      "git add",
+                      "git commit",
+                      "git save"
+                    ],
+                    "answer": "git commit"
+                  },
+                  {
+                    "question": "What is the command to create a new branch named 'feature'?",
+                    "options": [
+                      "git new feature",
+                      "git branch feature",
+                      "git checkout feature",
+                      "git create branch feature"
+                    ],
+                    "answer": "git branch feature"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Collaborate on a Project",
+                    "description": "Create a new repository on GitHub, create a 'develop' branch, make some changes, push the branch, and open a pull request to merge it into 'main'."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Official Git Documentation",
+                    "url": "https://git-scm.com/doc"
+                  },
+                  {
+                    "title": "GitHub Skills",
+                    "url": "https://skills.github.com/"
+                  }
+                ]
+              }
+            ]
+          },
+          "backend": {
+            "title": "Backend Development",
+            "modules": [
+              {
+                "id": "be_fresh_01",
+                "title": "Introduction to Node.js & Express",
+                "description": "Build your first server-side application with JavaScript.",
+                "topics": [
+                  "Node.js Runtime & Event Loop",
+                  "NPM for package management",
+                  "Creating an Express Server",
+                  "Routing",
+                  "Middleware",
+                  "Handling Requests and Responses (JSON, query params, body)"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is NPM?",
+                    "options": [
+                      "Node Project Manager",
+                      "Node Package Manager",
+                      "New Project Manager",
+                      "New Package Manager"
+                    ],
+                    "answer": "Node Package Manager"
+                  },
+                  {
+                    "question": "In Express, what is middleware?",
+                    "options": [
+                      "A database",
+                      "A function that has access to the request and response objects",
+                      "A templating engine",
+                      "A routing library"
+                    ],
+                    "answer": "A function that has access to the request and response objects"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Create a Simple REST API",
+                    "description": "Build an Express server with CRUD (Create, Read, Update, Delete) endpoints for a collection of in-memory 'posts'."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Node.js Official Docs",
+                    "url": "https://nodejs.org/en/docs/"
+                  },
+                  {
+                    "title": "Express.js Official Docs",
+                    "url": "https://expressjs.com/"
+                  }
+                ]
+              },
+              {
+                "id": "be_fresh_02",
+                "title": "Backend Fundamentals with Django",
+                "description": "Learn a powerful Python framework for rapid and secure web development.",
+                "topics": [
+                  "Python Basics for Django",
+                  "Django Setup (MTV)",
+                  "Models and Migrations",
+                  "Views & Templates",
+                  "URL Routing",
+                  "The Django Admin",
+                  "Working with Forms"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What does MTV stand for in Django?",
+                    "options": [
+                      "Model Test View",
+                      "Model Template View",
+                      "Main Template View",
+                      "Model Template Vision"
+                    ],
+                    "answer": "Model Template View"
+                  },
+                  {
+                    "question": "Which command creates the necessary database tables for your models?",
+                    "options": [
+                      "django-admin startproject",
+                      "python manage.py runserver",
+                      "python manage.py makemigrations",
+                      "python manage.py migrate"
+                    ],
+                    "answer": "python manage.py migrate"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Build a Simple Blog Backend",
+                    "description": "Create a Django project with a 'Post' model (title, content, author, created_date). Use the Django admin to create and view posts, and create a simple view to list all posts."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Django Official Documentation",
+                    "url": "https://docs.djangoproject.com/en/stable/"
+                  },
+                  {
+                    "title": "MDN: Django Tutorial",
+                    "url": "https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "mobile_development": {
+          "title": "Mobile Development",
+          "modules": [
+            {
+              "id": "mob_fresh_01",
+              "title": "Mobile Development Landscape",
+              "description": "Understand the different approaches to building mobile applications.",
+              "topics": [
+                "Native vs. Cross-Platform vs. Hybrid",
+                "UI/UX Principles for Mobile",
+                "iOS and Android Platform Guidelines",
+                "Setting up Your Development Environment (Android Studio, Xcode)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which approach typically offers the best performance?",
+                  "options": ["Native", "Cross-Platform", "Hybrid", "Web App"],
+                  "answer": "Native"
+                },
+                {
+                  "question": "What is the primary language for native Android development?",
+                  "options": ["Swift", "Java", "Kotlin", "Dart"],
+                  "answer": "Kotlin"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Environment Setup",
+                  "description": "Successfully install and configure Android Studio (with the Android emulator) and/or Xcode (with the iOS simulator)."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Android Developer Docs",
+                  "url": "https://developer.android.com/"
+                },
+                {
+                  "title": "Apple Developer Docs",
+                  "url": "https://developer.apple.com/documentation/"
+                }
+              ]
+            },
+            {
+              "id": "mob_fresh_02",
+              "title": "Introduction to Flutter",
+              "description": "Build beautiful, natively compiled applications from a single codebase using Dart.",
+              "topics": [
+                "Dart Programming Language Basics",
+                "Thinking in Widgets",
+                "Stateless vs. Stateful Widgets",
+                "Building Layouts (Rows, Columns, Stacks)",
+                "Handling User Input (Buttons, TextFields)",
+                "Basic Navigation"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "In Flutter, everything is a...",
+                  "options": ["Component", "Module", "Widget", "View"],
+                  "answer": "Widget"
+                },
+                {
+                  "question": "Which widget is used to place items in a vertical array?",
+                  "options": ["Row", "Stack", "List", "Column"],
+                  "answer": "Column"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Build a 'Business Card' App",
+                  "description": "Create a single-screen Flutter application that displays your name, title, and contact information using various layout widgets."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Flutter Official Docs",
+                  "url": "https://docs.flutter.dev/"
+                },
+                {
+                  "title": "Dart Language Tour",
+                  "url": "https://dart.dev/guides/language/language-tour"
+                }
+              ]
+            }
+          ]
+        },
+        "data_analyst": {
+          "title": "Data Analyst",
+          "modules": [
+            {
+              "id": "da_fresh_01",
+              "title": "Foundations of Data Analysis",
+              "description": "Learn the core concepts of statistics and the data analysis lifecycle.",
+              "topics": [
+                "The Data Analysis Lifecycle",
+                "Data Types (Quantitative vs. Categorical)",
+                "Descriptive Statistics (Mean, Median, Mode, Standard Deviation)",
+                "Probability Fundamentals",
+                "Asking the Right Questions"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What measure of central tendency is most affected by outliers?",
+                  "options": ["Mean", "Median", "Mode"],
+                  "answer": "Mean"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Calculate Statistics",
+                  "description": "Given a list of numbers, manually calculate the mean, median, and mode without using a library."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Khan Academy: Statistics and Probability",
+                  "url": "https://www.khanacademy.org/math/statistics-probability"
+                }
+              ]
+            },
+            {
+              "id": "da_fresh_02",
+              "title": "Python for Data Analysis",
+              "description": "Use Python libraries like Pandas and NumPy to manipulate and analyze data.",
+              "topics": [
+                "Intro to Jupyter Notebooks",
+                "NumPy for Numerical Data",
+                "Pandas Series & DataFrames",
+                "Data Loading (from CSV, Excel)",
+                "Data Cleaning (Handling Missing Values)",
+                "Data Wrangling (Filtering, Sorting, Grouping)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "In Pandas, what is the primary data structure?",
+                  "options": ["Array", "List", "Series", "DataFrame"],
+                  "answer": "DataFrame"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Analyze Sales Data",
+                  "description": "Using Pandas, load a CSV file of sales data. Find the total revenue, average order value, and the top-selling product."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Pandas Official Documentation",
+                  "url": "https://pandas.pydata.org/docs/"
+                }
+              ]
+            },
+            {
+              "id": "da_fresh_03",
+              "title": "SQL for Analysts",
+              "description": "Master the language for querying and managing relational databases.",
+              "topics": [
+                "SELECT Statements",
+                "Filtering with WHERE",
+                "Sorting with ORDER BY",
+                "Aggregate Functions (COUNT, SUM, AVG)",
+                "Grouping with GROUP BY",
+                "Joining Tables (INNER, LEFT)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which clause is used to filter results of an aggregate function?",
+                  "options": ["WHERE", "FILTER", "HAVING", "GROUPBY"],
+                  "answer": "HAVING"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Customer Order Analysis",
+                  "description": "Given Customers and Orders tables, write a SQL query to find the top 5 customers who have spent the most money."
+                }
+              ],
+              "references": [
+                {
+                  "title": "SQLBolt - Interactive Tutorial",
+                  "url": "https://sqlbolt.com/"
+                }
+              ]
+            },
+            {
+              "id": "da_fresh_04",
+              "title": "Data Visualization Basics",
+              "description": "Learn to tell stories with data using popular tools.",
+              "topics": [
+                "Principles of Effective Visualization",
+                "Choosing the Right Chart Type",
+                "Data Storytelling",
+                "Introduction to Tableau or Power BI",
+                "Basic Charting with Matplotlib and Seaborn"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which chart is best for showing the relationship between two continuous variables?",
+                  "options": [
+                    "Bar Chart",
+                    "Pie Chart",
+                    "Scatter Plot",
+                    "Line Chart"
+                  ],
+                  "answer": "Scatter Plot"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Create an Interactive Dashboard",
+                  "description": "Using Tableau Public or Power BI, connect to a sample dataset and create a dashboard with at least three different charts that allow for interactive filtering."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Tableau Public Resources",
+                  "url": "https://public.tableau.com/en-us/s/resources"
+                }
+              ]
+            }
+          ]
+        },
+        "devops": {
+          "title": "DevOps",
+          "modules": [
+            {
+              "id": "do_fresh_01",
+              "title": "Linux & Shell Scripting",
+              "description": "Learn the fundamentals of the Linux command line and automation.",
+              "topics": [
+                "File System Navigation",
+                "Permissions",
+                "Users & Groups",
+                "Package Management (apt/yum)",
+                "Bash Scripting Basics (variables, loops, conditionals)",
+                "Common Utilities (grep, awk, sed)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which command is used to change file permissions?",
+                  "options": ["chown", "chmod", "chgrp", "perm"],
+                  "answer": "chmod"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Automate Backups",
+                  "description": "Write a bash script that creates a compressed archive of a specified directory and moves it to a backup folder with a timestamp in the filename."
+                }
+              ],
+              "references": [
+                {
+                  "title": "The Linux Command Line (Book)",
+                  "url": "http://linuxcommand.org/tlcl.php"
+                }
+              ]
+            },
+            {
+              "id": "do_fresh_02",
+              "title": "Introduction to Cloud Computing",
+              "description": "Understand the basics of cloud services and major providers.",
+              "topics": [
+                "What is the Cloud?",
+                "IaaS vs. PaaS vs. SaaS",
+                "Core Services of AWS, Azure, GCP (Compute, Storage, Networking)",
+                "Virtual Machines",
+                "The Shared Responsibility Model"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "Which of these is an example of IaaS?",
+                  "options": ["Gmail", "Amazon EC2", "Heroku", "Google Docs"],
+                  "answer": "Amazon EC2"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Launch a Virtual Machine",
+                  "description": "Using the free tier of AWS, GCP, or Azure, launch a simple Linux virtual machine and connect to it using SSH."
+                }
+              ],
+              "references": [
+                {
+                  "title": "AWS Cloud Practitioner Essentials",
+                  "url": "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "working_professional_2_3_yr": {
+      "title": "Working Professional (2-3 Yrs)",
+      "description": "Deepen your knowledge with advanced concepts, tooling, and best practices.",
+      "domains": {
+        "web_development": {
+          "title": "Web Development",
+          "frontend": {
+            "title": "Frontend Development",
+            "modules": [
+              {
+                "id": "fe_wp_01",
+                "title": "Advanced React & State Management",
+                "description": "Write more efficient code and manage complex application state effectively.",
+                "topics": [
+                  "Advanced Hooks (useReducer, useContext, useMemo, useCallback)",
+                  "State Management with Redux Toolkit",
+                  "Client-side caching with React Query / SWR",
+                  "Performance Optimization (Memoization, Profiler)",
+                  "Custom Hooks"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is the purpose of `useMemo`?",
+                    "options": [
+                      "To cache a function",
+                      "To cache a value",
+                      "To run side effects",
+                      "To manage context"
+                    ],
+                    "answer": "To cache a value"
+                  },
+                  {
+                    "question": "What problem does React Query primarily solve?",
+                    "options": [
+                      "Global state management",
+                      "Server state caching and synchronization",
+                      "Routing",
+                      "Styling"
+                    ],
+                    "answer": "Server state caching and synchronization"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Refactor a component with `useReducer`",
+                    "description": "Take a component that uses multiple `useState` hooks for related state and refactor it to use a single `useReducer` for more organized state logic."
+                  },
+                  {
+                    "title": "Create a Custom Hook",
+                    "description": "Create a custom hook `useFetch` that takes a URL and returns the data, loading state, and error state."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Redux Toolkit Docs",
+                    "url": "https://redux-toolkit.js.org/"
+                  },
+                  {
+                    "title": "React Query Docs",
+                    "url": "https://tanstack.com/query/latest/docs/react/overview"
+                  }
+                ]
+              },
+              {
+                "id": "fe_wp_02",
+                "title": "TypeScript and Frontend Testing",
+                "description": "Add static typing and ensure application quality with automated tests.",
+                "topics": [
+                  "TypeScript Basics (Types, Interfaces)",
+                  "Generics",
+                  "Using TypeScript with React (Props, State)",
+                  "Unit Testing with Jest & React Testing Library",
+                  "Mocking API Calls",
+                  "Introduction to E2E Testing (Cypress)"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is the file extension for a TypeScript React component?",
+                    "options": [".js", ".ts", ".tsx", ".jsx"],
+                    "answer": ".tsx"
+                  },
+                  {
+                    "question": "In React Testing Library, what is the purpose of `getByRole`?",
+                    "options": [
+                      "To find an element by its CSS class",
+                      "To find an element by its accessibility role",
+                      "To find an element by its data-testid",
+                      "To find an element by its text content"
+                    ],
+                    "answer": "To find an element by its accessibility role"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Write a Unit Test for a Component with API call",
+                    "description": "Create a component that fetches and displays data. Write a test that mocks the API call and verifies the component renders the 'loading', 'success', and 'error' states correctly."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "TypeScript Handbook",
+                    "url": "https://www.typescriptlang.org/docs/handbook/intro.html"
+                  },
+                  {
+                    "title": "React Testing Library Docs",
+                    "url": "https://testing-library.com/docs/react-testing-library/intro/"
+                  },
+                  { "title": "Cypress Docs", "url": "https://docs.cypress.io/" }
+                ]
+              },
+              {
+                "id": "fe_wp_03",
+                "title": "Exploring Next.js and Angular",
+                "description": "Explore powerful frameworks for building enterprise-level applications.",
+                "topics": [
+                  "Next.js: SSR, SSG, ISR, API Routes, File-based Routing",
+                  "Angular: Components, Services, Modules, Dependency Injection, RxJS, Reactive Forms"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is Static Site Generation (SSG)?",
+                    "options": [
+                      "The page is rendered on the client",
+                      "The page is rendered on the server for each request",
+                      "The page is rendered at build time into static HTML",
+                      "The page is not rendered"
+                    ],
+                    "answer": "The page is rendered at build time into static HTML"
+                  },
+                  {
+                    "question": "What is a primary use case for RxJS in Angular?",
+                    "options": [
+                      "Styling components",
+                      "Managing asynchronous events and data streams",
+                      "Defining component structure",
+                      "Routing"
+                    ],
+                    "answer": "Managing asynchronous events and data streams"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Build a blog with Next.js",
+                    "description": "Create a simple blog using Next.js where posts are pre-rendered at build time (SSG) from markdown files. Include dynamic routes for individual blog posts."
+                  }
+                ],
+                "references": [
+                  { "title": "Next.js Docs", "url": "https://nextjs.org/docs" },
+                  { "title": "Angular Docs", "url": "https://angular.io/docs" }
+                ]
+              }
+            ]
+          },
+          "backend": {
+            "title": "Backend Development",
+            "modules": [
+              {
+                "id": "be_wp_01",
+                "title": "Authentication, Authorization & Docker",
+                "description": "Implement security and package your applications into portable containers.",
+                "topics": [
+                  "JWT (JSON Web Tokens)",
+                  "OAuth 2.0 Basics",
+                  "Cookie-based Sessions",
+                  "Role-Based Access Control",
+                  "Containerization with Docker",
+                  "Writing Dockerfiles",
+                  "Docker Compose for multi-container apps"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is a Docker image?",
+                    "options": [
+                      "A running instance of a container",
+                      "A lightweight, standalone, executable package template",
+                      "A configuration file",
+                      "A network driver"
+                    ],
+                    "answer": "A lightweight, standalone, executable package template"
+                  },
+                  {
+                    "question": "What is a major benefit of using JWTs?",
+                    "options": [
+                      "They are stored in the database",
+                      "They are stateful",
+                      "They are stateless and contain self-contained claims",
+                      "They can only be used with cookies"
+                    ],
+                    "answer": "They are stateless and contain self-contained claims"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Dockerize a Fullstack App",
+                    "description": "Take a Node.js/Express backend and a React frontend and write a Docker Compose file to build and run both services, connecting them via a network."
+                  }
+                ],
+                "references": [
+                  { "title": "JWT.io", "url": "https://jwt.io/" },
+                  {
+                    "title": "Docker Official Docs",
+                    "url": "https://docs.docker.com/"
+                  }
+                ]
+              },
+              {
+                "id": "be_wp_02",
+                "title": "Advanced API Development",
+                "description": "Build more robust and efficient APIs with advanced techniques.",
+                "topics": [
+                  "API Versioning Strategies",
+                  "Pagination",
+                  "Rate Limiting",
+                  "Error Handling & Status Codes",
+                  "Intro to GraphQL",
+                  "Using an ORM/ODM effectively (Prisma, Mongoose, Django ORM)"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What problem does GraphQL aim to solve?",
+                    "options": [
+                      "Database connections",
+                      "Over-fetching and under-fetching of data",
+                      "Authentication",
+                      "Server deployment"
+                    ],
+                    "answer": "Over-fetching and under-fetching of data"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Implement Pagination",
+                    "description": "Add pagination to an existing API endpoint that returns a list of items. It should accept 'page' and 'limit' query parameters."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "GraphQL Official Docs",
+                    "url": "https://graphql.org/"
+                  },
+                  {
+                    "title": "Prisma Docs",
+                    "url": "https://www.prisma.io/docs/"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "devops": {
+          "title": "DevOps",
+          "modules": [
+            {
+              "id": "do_wp_01",
+              "title": "CI/CD Implementation",
+              "description": "Automate your build, test, and deployment pipelines.",
+              "topics": [
+                "CI/CD Principles",
+                "GitHub Actions",
+                "Jenkins Pipelines",
+                "GitLab CI",
+                "Pipeline as Code",
+                "Artifact Management"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What does 'CI' stand for in CI/CD?",
+                  "options": [
+                    "Continuous Integration",
+                    "Constant Integration",
+                    "Code Integration",
+                    "Continuous Internet"
+                  ],
+                  "answer": "Continuous Integration"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Build a CI Pipeline",
+                  "description": "Using GitHub Actions, create a workflow that triggers on a push to the main branch, installs dependencies, runs tests, and builds a Node.js application."
+                }
+              ],
+              "references": [
+                {
+                  "title": "GitHub Actions Docs",
+                  "url": "https://docs.github.com/en/actions"
+                }
+              ]
+            },
+            {
+              "id": "do_wp_02",
+              "title": "Infrastructure as Code (IaC)",
+              "description": "Manage your infrastructure with code for consistency and repeatability.",
+              "topics": [
+                "IaC Principles",
+                "Terraform Basics (Providers, Resources, State)",
+                "CloudFormation (AWS)",
+                "Writing Reusable Modules",
+                "Managing Secrets"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is the name of the file that stores the state of your infrastructure in Terraform?",
+                  "options": [
+                    "main.tf",
+                    "terraform.tfstate",
+                    "variables.tf",
+                    "output.tf"
+                  ],
+                  "answer": "terraform.tfstate"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Deploy a Web Server with Terraform",
+                  "description": "Write a Terraform configuration to provision a virtual machine on a cloud provider and install a simple web server (like Nginx) on it."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Terraform Documentation",
+                  "url": "https://developer.hashicorp.com/terraform/docs"
+                }
+              ]
+            },
+            {
+              "id": "do_wp_03",
+              "title": "Introduction to Kubernetes",
+              "description": "Learn the fundamentals of the leading container orchestration platform.",
+              "topics": [
+                "Container Orchestration Concepts",
+                "Kubernetes Architecture",
+                "Core Objects: Pods, Services, Deployments, ReplicaSets",
+                "ConfigMaps & Secrets",
+                "Basic Kubectl commands"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "In Kubernetes, what is the smallest deployable unit of computing?",
+                  "options": ["Container", "Node", "Pod", "Service"],
+                  "answer": "Pod"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Deploy an Application on Minikube",
+                  "description": "Using Minikube, deploy a simple web application container using a Deployment and expose it with a Service."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Kubernetes Official Docs",
+                  "url": "https://kubernetes.io/docs/home/"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "experienced_professional_4_6_yr": {
+      "title": "Experienced Professional (4-6 Yrs)",
+      "description": "Focus on architecture, system design, and leading technical projects.",
+      "domains": {
+        "web_development": {
+          "title": "Web Development",
+          "frontend": {
+            "title": "Frontend Development",
+            "modules": [
+              {
+                "id": "fe_exp_01",
+                "title": "Frontend Architecture & Web Performance",
+                "description": "Design scalable frontend systems and optimize application speed.",
+                "topics": [
+                  "Design Patterns (MVC, MVVM)",
+                  "Monorepos vs Micro-frontends",
+                  "Core Web Vitals",
+                  "Code Splitting & Tree Shaking",
+                  "Advanced Caching Strategies (Service Workers)",
+                  "CDNs & Edge Computing",
+                  "Building Design Systems"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is the main advantage of a micro-frontend architecture?",
+                    "options": [
+                      "Simplicity",
+                      "Independent deployments",
+                      "Single codebase",
+                      "Reduced performance"
+                    ],
+                    "answer": "Independent deployments"
+                  },
+                  {
+                    "question": "Which Core Web Vital measures loading performance?",
+                    "options": [
+                      "FID (First Input Delay)",
+                      "CLS (Cumulative Layout Shift)",
+                      "LCP (Largest Contentful Paint)",
+                      "TTFB (Time to First Byte)"
+                    ],
+                    "answer": "LCP (Largest Contentful Paint)"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Analyze and Propose a Performance Fix",
+                    "description": "Use Google Lighthouse to analyze a website. Identify the largest performance bottleneck and write a detailed proposal on how you would fix it, including code examples."
+                  }
+                ],
+                "references": [
+                  { "title": "web.dev by Google", "url": "https://web.dev/" },
+                  {
+                    "title": "Micro Frontends Org",
+                    "url": "https://micro-frontends.org/"
+                  }
+                ]
+              }
+            ]
+          },
+          "backend": {
+            "title": "Backend Development",
+            "modules": [
+              {
+                "id": "be_exp_01",
+                "title": "System Design & Microservices",
+                "description": "Design scalable, reliable systems and explore microservice patterns.",
+                "topics": [
+                  "Scalability Patterns (Horizontal vs Vertical)",
+                  "CAP Theorem",
+                  "Load Balancing",
+                  "Database Sharding & Replication",
+                  "API Gateway",
+                  "Service Discovery",
+                  "Circuit Breaker Pattern",
+                  "Event-Driven Architecture",
+                  "System Design Interview Prep"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "In the CAP theorem, what does 'C' stand for?",
+                    "options": [
+                      "Consistency",
+                      "Completeness",
+                      "Concurrency",
+                      "Capacity"
+                    ],
+                    "answer": "Consistency"
+                  },
+                  {
+                    "question": "What is the purpose of a Circuit Breaker pattern?",
+                    "options": [
+                      "To secure the system",
+                      "To prevent a network failure from cascading to other services",
+                      "To balance load between servers",
+                      "To discover other services"
+                    ],
+                    "answer": "To prevent a network failure from cascading to other services"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Design a URL Shortening Service",
+                    "description": "On a whiteboard or in a document, outline the system design for a URL shortener like bit.ly. Consider the API endpoints, database schema, handling hash collisions, and scaling for high traffic."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Grokking the System Design Interview",
+                    "url": "https://www.educative.io/courses/grokking-the-system-design-interview"
+                  },
+                  {
+                    "title": "Microservices.io Patterns",
+                    "url": "https://microservices.io/patterns/index.html"
+                  }
+                ]
+              },
+              {
+                "id": "be_exp_02",
+                "title": "Asynchronous Communication & Caching",
+                "description": "Decouple your services with message queues and improve performance with advanced caching.",
+                "topics": [
+                  "Message Queues vs Event Brokers",
+                  "RabbitMQ Basics",
+                  "Kafka Fundamentals",
+                  "Advanced Caching with Redis",
+                  "Caching Patterns (Cache-Aside, Write-Through, Read-Through)",
+                  "Distributed Caching"
+                ],
+                "quizQuestions": [
+                  {
+                    "question": "What is a key difference between Kafka and RabbitMQ?",
+                    "options": [
+                      "Kafka is a database, RabbitMQ is not",
+                      "Kafka uses a pull model (consumers pull data), while RabbitMQ uses a push model",
+                      "RabbitMQ is faster than Kafka",
+                      "Kafka is only for logging"
+                    ],
+                    "answer": "Kafka uses a pull model (consumers pull data), while RabbitMQ uses a push model"
+                  }
+                ],
+                "codingChallenges": [
+                  {
+                    "title": "Implement a Producer-Consumer System",
+                    "description": "Write a simple producer in one language (e.g., Python) that sends messages to a RabbitMQ queue, and a consumer in another language (e.g., Node.js) that reads and processes them."
+                  }
+                ],
+                "references": [
+                  {
+                    "title": "Kafka Documentation",
+                    "url": "https://kafka.apache.org/documentation/"
+                  },
+                  {
+                    "title": "Redis Documentation",
+                    "url": "https://redis.io/docs/"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "devops": {
+          "title": "DevOps",
+          "modules": [
+            {
+              "id": "do_exp_01",
+              "title": "Advanced Kubernetes & Cloud Architecture",
+              "description": "Master container orchestration and design secure, cost-effective cloud solutions.",
+              "topics": [
+                "Advanced Kubernetes (Helm, Ingress, StatefulSets, Custom Controllers)",
+                "Service Meshes (Istio, Linkerd)",
+                "Cloud Well-Architected Frameworks",
+                "Cloud Security Best Practices (IAM, VPC)",
+                "Site Reliability Engineering (SRE) Principles (SLOs, SLIs, Error Budgets)"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is Helm used for in Kubernetes?",
+                  "options": [
+                    "To manage networking",
+                    "To manage storage",
+                    "To manage packages of pre-configured Kubernetes resources",
+                    "To monitor clusters"
+                  ],
+                  "answer": "To manage packages of pre-configured Kubernetes resources"
+                },
+                {
+                  "question": "What is an SLO in SRE?",
+                  "options": [
+                    "Service Level Obligation",
+                    "Service Level Objective",
+                    "Service Level Organization",
+                    "Service Level Origin"
+                  ],
+                  "answer": "Service Level Objective"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Create a Helm Chart for a multi-service app",
+                  "description": "Package a web application, its API, and a database into a single, configurable Helm chart with dependencies."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Kubernetes Official Docs",
+                  "url": "https://kubernetes.io/docs/home/"
+                },
+                {
+                  "title": "Google SRE Book",
+                  "url": "https://sre.google/books/"
+                },
+                {
+                  "title": "AWS Well-Architected Framework",
+                  "url": "https://aws.amazon.com/architecture/well-architected/"
+                }
+              ]
+            }
+          ]
+        },
+        "ai_ml": {
+          "title": "AI & Machine Learning",
+          "modules": [
+            {
+              "id": "ml_exp_01",
+              "title": "Applied Machine Learning",
+              "description": "Go beyond theory to build and deploy real-world machine learning models.",
+              "topics": [
+                "The ML Project Lifecycle",
+                "Feature Engineering",
+                "Model Selection & Evaluation Metrics",
+                "Supervised Learning (Regression, Classification)",
+                "Unsupervised Learning (Clustering)",
+                "Introduction to Deep Learning & Neural Networks",
+                "Using Scikit-learn and TensorFlow/PyTorch"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is overfitting?",
+                  "options": [
+                    "When a model performs well on new data",
+                    "When a model performs poorly on training data",
+                    "When a model performs well on training data but poorly on new data",
+                    "When a model is too simple"
+                  ],
+                  "answer": "When a model performs well on training data but poorly on new data"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Predict House Prices",
+                  "description": "Using a dataset like the Boston Housing dataset, build and train a regression model with Scikit-learn to predict house prices. Evaluate your model using Mean Squared Error."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Scikit-learn User Guide",
+                  "url": "https://scikit-learn.org/stable/user_guide.html"
+                },
+                {
+                  "title": "Hands-On Machine Learning (Book)",
+                  "url": "https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "industry_expert_8_plus_yr": {
+      "title": "Industry Expert (8+ Yrs)",
+      "description": "Focus on technical strategy, innovation, leadership, and business impact.",
+      "domains": {
+        "architecture": {
+          "title": "CTO / Architect Track",
+          "modules": [
+            {
+              "id": "arch_expert_01",
+              "title": "Technical Strategy & Distributed Systems",
+              "description": "Drive technical direction and architect highly available, globe-spanning systems.",
+              "topics": [
+                "Technology Roadmapping",
+                "Designing for >99.99% Availability",
+                "Consensus Algorithms (Paxos, Raft)",
+                "Distributed Databases & Transactions",
+                "Cloud-Native Architecture Patterns",
+                "Build vs. Buy Decisions",
+                "Communicating with Stakeholders"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is the primary goal of a technology roadmap?",
+                  "options": [
+                    "To list all current bugs",
+                    "To align technology development with business goals",
+                    "To document employee vacation",
+                    "To track daily tasks"
+                  ],
+                  "answer": "To align technology development with business goals"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Architect a Real-Time Bidding System",
+                  "description": "Outline the high-level architecture for an advertising RTB system. Focus on high throughput, low latency, fault tolerance, and data processing pipelines. Justify your technology choices."
+                }
+              ],
+              "references": [
+                {
+                  "title": "Martin Fowler's Blog on Software Architecture",
+                  "url": "https://martinfowler.com/architecture/"
+                },
+                {
+                  "title": "Designing Data-Intensive Applications (Book)",
+                  "url": "https://www.oreilly.com/library/view/designing-data-intensive-applications/9781449373320/"
+                }
+              ]
+            },
+            {
+              "id": "arch_expert_02",
+              "title": "Engineering Leadership & Management",
+              "description": "Build and lead high-performing engineering teams and cultures.",
+              "topics": [
+                "Scaling Engineering Teams",
+                "Hiring and Mentorship",
+                "Career Ladders & Growth Paths",
+                "Agile at Scale (SAFe, LeSS)",
+                "Project Management Methodologies",
+                "Budgeting and Financials",
+                "Fostering Innovation"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is a primary responsibility of a Staff+ engineer?",
+                  "options": [
+                    "Writing code 100% of the time",
+                    "Managing a team of 10 people",
+                    "Driving technical strategy across multiple teams",
+                    "Only fixing bugs"
+                  ],
+                  "answer": "Driving technical strategy across multiple teams"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Develop an Engineering Career Ladder",
+                  "description": "Create a document outlining the expectations and responsibilities for different engineering levels (e.g., Junior, Mid, Senior, Staff) at a fictional company."
+                }
+              ],
+              "references": [
+                {
+                  "title": "The Manager's Path (Book)",
+                  "url": "https://www.oreilly.com/library/view/the-managers-path/9781491973882/"
+                }
+              ]
+            }
+          ]
+        },
+        "devops": {
+          "title": "DevOps & Platform Engineering",
+          "modules": [
+            {
+              "id": "do_expert_01",
+              "title": "Platform Engineering, DevSecOps & FinOps",
+              "description": "Build internal developer platforms, integrate security, and manage cloud costs.",
+              "topics": [
+                "Internal Developer Platforms (IDPs)",
+                "Golden Paths",
+                "Developer Experience (DevEx)",
+                "Security as Code (SAST, DAST, IAST)",
+                "Container Security & Supply Chain Security (SLSA)",
+                "Cloud Cost Optimization & Governance",
+                "FinOps Principles & Lifecycle"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is a primary goal of an Internal Developer Platform (IDP)?",
+                  "options": [
+                    "To increase developer toil",
+                    "To slow down deployments",
+                    "To enable developer self-service and reduce cognitive load",
+                    "To replace all developers with AI"
+                  ],
+                  "answer": "To enable developer self-service and reduce cognitive load"
+                },
+                {
+                  "question": "What does SAST stand for in DevSecOps?",
+                  "options": [
+                    "Static Application Security Testing",
+                    "Software Application Secure Tunnels",
+                    "Secure Application Server Template",
+                    "Static Analysis Software Test"
+                  ],
+                  "answer": "Static Application Security Testing"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Develop a FinOps Strategy",
+                  "description": "Imagine your company's monthly cloud bill has unexpectedly doubled. Create a 30-60-90 day plan to identify waste, implement cost-saving measures (like reservations and savings plans), and establish ongoing monitoring and alerts."
+                }
+              ],
+              "references": [
+                {
+                  "title": "The FinOps Foundation",
+                  "url": "https://www.finops.org/"
+                },
+                {
+                  "title": "PlatformEngineering.org",
+                  "url": "https://platformengineering.org/"
+                },
+                {
+                  "title": "OWASP Top 10",
+                  "url": "https://owasp.org/www-project-top-ten/"
+                }
+              ]
+            }
+          ]
+        },
+        "data_leadership": {
+          "title": "Data Leadership",
+          "modules": [
+            {
+              "id": "da_expert_01",
+              "title": "Data Governance, Strategy & MLOps",
+              "description": "Manage data as a corporate asset and operationalize machine learning.",
+              "topics": [
+                "Data Governance Frameworks",
+                "Data Quality & Master Data Management",
+                "Data Privacy & Compliance (GDPR, CCPA)",
+                "Building a Data-driven Culture",
+                "ML Operations (MLOps)",
+                "CI/CD for Machine Learning",
+                "Model Monitoring & Retraining"
+              ],
+              "quizQuestions": [
+                {
+                  "question": "What is MLOps primarily concerned with?",
+                  "options": [
+                    "Writing ML algorithms",
+                    "The lifecycle of ML models in production",
+                    "Data visualization",
+                    "SQL queries"
+                  ],
+                  "answer": "The lifecycle of ML models in production"
+                }
+              ],
+              "codingChallenges": [
+                {
+                  "title": "Design an MLOps Pipeline",
+                  "description": "On a whiteboard or diagramming tool, design a high-level CI/CD pipeline for a machine learning model. It should include steps for data validation, training, evaluation, deployment, and monitoring."
+                }
+              ],
+              "references": [
+                {
+                  "title": "DAMA-DMBOK",
+                  "url": "https://www.dama.org/cpages/dmbok"
+                },
+                {
+                  "title": "MLOps Community",
+                  "url": "https://mlops.community/"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
