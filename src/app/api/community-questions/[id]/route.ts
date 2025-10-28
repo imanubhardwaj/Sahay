@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import CommunityQuestion from "@/models/CommunityQuestion";
-import mongoose from "mongoose";
 
 // GET /api/community-questions/[id] - Get a single community question
 export async function GET(

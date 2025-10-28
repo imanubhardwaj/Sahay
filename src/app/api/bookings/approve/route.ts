@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import User from '@/models/User';
 import MentorProfile from '@/models/MentorProfile';
 import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
 import { createZoomMeeting } from '@/lib/zoom';
 import { sendBookingConfirmation, sendCancellationEmail } from '@/lib/email';
-import crypto from 'crypto';
 
 // GET - Handle approval/rejection from email link
 export async function GET(request: NextRequest) {

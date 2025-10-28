@@ -3,13 +3,12 @@ import connectDB from "@/lib/mongodb";
 import Project from "@/models/Project";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import Skill from "@/models/Skill";
 
 // GET /api/projects - Get all projects
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
     const createdBy = searchParams.get("createdBy");
     const category = searchParams.get("category");
@@ -19,7 +18,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
 
     const query: Record<string, unknown> = { deletedAt: null };
-    
+
     if (createdBy) query.createdBy = createdBy;
     if (category) query.category = category;
     if (status) query.status = status;
@@ -42,8 +41,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const projectData = await request.json();
     const { createdBy, ...otherData } = projectData;
 
@@ -76,23 +75,23 @@ export async function POST(request: NextRequest) {
     }
 
     if (!creator) {
-      return NextResponse.json(
-        { error: "Creator not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Creator not found" }, { status: 404 });
     }
 
     const project = new Project({
       ...otherData,
       createdBy,
       views: 0,
-      likes: 0
+      likes: 0,
     });
 
     await project.save();
 
     // Populate the creator data for the response
-    await project.populate("createdBy", "firstName lastName email avatar userType");
+    await project.populate(
+      "createdBy",
+      "firstName lastName email avatar userType"
+    );
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

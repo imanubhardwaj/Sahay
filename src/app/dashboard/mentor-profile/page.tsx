@@ -1,23 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-// Button component removed - using native button elements
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Edit, 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  Star, 
-  Users, 
+import {
+  Edit,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Star,
+  Users,
   Award,
   ExternalLink,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
 } from "lucide-react";
 
 interface MentorProfile {
@@ -62,19 +61,13 @@ export default function MentorProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<MentorProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    if (user?._id) {
-      fetchMentorProfile();
-    }
-  }, [user?._id]);
-
-  const fetchMentorProfile = async () => {
+  const fetchMentorProfile = useCallback(async () => {
     try {
       const response = await fetch(`/api/mentor-profile?userId=${user?._id}`);
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         setProfile(result.data);
       } else {
@@ -85,7 +78,13 @@ export default function MentorProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchMentorProfile();
+    }
+  }, [user?._id, fetchMentorProfile]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -115,11 +114,14 @@ export default function MentorProfilePage() {
                   No Mentor Profile Found
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  You haven&apos;t created a mentor profile yet. Start by setting up your profile to begin mentoring students.
+                  You haven&apos;t created a mentor profile yet. Start by
+                  setting up your profile to begin mentoring students.
                 </p>
               </div>
-              <button 
-                onClick={() => window.location.href = "/dashboard/mentor-setup"}
+              <button
+                onClick={() =>
+                  (window.location.href = "/dashboard/mentor-setup")
+                }
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-2 rounded-lg text-white font-medium"
               >
                 Create Mentor Profile
@@ -144,7 +146,10 @@ export default function MentorProfilePage() {
               Manage your mentor profile and showcase your expertise
             </p>
           </div>
-          <button onClick={handleEdit} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <button
+            onClick={handleEdit}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
             <Edit className="h-4 w-4" />
             Edit Profile
           </button>
@@ -157,7 +162,8 @@ export default function MentorProfilePage() {
               <CardHeader>
                 <div className="flex items-start gap-4">
                   <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {profile.userId.firstName?.[0]}{profile.userId.lastName?.[0]}
+                    {profile.userId.firstName?.[0]}
+                    {profile.userId.lastName?.[0]}
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-2xl">
@@ -181,17 +187,27 @@ export default function MentorProfilePage() {
                 {/* Bio */}
                 {profile.bio && (
                   <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">About Me</h3>
-                    <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      About Me
+                    </h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      {profile.bio}
+                    </p>
                   </div>
                 )}
 
                 {/* Expertise */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Expertise</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Expertise
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {profile.expertise.map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="px-3 py-1">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="px-3 py-1"
+                      >
                         {skill}
                       </Badge>
                     ))}
@@ -201,10 +217,16 @@ export default function MentorProfilePage() {
                 {/* Languages */}
                 {profile.languages.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Languages</h3>
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      Languages
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.languages.map((language, index) => (
-                        <Badge key={index} variant="outline" className="px-3 py-1">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="px-3 py-1"
+                        >
                           {language}
                         </Badge>
                       ))}
@@ -214,21 +236,29 @@ export default function MentorProfilePage() {
 
                 {/* Session Types */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Session Types</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Session Types
+                  </h3>
                   <div className="space-y-3">
                     {profile.sessionTypes.map((session, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-gray-900">{session.name}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {session.name}
+                          </h4>
                           <div className="text-right">
                             <span className="text-lg font-semibold text-purple-600">
                               {session.price} points
                             </span>
-                            <p className="text-sm text-gray-500">{session.duration} minutes</p>
+                            <p className="text-sm text-gray-500">
+                              {session.duration} minutes
+                            </p>
                           </div>
                         </div>
                         {session.description && (
-                          <p className="text-gray-600 text-sm">{session.description}</p>
+                          <p className="text-gray-600 text-sm">
+                            {session.description}
+                          </p>
                         )}
                       </div>
                     ))}
@@ -237,12 +267,14 @@ export default function MentorProfilePage() {
 
                 {/* Social Links */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Social Links</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Social Links
+                  </h3>
                   <div className="flex flex-wrap gap-4">
                     {profile.linkedIn && (
-                      <a 
-                        href={profile.linkedIn} 
-                        target="_blank" 
+                      <a
+                        href={profile.linkedIn}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
                       >
@@ -251,9 +283,9 @@ export default function MentorProfilePage() {
                       </a>
                     )}
                     {profile.twitter && (
-                      <a 
-                        href={profile.twitter} 
-                        target="_blank" 
+                      <a
+                        href={profile.twitter}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-400 hover:text-blue-600"
                       >
@@ -262,9 +294,9 @@ export default function MentorProfilePage() {
                       </a>
                     )}
                     {profile.github && (
-                      <a 
-                        href={profile.github} 
-                        target="_blank" 
+                      <a
+                        href={profile.github}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
                       >
@@ -273,9 +305,9 @@ export default function MentorProfilePage() {
                       </a>
                     )}
                     {profile.website && (
-                      <a 
-                        href={profile.website} 
-                        target="_blank" 
+                      <a
+                        href={profile.website}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-purple-600 hover:text-purple-800"
                       >
@@ -308,13 +340,19 @@ export default function MentorProfilePage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Approval Status</span>
-                    <Badge variant={profile.isApproved ? "default" : "secondary"}>
+                    <span className="text-sm text-gray-600">
+                      Approval Status
+                    </span>
+                    <Badge
+                      variant={profile.isApproved ? "default" : "secondary"}
+                    >
                       {profile.isApproved ? "Approved" : "Pending"}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Zoom Connected</span>
+                    <span className="text-sm text-gray-600">
+                      Zoom Connected
+                    </span>
                     <div className="flex items-center gap-1">
                       {profile.zoomConnected ? (
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -341,22 +379,34 @@ export default function MentorProfilePage() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Average Rating</span>
+                    <span className="text-sm text-gray-600">
+                      Average Rating
+                    </span>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="font-semibold">{profile.averageRating.toFixed(1)}</span>
+                      <span className="font-semibold">
+                        {profile.averageRating.toFixed(1)}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total Reviews</span>
-                    <span className="font-semibold">{profile.totalReviews}</span>
+                    <span className="font-semibold">
+                      {profile.totalReviews}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Completed Sessions</span>
-                    <span className="font-semibold">{profile.completedSessions}</span>
+                    <span className="text-sm text-gray-600">
+                      Completed Sessions
+                    </span>
+                    <span className="font-semibold">
+                      {profile.completedSessions}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Total Earnings</span>
+                    <span className="text-sm text-gray-600">
+                      Total Earnings
+                    </span>
                     <span className="font-semibold text-green-600">
                       {profile.totalEarnings} points
                     </span>
@@ -371,23 +421,25 @@ export default function MentorProfilePage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <button 
+                <button
                   className="w-full justify-start flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  onClick={() => window.location.href = "/dashboard/mentor-schedule"}
+                  onClick={() =>
+                    (window.location.href = "/dashboard/mentor-schedule")
+                  }
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Manage Schedule
                 </button>
-                <button 
+                <button
                   className="w-full justify-start flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  onClick={() => window.location.href = "/dashboard/sessions"}
+                  onClick={() => (window.location.href = "/dashboard/sessions")}
                 >
                   <Clock className="h-4 w-4 mr-2" />
                   View Sessions
                 </button>
-                <button 
+                <button
                   className="w-full justify-start flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  onClick={() => window.location.href = "/dashboard/earnings"}
+                  onClick={() => (window.location.href = "/dashboard/earnings")}
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
                   View Earnings
@@ -400,4 +452,3 @@ export default function MentorProfilePage() {
     </DashboardLayout>
   );
 }
-

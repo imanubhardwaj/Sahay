@@ -1,28 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Schedule from '@/models/Schedule';
-import MentorProfile from '@/models/MentorProfile';
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import Schedule from "@/models/Schedule";
+import MentorProfile from "@/models/MentorProfile";
 
 // GET - Get schedules
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
-    const professionalId = searchParams.get('professionalId');
-    const scheduleId = searchParams.get('scheduleId');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const isActive = searchParams.get('isActive');
+    const professionalId = searchParams.get("professionalId");
+    const scheduleId = searchParams.get("scheduleId");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const isActive = searchParams.get("isActive");
 
     // Get specific schedule
     if (scheduleId) {
-      const schedule = await Schedule.findById(scheduleId)
-        .populate('professionalId', 'firstName lastName email avatar');
+      const schedule = await Schedule.findById(scheduleId).populate(
+        "professionalId",
+        "firstName lastName email avatar"
+      );
 
       if (!schedule) {
         return NextResponse.json(
-          { success: false, error: 'Schedule not found' },
+          { success: false, error: "Schedule not found" },
           { status: 404 }
         );
       }
@@ -34,29 +36,29 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    const query: any = {};
-    
+    const query: Record<string, unknown> = {};
+
     if (professionalId) {
       query.professionalId = professionalId;
     }
 
     if (isActive !== null && isActive !== undefined) {
-      query.isActive = isActive === 'true';
+      query.isActive = isActive === "true";
     }
 
     // Date range filter
     if (startDate || endDate) {
       query.date = {};
       if (startDate) {
-        query.date.$gte = new Date(startDate);
+        (query.date as Record<string, unknown>).$gte = new Date(startDate);
       }
       if (endDate) {
-        query.date.$lte = new Date(endDate);
+        (query.date as Record<string, unknown>).$lte = new Date(endDate);
       }
     }
 
     const schedules = await Schedule.find(query)
-      .populate('professionalId', 'firstName lastName email avatar title')
+      .populate("professionalId", "firstName lastName email avatar title")
       .sort({ date: 1, startTime: 1 });
 
     return NextResponse.json({
@@ -64,9 +66,9 @@ export async function GET(request: NextRequest) {
       data: schedules,
     });
   } catch (error) {
-    console.error('Error fetching schedules:', error);
+    console.error("Error fetching schedules:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch schedules' },
+      { success: false, error: "Failed to fetch schedules" },
       { status: 500 }
     );
   }
@@ -76,26 +78,26 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const body = await request.json();
     const { professionalId, ...scheduleData } = body;
 
     if (!professionalId) {
       return NextResponse.json(
-        { success: false, error: 'Professional ID is required' },
+        { success: false, error: "Professional ID is required" },
         { status: 400 }
       );
     }
 
     // Verify mentor profile exists
-    const mentorProfile = await MentorProfile.findOne({ 
-      userId: professionalId, 
-      isMentor: true 
+    const mentorProfile = await MentorProfile.findOne({
+      userId: professionalId,
+      isMentor: true,
     });
 
     if (!mentorProfile) {
       return NextResponse.json(
-        { success: false, error: 'Mentor profile not found' },
+        { success: false, error: "Mentor profile not found" },
         { status: 404 }
       );
     }
@@ -108,22 +110,25 @@ export async function POST(request: NextRequest) {
       $or: [
         {
           startTime: { $lte: scheduleData.startTime },
-          endTime: { $gt: scheduleData.startTime }
+          endTime: { $gt: scheduleData.startTime },
         },
         {
           startTime: { $lt: scheduleData.endTime },
-          endTime: { $gte: scheduleData.endTime }
+          endTime: { $gte: scheduleData.endTime },
         },
         {
           startTime: { $gte: scheduleData.startTime },
-          endTime: { $lte: scheduleData.endTime }
-        }
-      ]
+          endTime: { $lte: scheduleData.endTime },
+        },
+      ],
     });
 
     if (overlapping) {
       return NextResponse.json(
-        { success: false, error: 'This time slot overlaps with an existing schedule' },
+        {
+          success: false,
+          error: "This time slot overlaps with an existing schedule",
+        },
         { status: 400 }
       );
     }
@@ -133,17 +138,23 @@ export async function POST(request: NextRequest) {
       ...scheduleData,
     });
 
-    await schedule.populate('professionalId', 'firstName lastName email avatar');
+    await schedule.populate(
+      "professionalId",
+      "firstName lastName email avatar"
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: schedule,
-      message: 'Schedule created successfully',
-    }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating schedule:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create schedule' },
+      {
+        success: true,
+        data: schedule,
+        message: "Schedule created successfully",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating schedule:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create schedule" },
       { status: 500 }
     );
   }
@@ -153,13 +164,13 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const body = await request.json();
     const { scheduleId, ...updates } = body;
 
     if (!scheduleId) {
       return NextResponse.json(
-        { success: false, error: 'Schedule ID is required' },
+        { success: false, error: "Schedule ID is required" },
         { status: 400 }
       );
     }
@@ -167,10 +178,10 @@ export async function PATCH(request: NextRequest) {
     // If updating time, check for overlaps
     if (updates.startTime || updates.endTime || updates.date) {
       const currentSchedule = await Schedule.findById(scheduleId);
-      
+
       if (!currentSchedule) {
         return NextResponse.json(
-          { success: false, error: 'Schedule not found' },
+          { success: false, error: "Schedule not found" },
           { status: 404 }
         );
       }
@@ -187,22 +198,25 @@ export async function PATCH(request: NextRequest) {
         $or: [
           {
             startTime: { $lte: checkStartTime },
-            endTime: { $gt: checkStartTime }
+            endTime: { $gt: checkStartTime },
           },
           {
             startTime: { $lt: checkEndTime },
-            endTime: { $gte: checkEndTime }
+            endTime: { $gte: checkEndTime },
           },
           {
             startTime: { $gte: checkStartTime },
-            endTime: { $lte: checkEndTime }
-          }
-        ]
+            endTime: { $lte: checkEndTime },
+          },
+        ],
       });
 
       if (overlapping) {
         return NextResponse.json(
-          { success: false, error: 'This time slot overlaps with an existing schedule' },
+          {
+            success: false,
+            error: "This time slot overlaps with an existing schedule",
+          },
           { status: 400 }
         );
       }
@@ -212,11 +226,11 @@ export async function PATCH(request: NextRequest) {
       scheduleId,
       { $set: updates },
       { new: true, runValidators: true }
-    ).populate('professionalId', 'firstName lastName email avatar');
+    ).populate("professionalId", "firstName lastName email avatar");
 
     if (!schedule) {
       return NextResponse.json(
-        { success: false, error: 'Schedule not found' },
+        { success: false, error: "Schedule not found" },
         { status: 404 }
       );
     }
@@ -224,12 +238,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: schedule,
-      message: 'Schedule updated successfully',
+      message: "Schedule updated successfully",
     });
   } catch (error) {
-    console.error('Error updating schedule:', error);
+    console.error("Error updating schedule:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update schedule' },
+      { success: false, error: "Failed to update schedule" },
       { status: 500 }
     );
   }
@@ -239,29 +253,30 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
-    const scheduleId = searchParams.get('scheduleId');
+    const scheduleId = searchParams.get("scheduleId");
 
     if (!scheduleId) {
       return NextResponse.json(
-        { success: false, error: 'Schedule ID is required' },
+        { success: false, error: "Schedule ID is required" },
         { status: 400 }
       );
     }
 
     // Check if there are any bookings
-    const Booking = (await import('@/models/Booking')).default;
+    const Booking = (await import("@/models/Booking")).default;
     const hasBookings = await Booking.countDocuments({
       scheduleId,
-      status: { $in: ['pending', 'confirmed'] }
+      status: { $in: ["pending", "confirmed"] },
     });
 
     if (hasBookings > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Cannot delete schedule with active bookings. Please cancel bookings first.' 
+        {
+          success: false,
+          error:
+            "Cannot delete schedule with active bookings. Please cancel bookings first.",
         },
         { status: 400 }
       );
@@ -271,19 +286,19 @@ export async function DELETE(request: NextRequest) {
 
     if (!schedule) {
       return NextResponse.json(
-        { success: false, error: 'Schedule not found' },
+        { success: false, error: "Schedule not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Schedule deleted successfully',
+      message: "Schedule deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting schedule:', error);
+    console.error("Error deleting schedule:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to delete schedule' },
+      { success: false, error: "Failed to delete schedule" },
       { status: 500 }
     );
   }

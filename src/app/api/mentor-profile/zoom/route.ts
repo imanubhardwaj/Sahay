@@ -1,17 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import MentorProfile from '@/models/MentorProfile';
-import { exchangeCodeForToken, getZoomUser, getZoomAuthorizationUrl } from '@/lib/zoom';
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import MentorProfile from "@/models/MentorProfile";
+import {
+  exchangeCodeForToken,
+  getZoomUser,
+  getZoomAuthorizationUrl,
+} from "@/lib/zoom";
 
 // GET - Get Zoom authorization URL
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'User ID is required' },
+        { success: false, error: "User ID is required" },
         { status: 400 }
       );
     }
@@ -24,9 +28,9 @@ export async function GET(request: NextRequest) {
       data: { authUrl },
     });
   } catch (error) {
-    console.error('Error generating Zoom auth URL:', error);
+    console.error("Error generating Zoom auth URL:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to generate authorization URL' },
+      { success: false, error: "Failed to generate authorization URL" },
       { status: 500 }
     );
   }
@@ -36,13 +40,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const body = await request.json();
     const { code, userId } = body;
 
     if (!code || !userId) {
       return NextResponse.json(
-        { success: false, error: 'Code and user ID are required' },
+        { success: false, error: "Code and user ID are required" },
         { status: 400 }
       );
     }
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
     const tokens = await exchangeCodeForToken(code);
     if (!tokens) {
       return NextResponse.json(
-        { success: false, error: 'Failed to exchange code for tokens' },
+        { success: false, error: "Failed to exchange code for tokens" },
         { status: 400 }
       );
     }
@@ -60,7 +64,7 @@ export async function POST(request: NextRequest) {
     const zoomUser = await getZoomUser(tokens.accessToken);
     if (!zoomUser) {
       return NextResponse.json(
-        { success: false, error: 'Failed to get Zoom user information' },
+        { success: false, error: "Failed to get Zoom user information" },
         { status: 400 }
       );
     }
@@ -69,20 +73,6 @@ export async function POST(request: NextRequest) {
     const expiryDate = new Date();
     expiryDate.setSeconds(expiryDate.getSeconds() + tokens.expiresIn);
 
-    const mentorProfile = await MentorProfile.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          zoomConnected: true,
-          zoomAccessToken: tokens.accessToken,
-          zoomRefreshToken: tokens.refreshToken,
-          zoomTokenExpiry: expiryDate,
-          zoomUserId: zoomUser.id,
-        },
-      },
-      { new: true, upsert: true }
-    );
-
     return NextResponse.json({
       success: true,
       data: {
@@ -90,12 +80,12 @@ export async function POST(request: NextRequest) {
         zoomUserId: zoomUser.id,
         email: zoomUser.email,
       },
-      message: 'Zoom account connected successfully',
+      message: "Zoom account connected successfully",
     });
   } catch (error) {
-    console.error('Error connecting Zoom account:', error);
+    console.error("Error connecting Zoom account:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to connect Zoom account' },
+      { success: false, error: "Failed to connect Zoom account" },
       { status: 500 }
     );
   }
@@ -105,13 +95,13 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'User ID is required' },
+        { success: false, error: "User ID is required" },
         { status: 400 }
       );
     }
@@ -132,21 +122,20 @@ export async function DELETE(request: NextRequest) {
 
     if (!mentorProfile) {
       return NextResponse.json(
-        { success: false, error: 'Mentor profile not found' },
+        { success: false, error: "Mentor profile not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Zoom account disconnected successfully',
+      message: "Zoom account disconnected successfully",
     });
   } catch (error) {
-    console.error('Error disconnecting Zoom account:', error);
+    console.error("Error disconnecting Zoom account:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to disconnect Zoom account' },
+      { success: false, error: "Failed to disconnect Zoom account" },
       { status: 500 }
     );
   }
 }
-

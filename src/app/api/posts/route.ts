@@ -3,15 +3,12 @@ import connectDB from "@/lib/mongodb";
 import Post from "@/models/Post";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import Community from "@/models/Community";
-import PostReaction from "@/models/PostReaction";
-import PostComment from "@/models/PostComment";
 
 // GET /api/posts - Get all posts (with optional filters)
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
     const authorId = searchParams.get("authorId");
     const communityId = searchParams.get("communityId");
@@ -20,7 +17,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
 
     const query: Record<string, unknown> = { deletedAt: null };
-    
+
     if (authorId) query.authorId = authorId;
     if (communityId) query.communityId = communityId;
     if (tags) query.tags = { $in: tags.split(",") };
@@ -44,8 +41,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -60,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    
+
     const postData = await request.json();
     const { authorId, ...otherData } = postData;
 
@@ -78,10 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!author) {
-      return NextResponse.json(
-        { error: "Author not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Author not found" }, { status: 404 });
     }
 
     const post = new Post({
@@ -89,7 +83,7 @@ export async function POST(request: NextRequest) {
       authorId,
       reactions: [],
       comments: [],
-      views: 0
+      views: 0,
     });
 
     await post.save();

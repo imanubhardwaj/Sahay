@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/Button";
-// Removed mock API - using real API calls
 
 interface Module {
   _id: string;
@@ -53,73 +51,77 @@ export default function ModulesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    loadModules();
-  }, [user, router]);
-
-  const loadModules = async () => {
+  const loadModules = useCallback(async () => {
     try {
       setIsLoading(true);
-      
+
       // Fetch modules from real API
-      const response = await fetch('/api/modules');
-      
+      const response = await fetch("/api/modules");
+
       if (response.ok) {
         const data = await response.json();
-        
+
         // Fetch user progress for all modules
-        const progressResponse = await fetch(`/api/module-progress?userId=${user!._id}`);
-        let userProgressMap: any = {};
-        
+        const progressResponse = await fetch(
+          `/api/module-progress?userId=${user!._id}`
+        );
+        let userProgressMap: Record<string, number> = {};
+
         if (progressResponse.ok) {
           const progressData = await progressResponse.json();
-          userProgressMap = progressData.progress?.reduce((map: any, p: any) => {
-            map[p.moduleId._id || p.moduleId] = p;
-            return map;
-          }, {}) || {};
+          userProgressMap =
+            progressData.progress?.reduce(
+              (
+                map: Record<string, number>,
+                p: { moduleId: { _id: string }; completionPercentage: number }
+              ) => {
+                map[p.moduleId._id] = p.completionPercentage || 0;
+                return map;
+              },
+              {}
+            ) || {};
         }
-        
-        const apiModules: ModuleWithProgress[] = data.modules.map((module: ApiModule) => {
-          const progress = userProgressMap[module._id];
-          return {
-            _id: module._id,
-            title: module.name,
-            description: module.description,
-            difficulty: module.difficulty || 'Beginner',
-            category: module.category || 'Programming',
-            estimatedDuration: module.duration || 30,
-            points: module.points || 100,
-            lessons: [],
-            quizzes: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            userProgress: progress ? {
-              completed: progress.status === 'completed',
-              progress: progress.completionPercentage || 0
-            } : {
-              completed: false,
-              progress: 0
-            }
-          };
-        });
+
+        const apiModules: ModuleWithProgress[] = data.modules.map(
+          (module: ApiModule) => {
+            const progress = userProgressMap[module._id];
+            return {
+              _id: module._id,
+              title: module.name,
+              description: module.description,
+              difficulty: module.difficulty || "Beginner",
+              category: module.category || "Programming",
+              estimatedDuration: module.duration || 30,
+              points: module.points || 100,
+              lessons: [],
+              quizzes: [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              userProgress: progress
+                ? {
+                    completed: progress === 100,
+                    progress: progress || 0,
+                  }
+                : {
+                    completed: false,
+                    progress: 0,
+                  },
+            };
+          }
+        );
         setModules(apiModules);
         setIsLoading(false);
         return;
       }
-      
+
       // Fallback to mock data if API fails
       const mockModules: ModuleWithProgress[] = [
         {
-          _id: '1',
-          title: 'JavaScript Fundamentals',
-          description: 'Learn the basics of JavaScript programming language',
-          category: 'Programming',
-          difficulty: 'beginner',
+          _id: "1",
+          title: "JavaScript Fundamentals",
+          description: "Learn the basics of JavaScript programming language",
+          category: "Programming",
+          difficulty: "beginner",
           estimatedDuration: 120,
           points: 100,
           lessons: [],
@@ -128,15 +130,15 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: false,
-            progress: 65
-          }
+            progress: 65,
+          },
         },
         {
-          _id: '2',
-          title: 'React Components',
-          description: 'Understanding React components and their lifecycle',
-          category: 'Frontend',
-          difficulty: 'intermediate',
+          _id: "2",
+          title: "React Components",
+          description: "Understanding React components and their lifecycle",
+          category: "Frontend",
+          difficulty: "intermediate",
           estimatedDuration: 180,
           points: 150,
           lessons: [],
@@ -145,15 +147,15 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: true,
-            progress: 100
-          }
+            progress: 100,
+          },
         },
         {
-          _id: '3',
-          title: 'Node.js Backend Development',
-          description: 'Building server-side applications with Node.js',
-          category: 'Backend',
-          difficulty: 'intermediate',
+          _id: "3",
+          title: "Node.js Backend Development",
+          description: "Building server-side applications with Node.js",
+          category: "Backend",
+          difficulty: "intermediate",
           estimatedDuration: 240,
           points: 200,
           lessons: [],
@@ -162,15 +164,15 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: false,
-            progress: 30
-          }
+            progress: 30,
+          },
         },
         {
-          _id: '4',
-          title: 'Python Basics',
-          description: 'Introduction to Python programming',
-          category: 'Programming',
-          difficulty: 'beginner',
+          _id: "4",
+          title: "Python Basics",
+          description: "Introduction to Python programming",
+          category: "Programming",
+          difficulty: "beginner",
           estimatedDuration: 150,
           points: 125,
           lessons: [],
@@ -179,15 +181,15 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: false,
-            progress: 0
-          }
+            progress: 0,
+          },
         },
         {
-          _id: '5',
-          title: 'Java Object-Oriented Programming',
-          description: 'Learn OOP concepts in Java',
-          category: 'Programming',
-          difficulty: 'advanced',
+          _id: "5",
+          title: "Java Object-Oriented Programming",
+          description: "Learn OOP concepts in Java",
+          category: "Programming",
+          difficulty: "advanced",
           estimatedDuration: 200,
           points: 175,
           lessons: [],
@@ -196,15 +198,15 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: false,
-            progress: 0
-          }
+            progress: 0,
+          },
         },
         {
-          _id: '6',
-          title: 'React Hooks Deep Dive',
-          description: 'Master React Hooks for state management',
-          category: 'Frontend',
-          difficulty: 'advanced',
+          _id: "6",
+          title: "React Hooks Deep Dive",
+          description: "Master React Hooks for state management",
+          category: "Frontend",
+          difficulty: "advanced",
           estimatedDuration: 160,
           points: 140,
           lessons: [],
@@ -213,9 +215,9 @@ export default function ModulesPage() {
           updatedAt: new Date().toISOString(),
           userProgress: {
             completed: false,
-            progress: 0
-          }
-        }
+            progress: 0,
+          },
+        },
       ];
 
       setModules(mockModules);
@@ -226,7 +228,16 @@ export default function ModulesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    loadModules();
+  }, [user, router, loadModules]);
 
   const handleStartModule = async (moduleId: string) => {
     try {
@@ -243,7 +254,8 @@ export default function ModulesPage() {
   ];
   const filteredModules = (modules || []).filter((module) => {
     const matchesCategory =
-      selectedCategory === "All" || (module.category || 'Programming') === selectedCategory;
+      selectedCategory === "All" ||
+      (module.category || "Programming") === selectedCategory;
     const matchesSearch =
       module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       module.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -353,7 +365,7 @@ export default function ModulesPage() {
               <div
                 key={module._id}
                 className={`bg-gradient-to-br ${getDifficultyBg(
-                  module.difficulty || 'Beginner'
+                  module.difficulty || "Beginner"
                 )} rounded-3xl p-6 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group`}
               >
                 {/* Module Header */}
@@ -380,7 +392,7 @@ export default function ModulesPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Category</span>
                     <span className="font-medium text-gray-900">
-                      {module.category || 'Programming'}
+                      {module.category || "Programming"}
                     </span>
                   </div>
 
@@ -391,7 +403,7 @@ export default function ModulesPage() {
                         module.difficulty
                       )}`}
                     >
-                      {(module.difficulty || 'Beginner').toUpperCase()}
+                      {(module.difficulty || "Beginner").toUpperCase()}
                     </span>
                   </div>
 
@@ -428,8 +440,7 @@ export default function ModulesPage() {
                 <div className="pt-2">
                   {module.userProgress?.completed ? (
                     <button
-                      variant="outline"
-                      className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                      className="bg-gray-100 hover:bg-gray-200 cursor-pointer text-gray-800 font-medium py-2 px-4 rounded-lg border border-gray-300"
                       disabled
                     >
                       <span className="mr-2">✅</span>
@@ -484,7 +495,10 @@ export default function ModulesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center bg-white/60 rounded-2xl p-6 backdrop-blur-sm">
               <div className="text-4xl font-black text-green-600 mb-2">
-                {(modules || []).filter((m) => m.userProgress?.completed).length}
+                {
+                  (modules || []).filter((m) => m.userProgress?.completed)
+                    .length
+                }
               </div>
               <div className="text-gray-700 font-medium">Completed Modules</div>
             </div>

@@ -3,7 +3,6 @@ import connectDB from "@/lib/mongodb";
 import Quiz from "@/models/Quiz";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import Module from "@/models/Module";
 
 // GET /api/quizzes - Get all quizzes (without questions)
 export async function GET(request: NextRequest) {

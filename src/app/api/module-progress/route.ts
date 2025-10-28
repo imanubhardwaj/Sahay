@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import { ModuleProgress, UserLessonProgress, Lesson, Transaction, Wallet, User } from '@/models';
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import ModuleProgress from "@/models/ModuleProgress";
+import Lesson from "@/models/Lesson";
 
 // GET /api/module-progress - Get module progress for a user
 export async function GET(request: NextRequest) {
@@ -8,27 +9,36 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const moduleId = searchParams.get('moduleId');
+    const userId = searchParams.get("userId");
+    const moduleId = searchParams.get("moduleId");
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
     }
 
-    let query: any = { userId };
+    const query: Record<string, unknown> = { userId };
     if (moduleId) {
       query.moduleId = moduleId;
     }
 
     const progress = await ModuleProgress.find(query)
-      .populate('moduleId', 'name description level duration points lessonsCount')
-      .populate('currentLessonId', 'name order')
+      .populate(
+        "moduleId",
+        "name description level duration points lessonsCount"
+      )
+      .populate("currentLessonId", "name order")
       .sort({ lastAccessedAt: -1 });
 
     return NextResponse.json({ progress }, { status: 200 });
-  } catch (error: any) {
-    console.error('Error fetching module progress:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Error fetching module progress:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !moduleId) {
       return NextResponse.json(
-        { error: 'User ID and Module ID are required' },
+        { error: "User ID and Module ID are required" },
         { status: 400 }
       );
     }
@@ -63,20 +73,26 @@ export async function POST(request: NextRequest) {
         userId,
         moduleId,
         totalLessons,
-        status: 'in_progress',
+        status: "in_progress",
         startedAt: new Date(),
-        lastAccessedAt: new Date()
+        lastAccessedAt: new Date(),
       });
     }
 
     // Populate before returning
-    await progress.populate('moduleId', 'name description level duration points');
-    await progress.populate('currentLessonId', 'name order');
+    await progress.populate(
+      "moduleId",
+      "name description level duration points"
+    );
+    await progress.populate("currentLessonId", "name order");
 
     return NextResponse.json({ progress }, { status: 200 });
-  } catch (error: any) {
-    console.error('Error creating/updating module progress:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Error creating/updating module progress:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -90,7 +106,7 @@ export async function PUT(request: NextRequest) {
 
     if (!userId || !moduleId) {
       return NextResponse.json(
-        { error: 'User ID and Module ID are required' },
+        { error: "User ID and Module ID are required" },
         { status: 400 }
       );
     }
@@ -104,8 +120,8 @@ export async function PUT(request: NextRequest) {
         userId,
         moduleId,
         totalLessons,
-        status: 'in_progress',
-        startedAt: new Date()
+        status: "in_progress",
+        startedAt: new Date(),
       });
     }
 
@@ -120,7 +136,7 @@ export async function PUT(request: NextRequest) {
       if (!progress.completedLessons) {
         progress.completedLessons = [];
       }
-      
+
       if (!progress.completedLessons.includes(lessonId)) {
         progress.completedLessons.push(lessonId);
       }
@@ -134,10 +150,10 @@ export async function PUT(request: NextRequest) {
 
       // Check if module is completed
       if (progress.completedLessons.length >= totalLessons) {
-        progress.status = 'completed';
+        progress.status = "completed";
         progress.completedAt = new Date();
       } else {
-        progress.status = 'in_progress';
+        progress.status = "in_progress";
       }
     }
 
@@ -145,14 +161,18 @@ export async function PUT(request: NextRequest) {
     await progress.save();
 
     // Populate before returning
-    await progress.populate('moduleId', 'name description level duration points');
-    await progress.populate('currentLessonId', 'name order');
+    await progress.populate(
+      "moduleId",
+      "name description level duration points"
+    );
+    await progress.populate("currentLessonId", "name order");
 
     return NextResponse.json({ progress }, { status: 200 });
-  } catch (error: any) {
-    console.error('Error updating module progress:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Error updating module progress:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
-
-

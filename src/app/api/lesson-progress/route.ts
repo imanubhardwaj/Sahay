@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { UserLessonProgress, Lesson, Transaction, Wallet, User, ModuleProgress } from "@/models";
+import { UserLessonProgress, Lesson, Transaction, Wallet, ModuleProgress } from "@/models";
 import mongoose from "mongoose";
 
 // GET /api/lesson-progress - Get user's lesson progress for a module

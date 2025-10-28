@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 interface Booking {
@@ -525,7 +524,6 @@ export default function BookingsPage() {
                             handleCancelBooking(booking._id, reason);
                           }
                         }}
-                        variant="outline"
                         className="px-4 py-2 rounded-2xl text-red-600 border-red-200 hover:bg-red-50 text-sm"
                       >
                         Cancel
@@ -606,7 +604,6 @@ export default function BookingsPage() {
 
               <div className="flex items-center justify-end space-x-3 mt-6">
                 <button
-                  variant="outline"
                   onClick={() => {
                     setShowConfirmModal(false);
                     setSelectedBooking(null);

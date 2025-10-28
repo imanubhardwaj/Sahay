@@ -3,27 +3,56 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { FaPlus, FaEdit, FaTrash, FaClock, FaCalendarAlt, FaUsers, FaVideo, FaCheckCircle, FaTimesCircle, FaGlobe } from "react-icons/fa";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaClock,
+  FaCalendarAlt,
+  FaUsers,
+  FaVideo,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaGlobe,
+} from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+import { Booking } from "@/hooks/useBookings";
+import { Schedule } from "@/hooks/useSchedules";
 
 export default function MentorSchedulePage() {
   const { user } = useAuth();
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'schedules' | 'bookings'>('schedules');
-  const [formData, setFormData] = useState({
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [activeTab, setActiveTab] = useState<"schedules" | "bookings">(
+    "schedules"
+  );
+  const [formData, setFormData] = useState<Omit<Schedule, "_id">>({
+    id: "",
+    professionalId: "",
     title: "",
     description: "",
-    date: "",
-    startTime: "",
-    endTime: "",
+    date: new Date().toISOString(),
+    startTime: "09:00",
+    endTime: "17:00",
     duration: 60,
     maxBookings: 1,
     price: 100,
     sessionType: "one-on-one",
+    isRecurring: false,
+    recurringPattern: "weekly",
+    recurringEndDate: new Date().toISOString(),
+    location: "online",
+    meetingLink: "",
+    address: "",
+    requirements: [],
+    skills: [],
+    currentBookings: 0,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   // Weekly availability state
@@ -34,7 +63,7 @@ export default function MentorSchedulePage() {
     thursday: [{ start: "09:00", end: "17:00" }],
     friday: [{ start: "09:00", end: "17:00" }],
     saturday: [],
-    sunday: []
+    sunday: [],
   });
 
   const [timezone, setTimezone] = useState("Asia/Kolkata");
@@ -49,9 +78,11 @@ export default function MentorSchedulePage() {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/schedules?professionalId=${user?._id}`);
+      const response = await fetch(
+        `/api/schedules?professionalId=${user?._id}`
+      );
       const result = await response.json();
-      
+
       if (result.success) {
         setSchedules(result.data);
       }
@@ -66,7 +97,7 @@ export default function MentorSchedulePage() {
     try {
       const response = await fetch(`/api/bookings?mentorId=${user?._id}`);
       const result = await response.json();
-      
+
       if (result.success) {
         setBookings(result.data);
       }
@@ -75,28 +106,48 @@ export default function MentorSchedulePage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const openModal = (schedule?: any) => {
+  const openModal = (schedule?: Schedule) => {
     if (schedule) {
       setEditingSchedule(schedule);
       setFormData({
+        id: schedule.id,
+        professionalId: schedule.professionalId,
         title: schedule.title,
         description: schedule.description || "",
-        date: new Date(schedule.date).toISOString().split('T')[0],
+        date: new Date(schedule.date).toISOString().split("T")[0],
         startTime: schedule.startTime,
         endTime: schedule.endTime,
         duration: schedule.duration,
         maxBookings: schedule.maxBookings,
         price: schedule.price,
         sessionType: schedule.sessionType,
+        isRecurring: schedule.isRecurring,
+        recurringPattern: schedule.recurringPattern,
+        recurringEndDate: schedule.recurringEndDate,
+        location: schedule.location,
+        meetingLink: schedule.meetingLink,
+        address: schedule.address,
+        requirements: schedule.requirements,
+        skills: schedule.skills,
+        currentBookings: schedule.currentBookings,
+        isActive: schedule.isActive,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     } else {
       setEditingSchedule(null);
       setFormData({
+        id: "",
+        professionalId: "",
         title: "",
         description: "",
         date: "",
@@ -106,6 +157,18 @@ export default function MentorSchedulePage() {
         maxBookings: 1,
         price: 100,
         sessionType: "one-on-one",
+        isRecurring: false,
+        recurringPattern: "weekly",
+        recurringEndDate: new Date().toISOString(),
+        location: "online",
+        meetingLink: "",
+        address: "",
+        requirements: [],
+        skills: [],
+        currentBookings: 0,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     }
     setShowModal(true);
@@ -120,13 +183,11 @@ export default function MentorSchedulePage() {
     e.preventDefault();
 
     try {
-      const url = editingSchedule
-        ? "/api/schedules"
-        : "/api/schedules";
-      
+      const url = editingSchedule ? "/api/schedules" : "/api/schedules";
+
       const payload = editingSchedule
         ? { scheduleId: editingSchedule._id, ...formData }
-        : { professionalId: user?._id, ...formData };
+        : { ...formData, professionalId: user?._id };
 
       const response = await fetch(url, {
         method: editingSchedule ? "PATCH" : "POST",
@@ -195,89 +256,108 @@ export default function MentorSchedulePage() {
     }
   };
 
-  const getStatusColor = (schedule: any) => {
+  const getStatusColor = (schedule: Schedule) => {
     if (!schedule.isActive) return "bg-gray-500";
     if (schedule.currentBookings >= schedule.maxBookings) return "bg-red-500";
     return "bg-green-500";
   };
 
-  const getStatusText = (schedule: any) => {
+  const getStatusText = (schedule: Schedule) => {
     if (!schedule.isActive) return "Inactive";
     if (schedule.currentBookings >= schedule.maxBookings) return "Fully Booked";
     return "Available";
   };
 
-  const getBookingStatusColor = (booking: any) => {
+  const getBookingStatusColor = (booking: Booking) => {
     switch (booking.status) {
-      case 'confirmed': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'cancelled': return 'bg-red-500';
-      case 'completed': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case "confirmed":
+        return "bg-green-500";
+      case "pending":
+        return "bg-yellow-500";
+      case "cancelled":
+        return "bg-red-500";
+      case "completed":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
-  const getBookingStatusText = (booking: any) => {
+  const getBookingStatusText = (booking: Booking) => {
     switch (booking.status) {
-      case 'confirmed': return 'Confirmed';
-      case 'pending': return 'Pending';
-      case 'cancelled': return 'Cancelled';
-      case 'completed': return 'Completed';
-      default: return 'Unknown';
+      case "confirmed":
+        return "Confirmed";
+      case "pending":
+        return "Pending";
+      case "cancelled":
+        return "Cancelled";
+      case "completed":
+        return "Completed";
+      default:
+        return "Unknown";
     }
   };
 
   const formatDateTime = (dateString: string, timeString: string) => {
     const date = new Date(`${dateString}T${timeString}`);
-    return date.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const addTimeSlot = (day: string) => {
-    setWeeklyAvailability(prev => ({
+    setWeeklyAvailability((prev) => ({
       ...prev,
-      [day]: [...prev[day as keyof typeof prev], { start: "09:00", end: "17:00" }]
+      [day]: [
+        ...prev[day as keyof typeof prev],
+        { start: "09:00", end: "17:00" },
+      ],
     }));
   };
 
   const removeTimeSlot = (day: string, index: number) => {
-    setWeeklyAvailability(prev => ({
+    setWeeklyAvailability((prev) => ({
       ...prev,
-      [day]: prev[day as keyof typeof prev].filter((_, i) => i !== index)
+      [day]: prev[day as keyof typeof prev].filter((_, i) => i !== index),
     }));
   };
 
-  const updateTimeSlot = (day: string, index: number, field: 'start' | 'end', value: string) => {
-    setWeeklyAvailability(prev => ({
+  const updateTimeSlot = (
+    day: string,
+    index: number,
+    field: "start" | "end",
+    value: string
+  ) => {
+    setWeeklyAvailability((prev) => ({
       ...prev,
-      [day]: prev[day as keyof typeof prev].map((slot, i) => 
+      [day]: prev[day as keyof typeof prev].map((slot, i) =>
         i === index ? { ...slot, [field]: value } : slot
-      )
+      ),
     }));
   };
 
   const copyTimeSlot = (day: string, index: number) => {
-    const slot = weeklyAvailability[day as keyof typeof weeklyAvailability][index];
-    setWeeklyAvailability(prev => ({
+    const slot =
+      weeklyAvailability[day as keyof typeof weeklyAvailability][index];
+    setWeeklyAvailability((prev) => ({
       ...prev,
-      [day]: [...prev[day as keyof typeof prev], { ...slot }]
+      [day]: [...prev[day as keyof typeof prev], { ...slot }],
     }));
   };
 
   const days = [
-    { key: 'monday', label: 'Monday', short: 'M' },
-    { key: 'tuesday', label: 'Tuesday', short: 'T' },
-    { key: 'wednesday', label: 'Wednesday', short: 'W' },
-    { key: 'thursday', label: 'Thursday', short: 'T' },
-    { key: 'friday', label: 'Friday', short: 'F' },
-    { key: 'saturday', label: 'Saturday', short: 'S' },
-    { key: 'sunday', label: 'Sunday', short: 'S' }
+    { key: "monday", label: "Monday", short: "M" },
+    { key: "tuesday", label: "Tuesday", short: "T" },
+    { key: "wednesday", label: "Wednesday", short: "W" },
+    { key: "thursday", label: "Thursday", short: "T" },
+    { key: "friday", label: "Friday", short: "F" },
+    { key: "saturday", label: "Saturday", short: "S" },
+    { key: "sunday", label: "Sunday", short: "S" },
   ];
 
   return (
@@ -310,21 +390,24 @@ export default function MentorSchedulePage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Weekly hours</h2>
-              <p className="text-gray-600">Set when you are typically available for meetings</p>
+              <p className="text-gray-600">
+                Set when you are typically available for meetings
+              </p>
             </div>
           </div>
 
           {/* Days of the week */}
           <div className="space-y-4">
             {days.map((day) => {
-              const daySlots = weeklyAvailability[day.key as keyof typeof weeklyAvailability];
+              const daySlots =
+                weeklyAvailability[day.key as keyof typeof weeklyAvailability];
               return (
                 <div key={day.key} className="flex items-center gap-4">
                   {/* Day indicator */}
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                     {day.short}
                   </div>
-                  
+
                   {/* Day name */}
                   <div className="w-24 text-sm font-medium text-gray-700">
                     {day.label}
@@ -334,7 +417,9 @@ export default function MentorSchedulePage() {
                   <div className="flex-1">
                     {daySlots.length === 0 ? (
                       <div className="flex items-center gap-3">
-                        <span className="text-gray-500 text-sm">Unavailable</span>
+                        <span className="text-gray-500 text-sm">
+                          Unavailable
+                        </span>
                         <button
                           onClick={() => addTimeSlot(day.key)}
                           className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
@@ -349,14 +434,28 @@ export default function MentorSchedulePage() {
                             <input
                               type="time"
                               value={slot.start}
-                              onChange={(e) => updateTimeSlot(day.key, index, 'start', e.target.value)}
+                              onChange={(e) =>
+                                updateTimeSlot(
+                                  day.key,
+                                  index,
+                                  "start",
+                                  e.target.value
+                                )
+                              }
                               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                             <span className="text-gray-500">-</span>
                             <input
                               type="time"
                               value={slot.end}
-                              onChange={(e) => updateTimeSlot(day.key, index, 'end', e.target.value)}
+                              onChange={(e) =>
+                                updateTimeSlot(
+                                  day.key,
+                                  index,
+                                  "end",
+                                  e.target.value
+                                )
+                              }
                               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                             <button
@@ -394,14 +493,16 @@ export default function MentorSchedulePage() {
                 <FaGlobe className="text-gray-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Time zone</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Time zone
+                </h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-gray-600">
-                    {new Date().toLocaleString('en-US', { 
+                    {new Date().toLocaleString("en-US", {
                       timeZone: timezone,
-                      timeZoneName: 'long',
-                      hour: '2-digit',
-                      minute: '2-digit'
+                      timeZoneName: "long",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </span>
                   <select
@@ -424,22 +525,22 @@ export default function MentorSchedulePage() {
         {/* Tabs */}
         <div className="flex space-x-1 mb-8 bg-gray-800 p-1 rounded-lg">
           <button
-            onClick={() => setActiveTab('schedules')}
+            onClick={() => setActiveTab("schedules")}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'schedules'
-                ? 'bg-purple-600 text-white'
-                : 'text-gray-400 hover:text-white'
+              activeTab === "schedules"
+                ? "bg-purple-600 text-white"
+                : "text-gray-400 hover:text-white"
             }`}
           >
             <FaCalendarAlt className="inline mr-2" />
             Time Slots
           </button>
           <button
-            onClick={() => setActiveTab('bookings')}
+            onClick={() => setActiveTab("bookings")}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'bookings'
-                ? 'bg-purple-600 text-white'
-                : 'text-gray-400 hover:text-white'
+              activeTab === "bookings"
+                ? "bg-purple-600 text-white"
+                : "text-gray-400 hover:text-white"
             }`}
           >
             <FaUsers className="inline mr-2" />
@@ -449,10 +550,12 @@ export default function MentorSchedulePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {activeTab === 'schedules' ? (
+          {activeTab === "schedules" ? (
             <>
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-                <div className="text-3xl font-bold">{schedules.filter(s => s.isActive).length}</div>
+                <div className="text-3xl font-bold">
+                  {schedules.filter((s) => s.isActive).length}
+                </div>
                 <div className="text-blue-100">Active Slots</div>
               </div>
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
@@ -463,7 +566,11 @@ export default function MentorSchedulePage() {
               </div>
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                 <div className="text-3xl font-bold">
-                  {schedules.filter(s => s.currentBookings < s.maxBookings && s.isActive).length}
+                  {
+                    schedules.filter(
+                      (s) => s.currentBookings < s.maxBookings && s.isActive
+                    ).length
+                  }
                 </div>
                 <div className="text-purple-100">Available Slots</div>
               </div>
@@ -471,15 +578,21 @@ export default function MentorSchedulePage() {
           ) : (
             <>
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-                <div className="text-3xl font-bold">{bookings.filter(b => b.status === 'confirmed').length}</div>
+                <div className="text-3xl font-bold">
+                  {bookings.filter((b) => b.status === "confirmed").length}
+                </div>
                 <div className="text-blue-100">Confirmed Meetings</div>
               </div>
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-                <div className="text-3xl font-bold">{bookings.filter(b => b.status === 'completed').length}</div>
+                <div className="text-3xl font-bold">
+                  {bookings.filter((b) => b.status === "completed").length}
+                </div>
                 <div className="text-green-100">Completed Sessions</div>
               </div>
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-                <div className="text-3xl font-bold">{bookings.filter(b => b.status === 'pending').length}</div>
+                <div className="text-3xl font-bold">
+                  {bookings.filter((b) => b.status === "pending").length}
+                </div>
                 <div className="text-purple-100">Pending Approval</div>
               </div>
             </>
@@ -487,216 +600,227 @@ export default function MentorSchedulePage() {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'schedules' ? (
+        {activeTab === "schedules" ? (
           /* Schedules List */
           loading ? (
-            <div className="text-center py-12 text-gray-400">Loading schedules...</div>
+            <div className="text-center py-12 text-gray-400">
+              Loading schedules...
+            </div>
           ) : schedules.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center">
-            <FaCalendarAlt className="mx-auto text-gray-300 mb-4" size={64} />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              No Schedules Yet
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Create your first time slot to start accepting bookings
-            </p>
-            <button 
-              onClick={() => openModal()}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-medium"
-            >
-              Create Your First Slot
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {schedules.map((schedule) => (
-              <div
-                key={schedule._id}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-              >
-                {/* Status Badge */}
-                <div className={`${getStatusColor(schedule)} text-white px-4 py-2 text-sm font-semibold`}>
-                  {getStatusText(schedule)}
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {schedule.title}
-                  </h3>
-                  {schedule.description && (
-                    <p className="text-sm text-gray-600 mb-4">
-                      {schedule.description}
-                    </p>
-                  )}
-
-                  {/* Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaCalendarAlt className="mr-2 text-blue-500" />
-                      {new Date(schedule.date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaClock className="mr-2 text-green-500" />
-                      {schedule.startTime} - {schedule.endTime}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      ⏱️ Duration: {schedule.duration} minutes
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      👥 Bookings: {schedule.currentBookings}/{schedule.maxBookings}
-                    </div>
-                    <div className="text-sm font-semibold text-purple-600">
-                      💰 {schedule.price} points
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openModal(schedule)}
-                      className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <FaEdit />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => toggleActive(schedule._id, schedule.isActive)}
-                      className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      {schedule.isActive ? <MdCancel /> : <FaCalendarAlt />}
-                      {schedule.isActive ? "Deactivate" : "Activate"}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(schedule._id)}
-                      className="text-red-600 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-        ) : (
-          /* Bookings List */
-          loading ? (
-            <div className="text-center py-12 text-gray-400">Loading bookings...</div>
-          ) : bookings.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center">
-              <FaUsers className="mx-auto text-gray-300 mb-4" size={64} />
+              <FaCalendarAlt className="mx-auto text-gray-300 mb-4" size={64} />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No Bookings Yet
+                No Schedules Yet
               </h3>
               <p className="text-gray-500 mb-6">
-                You haven't received any booking requests yet. Create time slots to start getting bookings.
+                Create your first time slot to start accepting bookings
               </p>
-              <button 
-                onClick={() => setActiveTab('schedules')}
+              <button
+                onClick={() => openModal()}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-medium"
               >
-                Create Time Slots
+                Create Your First Slot
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bookings.map((booking) => (
+              {schedules.map((schedule) => (
                 <div
-                  key={booking._id}
+                  key={schedule._id}
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {/* Status Badge */}
-                  <div className={`${getBookingStatusColor(booking)} text-white px-4 py-2 text-sm font-semibold`}>
-                    {getBookingStatusText(booking)}
+                  <div
+                    className={`${getStatusColor(
+                      schedule
+                    )} text-white px-4 py-2 text-sm font-semibold`}
+                  >
+                    {getStatusText(schedule)}
                   </div>
 
                   {/* Content */}
                   <div className="p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      {booking.studentId?.firstName} {booking.studentId?.lastName}
+                      {schedule.title}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      {booking.studentId?.email}
-                    </p>
+                    {schedule.description && (
+                      <p className="text-sm text-gray-600 mb-4">
+                        {schedule.description}
+                      </p>
+                    )}
 
                     {/* Details */}
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <FaCalendarAlt className="mr-2 text-blue-500" />
-                        {formatDateTime(booking.scheduleId?.date, booking.scheduleId?.startTime)}
+                        {new Date(schedule.date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <FaClock className="mr-2 text-green-500" />
-                        {booking.scheduleId?.duration} minutes
+                        {schedule.startTime} - {schedule.endTime}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ⏱️ Duration: {schedule.duration} minutes
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        👥 Bookings: {schedule.currentBookings}/
+                        {schedule.maxBookings}
                       </div>
                       <div className="text-sm font-semibold text-purple-600">
-                        💰 {booking.scheduleId?.price} points
+                        💰 {schedule.price} points
                       </div>
-                      {booking.zoomJoinUrl && (
-                        <div className="flex items-center text-sm text-blue-600">
-                          <FaVideo className="mr-2" />
-                          <a 
-                            href={booking.zoomJoinUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                          >
-                            Join Meeting
-                          </a>
-                        </div>
-                      )}
                     </div>
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                      {booking.status === 'pending' && (
-                        <>
-                          <button
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                            onClick={() => {
-                              // Handle confirm booking
-                              console.log('Confirm booking:', booking._id);
-                            }}
-                          >
-                            <FaCheckCircle />
-                            Confirm
-                          </button>
-                          <button
-                            className="flex-1 border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-                            onClick={() => {
-                              // Handle reject booking
-                              console.log('Reject booking:', booking._id);
-                            }}
-                          >
-                            <FaTimesCircle />
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {booking.status === 'confirmed' && (
-                        <button
-                          className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                          onClick={() => {
-                            // Handle mark as completed
-                            console.log('Mark as completed:', booking._id);
-                          }}
-                        >
-                          <FaCheckCircle />
-                          Mark as Completed
-                        </button>
-                      )}
+                      <button
+                        onClick={() => openModal(schedule)}
+                        className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <FaEdit />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() =>
+                          toggleActive(schedule._id, schedule.isActive)
+                        }
+                        className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        {schedule.isActive ? <MdCancel /> : <FaCalendarAlt />}
+                        {schedule.isActive ? "Deactivate" : "Activate"}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(schedule._id)}
+                        className="text-red-600 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <FaTrash />
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           )
+        ) : /* Bookings List */
+        loading ? (
+          <div className="text-center py-12 text-gray-400">
+            Loading bookings...
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="bg-white rounded-xl p-12 text-center">
+            <FaUsers className="mx-auto text-gray-300 mb-4" size={64} />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              No Bookings Yet
+            </h3>
+            <p className="text-gray-500 mb-6">
+              You haven&apos;t received any booking requests yet. Create time
+              slots to start getting bookings.
+            </p>
+            <button
+              onClick={() => setActiveTab("schedules")}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-medium"
+            >
+              Create Time Slots
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+              >
+                {/* Status Badge */}
+                <div
+                  className={`${getBookingStatusColor(
+                    booking
+                  )} text-white px-4 py-2 text-sm font-semibold`}
+                >
+                  {getBookingStatusText(booking)}
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {booking.studentId}
+                  </h3>
+
+                  {/* Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <FaCalendarAlt className="mr-2 text-blue-500" />
+                      {formatDateTime(booking.sessionDate, booking.sessionTime)}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <FaClock className="mr-2 text-green-500" />
+                      {booking.duration} minutes
+                    </div>
+                    <div className="text-sm font-semibold text-purple-600">
+                      💰 {booking.price} points
+                    </div>
+                    {booking.meetingLink && (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <FaVideo className="mr-2" />
+                        <a
+                          href={booking.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          Join Meeting
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    {booking.status === "pending" && (
+                      <>
+                        <button
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          onClick={() => {
+                            // Handle confirm booking
+                            console.log("Confirm booking:", booking._id);
+                          }}
+                        >
+                          <FaCheckCircle />
+                          Confirm
+                        </button>
+                        <button
+                          className="flex-1 border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                          onClick={() => {
+                            // Handle reject booking
+                            console.log("Reject booking:", booking._id);
+                          }}
+                        >
+                          <FaTimesCircle />
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {booking.status === "confirmed" && (
+                      <button
+                        className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                        onClick={() => {
+                          // Handle mark as completed
+                          console.log("Mark as completed:", booking._id);
+                        }}
+                      >
+                        <FaCheckCircle />
+                        Mark as Completed
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Modal */}
@@ -747,7 +871,7 @@ export default function MentorSchedulePage() {
                         name="date"
                         value={formData.date}
                         onChange={handleInputChange}
-                        min={new Date().toISOString().split('T')[0]}
+                        min={new Date().toISOString().split("T")[0]}
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />

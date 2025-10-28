@@ -3,8 +3,6 @@ import connectDB from "@/lib/mongodb";
 import Course from "@/models/Course";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import Skill from "@/models/Skill";
-import Module from "@/models/Module";
 
 // GET /api/courses - Get all courses
 export async function GET(request: NextRequest) {

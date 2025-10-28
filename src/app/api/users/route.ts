@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import College from "@/models/College";
-import Skill from "@/models/Skill";
 
 // GET /api/users - Get all users (with optional filters)
 export async function GET(req: NextRequest) {

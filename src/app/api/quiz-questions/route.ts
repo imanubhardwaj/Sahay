@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query: any = {};
+    const query: Record<string, unknown> = {};
 
     if (quizId) {
       try {
@@ -44,19 +44,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const questions = await Question.find(query)
-      .sort({ order: 1 });
+    const questions = await Question.find(query).sort({ order: 1 });
 
     return NextResponse.json({
       success: true,
-      questions: questions.map(q => ({
+      questions: questions.map((q) => ({
         _id: q._id,
         questionText: q.questionText,
         options: q.options,
         answer: q.answer,
         order: q.order,
-        points: q.points
-      }))
+        points: q.points,
+      })),
     });
   } catch (error) {
     console.error("Error fetching quiz questions:", error);

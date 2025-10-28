@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import ModuleProgress from '@/models/ModuleProgress';
 
 // GET - Fix all module progress records where nextLessonOrder is incorrect
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
 

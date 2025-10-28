@@ -1,12 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Input } from "@/components/ui/Input";
 
 interface Module {
   _id: string;
@@ -22,12 +21,12 @@ interface Module {
   lessonsCount: number;
 }
 
-const LEVELS = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+const LEVELS = ["All", "Beginner", "Intermediate", "Advanced"];
 const SORT_OPTIONS = [
-  { value: 'relevance', label: 'Most Relevant' },
-  { value: 'name', label: 'Name (A-Z)' },
-  { value: 'duration', label: 'Duration' },
-  { value: 'points', label: 'Points' },
+  { value: "relevance", label: "Most Relevant" },
+  { value: "name", label: "Name (A-Z)" },
+  { value: "duration", label: "Duration" },
+  { value: "points", label: "Points" },
 ];
 
 export default function ExplorePage() {
@@ -36,15 +35,15 @@ export default function ExplorePage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [filteredModules, setFilteredModules] = useState<Module[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('All');
-  const [selectedSort, setSelectedSort] = useState('relevance');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [selectedSort, setSelectedSort] = useState("relevance");
   const [skills, setSkills] = useState<string[]>([]);
-  const [selectedSkill, setSelectedSkill] = useState('All');
+  const [selectedSkill, setSelectedSkill] = useState("All");
 
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
     loadModules();
@@ -53,12 +52,12 @@ export default function ExplorePage() {
   const loadModules = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/modules');
-      
+      const response = await fetch("/api/modules");
+
       if (response.ok) {
         const data = await response.json();
         setModules(data.modules || []);
-        
+
         // Extract unique skills
         const uniqueSkills = Array.from(
           new Set(
@@ -70,7 +69,7 @@ export default function ExplorePage() {
         setSkills(uniqueSkills);
       }
     } catch (error) {
-      console.error('Failed to load modules:', error);
+      console.error("Failed to load modules:", error);
     } finally {
       setIsLoading(false);
     }
@@ -95,33 +94,43 @@ export default function ExplorePage() {
     }
 
     // Level filter
-    if (selectedLevel !== 'All') {
+    if (selectedLevel !== "All") {
       filtered = filtered.filter((module) => module.level === selectedLevel);
     }
 
     // Skill filter
-    if (selectedSkill !== 'All') {
-      filtered = filtered.filter((module) => module.skillId?.name === selectedSkill);
+    if (selectedSkill !== "All") {
+      filtered = filtered.filter(
+        (module) => module.skillId?.name === selectedSkill
+      );
     }
 
     // Sort
     switch (selectedSort) {
-      case 'name':
+      case "name":
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case 'duration':
+      case "duration":
         filtered.sort((a, b) => a.duration - b.duration);
         break;
-      case 'points':
+      case "points":
         filtered.sort((a, b) => b.points - a.points);
         break;
-      case 'relevance':
+      case "relevance":
       default:
         // If user has a domain, prioritize modules related to it
         if (user?.domain) {
           filtered.sort((a, b) => {
-            const aDomainMatch = a.skillId?.name.toLowerCase().includes(user.domain.toLowerCase()) ? 1 : 0;
-            const bDomainMatch = b.skillId?.name.toLowerCase().includes(user.domain.toLowerCase()) ? 1 : 0;
+            const aDomainMatch = a.skillId?.name
+              .toLowerCase()
+              .includes(user.domain.toLowerCase())
+              ? 1
+              : 0;
+            const bDomainMatch = b.skillId?.name
+              .toLowerCase()
+              .includes(user.domain.toLowerCase())
+              ? 1
+              : 0;
             return bDomainMatch - aDomainMatch;
           });
         }
@@ -133,14 +142,14 @@ export default function ExplorePage() {
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'Beginner':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'Intermediate':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'Advanced':
-        return 'bg-red-100 text-red-700 border-red-200';
+      case "Beginner":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "Intermediate":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "Advanced":
+        return "bg-red-100 text-red-700 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
@@ -236,14 +245,14 @@ export default function ExplorePage() {
               <span className="text-gray-600">
                 Showing {filteredModules.length} of {modules.length} modules
               </span>
-              {(searchQuery || selectedLevel !== 'All' || selectedSkill !== 'All') && (
+              {(searchQuery ||
+                selectedLevel !== "All" ||
+                selectedSkill !== "All") && (
                 <button
-                  variant="outline"
-                  size="sm"
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedLevel('All');
-                    setSelectedSkill('All');
+                    setSearchQuery("");
+                    setSelectedLevel("All");
+                    setSelectedSkill("All");
                   }}
                   className="text-xs"
                 >
@@ -258,21 +267,26 @@ export default function ExplorePage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-gray-100 rounded-xl h-64"></div>
+              <div
+                key={i}
+                className="animate-pulse bg-gray-100 rounded-xl h-64"
+              ></div>
             ))}
           </div>
         ) : filteredModules.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-200">
             <span className="text-6xl mb-4 block">🔍</span>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No modules found</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              No modules found
+            </h3>
             <p className="text-gray-600 mb-4">
               Try adjusting your search or filters
             </p>
             <button
               onClick={() => {
-                setSearchQuery('');
-                setSelectedLevel('All');
-                setSelectedSkill('All');
+                setSearchQuery("");
+                setSelectedLevel("All");
+                setSelectedSkill("All");
               }}
             >
               Clear All Filters
@@ -332,5 +346,3 @@ export default function ExplorePage() {
     </DashboardLayout>
   );
 }
-
-

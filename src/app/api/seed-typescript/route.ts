@@ -1,47 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Module from '@/models/Module';
-import Lesson from '@/models/Lesson';
-import Quiz from '@/models/Quiz';
-import Question from '@/models/Question';
-import Skill from '@/models/Skill';
+import { NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import Module from "@/models/Module";
+import Lesson from "@/models/Lesson";
+import Quiz from "@/models/Quiz";
+import Question from "@/models/Question";
+import Skill from "@/models/Skill";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     await connectDB();
-    console.log('🌱 Starting TypeScript module seeding...');
+    console.log("🌱 Starting TypeScript module seeding...");
 
     // Find or create TypeScript skill
-    let typescriptSkill = await Skill.findOne({ name: 'TypeScript' });
+    let typescriptSkill = await Skill.findOne({ name: "TypeScript" });
     if (!typescriptSkill) {
       typescriptSkill = await Skill.create({
-        name: 'TypeScript',
-        description: 'TypeScript is a strongly typed programming language that builds on JavaScript',
-        category: 'Programming Language',
-        difficulty: 'Intermediate',
-        prerequisites: ['JavaScript'],
+        name: "TypeScript",
+        description:
+          "TypeScript is a strongly typed programming language that builds on JavaScript",
+        category: "Programming Language",
+        difficulty: "Intermediate",
+        prerequisites: ["JavaScript"],
         estimatedTime: 40,
-        tags: ['typescript', 'javascript', 'programming', 'web-development']
+        tags: ["typescript", "javascript", "programming", "web-development"],
       });
-      console.log('✅ Created TypeScript skill');
+      console.log("✅ Created TypeScript skill");
     }
 
     // Create TypeScript module
     const typescriptModule = await Module.create({
-      name: 'TypeScript Fundamentals',
-      description: 'Learn TypeScript from basics to advanced concepts including types, interfaces, generics, and more.',
-      level: 'Intermediate',
+      name: "TypeScript Fundamentals",
+      description:
+        "Learn TypeScript from basics to advanced concepts including types, interfaces, generics, and more.",
+      level: "Intermediate",
       skillId: typescriptSkill._id,
       duration: 300, // 5 hours
       points: 500,
-      lessonsCount: 5
+      lessonsCount: 5,
     });
-    console.log('✅ Created TypeScript module');
+    console.log("✅ Created TypeScript module");
 
     // Create lessons
     const lessons = [
       {
-        name: 'Introduction to TypeScript',
+        name: "Introduction to TypeScript",
         content: `# Introduction to TypeScript
 
 TypeScript is a programming language developed by Microsoft. It is a strict syntactical superset of JavaScript and adds optional static type checking to the language.
@@ -67,20 +69,20 @@ let isActive: boolean = true;
 
 TypeScript compiles to plain JavaScript, making it compatible with any JavaScript environment.`,
         contentArray: [
-          'TypeScript is a programming language developed by Microsoft',
-          'It is a strict syntactical superset of JavaScript',
-          'Adds optional static type checking',
-          'Compiles to plain JavaScript'
+          "TypeScript is a programming language developed by Microsoft",
+          "It is a strict syntactical superset of JavaScript",
+          "Adds optional static type checking",
+          "Compiles to plain JavaScript",
         ],
-        type: 'Text',
+        type: "Text",
         moduleId: typescriptModule._id,
         skillId: typescriptSkill._id,
         duration: 60,
         points: 100,
-        order: 1
+        order: 1,
       },
       {
-        name: 'TypeScript Types and Interfaces',
+        name: "TypeScript Types and Interfaces",
         content: `# TypeScript Types and Interfaces
 
 ## Basic Types
@@ -130,20 +132,20 @@ id = "123"; // OK
 id = 123;   // OK
 \`\`\``,
         contentArray: [
-          'Basic types: string, number, boolean',
-          'Arrays and objects',
-          'Interfaces define object structure',
-          'Union types allow multiple types'
+          "Basic types: string, number, boolean",
+          "Arrays and objects",
+          "Interfaces define object structure",
+          "Union types allow multiple types",
         ],
-        type: 'Text',
+        type: "Text",
         moduleId: typescriptModule._id,
         skillId: typescriptSkill._id,
         duration: 60,
         points: 100,
-        order: 2
+        order: 2,
       },
       {
-        name: 'Functions and Classes',
+        name: "Functions and Classes",
         content: `# Functions and Classes in TypeScript
 
 ## Typed Functions
@@ -208,20 +210,20 @@ class Student extends Person {
 }
 \`\`\``,
         contentArray: [
-          'Functions can have typed parameters and return types',
-          'Classes support access modifiers',
-          'Inheritance with extends keyword',
-          'Constructor functions'
+          "Functions can have typed parameters and return types",
+          "Classes support access modifiers",
+          "Inheritance with extends keyword",
+          "Constructor functions",
         ],
-        type: 'Text',
+        type: "Text",
         moduleId: typescriptModule._id,
         skillId: typescriptSkill._id,
         duration: 60,
         points: 100,
-        order: 3
+        order: 3,
       },
       {
-        name: 'Generics and Advanced Types',
+        name: "Generics and Advanced Types",
         content: `# Generics and Advanced Types
 
 ## Generics
@@ -287,20 +289,20 @@ function processValue(value: unknown) {
 }
 \`\`\``,
         contentArray: [
-          'Generics create reusable components',
-          'Conditional and mapped types',
-          'Utility types: Partial, Pick, Omit',
-          'Type guards narrow types'
+          "Generics create reusable components",
+          "Conditional and mapped types",
+          "Utility types: Partial, Pick, Omit",
+          "Type guards narrow types",
         ],
-        type: 'Text',
+        type: "Text",
         moduleId: typescriptModule._id,
         skillId: typescriptSkill._id,
         duration: 60,
         points: 100,
-        order: 4
+        order: 4,
       },
       {
-        name: 'TypeScript Best Practices',
+        name: "TypeScript Best Practices",
         content: `# TypeScript Best Practices
 
 ## Configuration
@@ -358,19 +360,19 @@ const numbers: number[] = [1, 2, 3, 4, 5];
 - Use readonly for immutable data
 - Leverage utility types`,
         contentArray: [
-          'Use strict mode configuration',
-          'Prefer interfaces over types',
-          'Avoid any type',
-          'Use type assertions carefully',
-          'Leverage type inference'
+          "Use strict mode configuration",
+          "Prefer interfaces over types",
+          "Avoid any type",
+          "Use type assertions carefully",
+          "Leverage type inference",
         ],
-        type: 'Text',
+        type: "Text",
         moduleId: typescriptModule._id,
         skillId: typescriptSkill._id,
         duration: 60,
         points: 100,
-        order: 5
-      }
+        order: 5,
+      },
     ];
 
     const createdLessons = [];
@@ -385,7 +387,7 @@ const numbers: number[] = [1, 2, 3, 4, 5];
 
     for (let i = 0; i < quizLessons.length; i++) {
       const lesson = quizLessons[i];
-      
+
       // Create quiz
       const quiz = await Quiz.create({
         name: `Quiz: ${lesson.name}`,
@@ -394,47 +396,100 @@ const numbers: number[] = [1, 2, 3, 4, 5];
         moduleId: typescriptModule._id,
         lessonId: lesson._id,
         numberOfQuestions: 3,
-        points: 40
+        points: 40,
       });
 
       // Create questions for each quiz
       const questions = [];
-      
-      if (lesson.order === 2) { // Types and Interfaces
+
+      if (lesson.order === 2) {
+        // Types and Interfaces
         questions.push(
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "What is the correct way to declare a string variable in TypeScript?",
-            type: 'mcq',
+            questionText:
+              "What is the correct way to declare a string variable in TypeScript?",
+            type: "mcq",
             order: 1,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75da', type: 'mcq', content: 'let name: string = "John";', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75db', type: 'mcq', content: 'let name = string "John";', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75dc', type: 'mcq', content: 'string name = "John";', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75dd', type: 'mcq', content: 'let name: "John" = string;', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75da",
+                type: "mcq",
+                content: 'let name: string = "John";',
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75db",
+                type: "mcq",
+                content: 'let name = string "John";',
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75dc",
+                type: "mcq",
+                content: 'string name = "John";',
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75dd",
+                type: "mcq",
+                content: 'let name: "John" = string;',
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'let name: string = "John";', optionId: '68f89e453c7450ea2f1d75da' },
-            explanation: "In TypeScript, you declare a variable with type annotation using the syntax: let variableName: type = value;"
+            answer: {
+              type: "mcq",
+              content: 'let name: string = "John";',
+              optionId: "68f89e453c7450ea2f1d75da",
+            },
+            explanation:
+              "In TypeScript, you declare a variable with type annotation using the syntax: let variableName: type = value;",
           },
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "Which keyword is used to define an interface in TypeScript?",
-            type: 'mcq',
+            questionText:
+              "Which keyword is used to define an interface in TypeScript?",
+            type: "mcq",
             order: 2,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75de', type: 'mcq', content: 'interface', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75df', type: 'mcq', content: 'class', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e0', type: 'mcq', content: 'type', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e1', type: 'mcq', content: 'struct', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75de",
+                type: "mcq",
+                content: "interface",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75df",
+                type: "mcq",
+                content: "class",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e0",
+                type: "mcq",
+                content: "type",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e1",
+                type: "mcq",
+                content: "struct",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'interface', optionId: '68f89e453c7450ea2f1d75de' },
-            explanation: "The 'interface' keyword is used to define interfaces in TypeScript."
+            answer: {
+              type: "mcq",
+              content: "interface",
+              optionId: "68f89e453c7450ea2f1d75de",
+            },
+            explanation:
+              "The 'interface' keyword is used to define interfaces in TypeScript.",
           },
           {
             quizId: quiz._id,
@@ -449,49 +504,110 @@ Create a TypeScript interface for a User object with the following requirements:
 - \`isActive\`: boolean (optional)
 
 Write your code in the editor below. The language is set to TypeScript.`,
-            type: 'subjective',
+            type: "subjective",
             order: 3,
             points: 20,
-            answer: { type: 'subjective', content: 'interface User {\n  id: number;\n  name: string;\n  email: string;\n  isActive?: boolean;\n}' },
-            evaluationCriteria: "Should include 'interface User' declaration with proper property types and optional isActive property",
-            explanation: "The interface should define the structure with correct TypeScript syntax including optional properties using the '?' operator."
+            answer: {
+              type: "subjective",
+              content:
+                "interface User {\n  id: number;\n  name: string;\n  email: string;\n  isActive?: boolean;\n}",
+            },
+            evaluationCriteria:
+              "Should include 'interface User' declaration with proper property types and optional isActive property",
+            explanation:
+              "The interface should define the structure with correct TypeScript syntax including optional properties using the '?' operator.",
           }
         );
-      } else if (lesson.order === 3) { // Functions and Classes
+      } else if (lesson.order === 3) {
+        // Functions and Classes
         questions.push(
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "What is the correct syntax for a function with typed parameters and return type?",
-            type: 'mcq',
+            questionText:
+              "What is the correct syntax for a function with typed parameters and return type?",
+            type: "mcq",
             order: 1,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75e2', type: 'mcq', content: 'function add(a: number, b: number): number { return a + b; }', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75e3', type: 'mcq', content: 'function add(a, b): number { return a + b; }', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e4', type: 'mcq', content: 'function add(a: number, b: number) { return a + b; }', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e5', type: 'mcq', content: 'add(a: number, b: number): number { return a + b; }', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75e2",
+                type: "mcq",
+                content:
+                  "function add(a: number, b: number): number { return a + b; }",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e3",
+                type: "mcq",
+                content: "function add(a, b): number { return a + b; }",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e4",
+                type: "mcq",
+                content: "function add(a: number, b: number) { return a + b; }",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e5",
+                type: "mcq",
+                content: "add(a: number, b: number): number { return a + b; }",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'function add(a: number, b: number): number { return a + b; }', optionId: '68f89e453c7450ea2f1d75e2' },
-            explanation: "TypeScript functions require type annotations for parameters and can specify return types."
+            answer: {
+              type: "mcq",
+              content:
+                "function add(a: number, b: number): number { return a + b; }",
+              optionId: "68f89e453c7450ea2f1d75e2",
+            },
+            explanation:
+              "TypeScript functions require type annotations for parameters and can specify return types.",
           },
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "Which access modifier makes a class property accessible only within the class?",
-            type: 'mcq',
+            questionText:
+              "Which access modifier makes a class property accessible only within the class?",
+            type: "mcq",
             order: 2,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75e6', type: 'mcq', content: 'private', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75e7', type: 'mcq', content: 'public', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e8', type: 'mcq', content: 'protected', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75e9', type: 'mcq', content: 'internal', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75e6",
+                type: "mcq",
+                content: "private",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e7",
+                type: "mcq",
+                content: "public",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e8",
+                type: "mcq",
+                content: "protected",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75e9",
+                type: "mcq",
+                content: "internal",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'private', optionId: '68f89e453c7450ea2f1d75e6' },
-            explanation: "The 'private' access modifier restricts access to only within the class."
+            answer: {
+              type: "mcq",
+              content: "private",
+              optionId: "68f89e453c7450ea2f1d75e6",
+            },
+            explanation:
+              "The 'private' access modifier restricts access to only within the class.",
           },
           {
             quizId: quiz._id,
@@ -505,49 +621,106 @@ Create a TypeScript class called 'Car' with the following requirements:
 - Method \`getInfo()\` that returns a formatted string: "Brand Model (Year)"
 
 Write your code in the editor below. The language is set to TypeScript.`,
-            type: 'subjective',
+            type: "subjective",
             order: 3,
             points: 20,
-            answer: { type: 'subjective', content: 'class Car {\n  brand: string;\n  model: string;\n  year: number;\n\n  constructor(brand: string, model: string, year: number) {\n    this.brand = brand;\n    this.model = model;\n    this.year = year;\n  }\n\n  getInfo(): string {\n    return `${this.brand} ${this.model} (${this.year})`;\n  }\n}' },
-            evaluationCriteria: "Should include class declaration, constructor, properties, and getInfo method",
-            explanation: "The class should demonstrate proper TypeScript class syntax with typed properties and methods."
+            answer: {
+              type: "subjective",
+              content:
+                "class Car {\n  brand: string;\n  model: string;\n  year: number;\n\n  constructor(brand: string, model: string, year: number) {\n    this.brand = brand;\n    this.model = model;\n    this.year = year;\n  }\n\n  getInfo(): string {\n    return `${this.brand} ${this.model} (${this.year})`;\n  }\n}",
+            },
+            evaluationCriteria:
+              "Should include class declaration, constructor, properties, and getInfo method",
+            explanation:
+              "The class should demonstrate proper TypeScript class syntax with typed properties and methods.",
           }
         );
-      } else if (lesson.order === 4) { // Generics and Advanced Types
+      } else if (lesson.order === 4) {
+        // Generics and Advanced Types
         questions.push(
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
             questionText: "What is the correct syntax for a generic function?",
-            type: 'mcq',
+            type: "mcq",
             order: 1,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75ea', type: 'mcq', content: 'function identity<T>(arg: T): T { return arg; }', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75eb', type: 'mcq', content: 'function identity(arg: T): T { return arg; }', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75ec', type: 'mcq', content: 'function identity<T>(arg): T { return arg; }', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75ed', type: 'mcq', content: 'function identity(arg: T): T { return arg; }', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75ea",
+                type: "mcq",
+                content: "function identity<T>(arg: T): T { return arg; }",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75eb",
+                type: "mcq",
+                content: "function identity(arg: T): T { return arg; }",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75ec",
+                type: "mcq",
+                content: "function identity<T>(arg): T { return arg; }",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75ed",
+                type: "mcq",
+                content: "function identity(arg: T): T { return arg; }",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'function identity<T>(arg: T): T { return arg; }', optionId: '68f89e453c7450ea2f1d75ea' },
-            explanation: "Generic functions use angle brackets <T> to define type parameters."
+            answer: {
+              type: "mcq",
+              content: "function identity<T>(arg: T): T { return arg; }",
+              optionId: "68f89e453c7450ea2f1d75ea",
+            },
+            explanation:
+              "Generic functions use angle brackets <T> to define type parameters.",
           },
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "Which utility type makes all properties of an interface optional?",
-            type: 'mcq',
+            questionText:
+              "Which utility type makes all properties of an interface optional?",
+            type: "mcq",
             order: 2,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75ee', type: 'mcq', content: 'Partial<T>', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75ef', type: 'mcq', content: 'Required<T>', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f0', type: 'mcq', content: 'Pick<T>', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f1', type: 'mcq', content: 'Omit<T>', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75ee",
+                type: "mcq",
+                content: "Partial<T>",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75ef",
+                type: "mcq",
+                content: "Required<T>",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f0",
+                type: "mcq",
+                content: "Pick<T>",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f1",
+                type: "mcq",
+                content: "Omit<T>",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'Partial<T>', optionId: '68f89e453c7450ea2f1d75ee' },
-            explanation: "Partial<T> makes all properties of type T optional."
+            answer: {
+              type: "mcq",
+              content: "Partial<T>",
+              optionId: "68f89e453c7450ea2f1d75ee",
+            },
+            explanation: "Partial<T> makes all properties of type T optional.",
           },
           {
             quizId: quiz._id,
@@ -561,49 +734,108 @@ Create a generic interface called 'Container<T>' with the following requirements
 - Method \`setValue(value: T)\` that sets the value
 
 Write your code in the editor below. The language is set to TypeScript.`,
-            type: 'subjective',
+            type: "subjective",
             order: 3,
             points: 20,
-            answer: { type: 'subjective', content: 'interface Container<T> {\n  value: T;\n  getValue(): T;\n  setValue(value: T): void;\n}' },
-            evaluationCriteria: "Should include generic interface declaration with proper syntax",
-            explanation: "The interface should demonstrate generic type usage with proper TypeScript syntax."
+            answer: {
+              type: "subjective",
+              content:
+                "interface Container<T> {\n  value: T;\n  getValue(): T;\n  setValue(value: T): void;\n}",
+            },
+            evaluationCriteria:
+              "Should include generic interface declaration with proper syntax",
+            explanation:
+              "The interface should demonstrate generic type usage with proper TypeScript syntax.",
           }
         );
-      } else if (lesson.order === 5) { // Best Practices
+      } else if (lesson.order === 5) {
+        // Best Practices
         questions.push(
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "What should you avoid using in TypeScript for better type safety?",
-            type: 'mcq',
+            questionText:
+              "What should you avoid using in TypeScript for better type safety?",
+            type: "mcq",
             order: 1,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75f2', type: 'mcq', content: 'any type', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75f3', type: 'mcq', content: 'string type', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f4', type: 'mcq', content: 'number type', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f5', type: 'mcq', content: 'boolean type', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75f2",
+                type: "mcq",
+                content: "any type",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f3",
+                type: "mcq",
+                content: "string type",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f4",
+                type: "mcq",
+                content: "number type",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f5",
+                type: "mcq",
+                content: "boolean type",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'any type', optionId: '68f89e453c7450ea2f1d75f2' },
-            explanation: "The 'any' type should be avoided as it defeats the purpose of TypeScript's type checking."
+            answer: {
+              type: "mcq",
+              content: "any type",
+              optionId: "68f89e453c7450ea2f1d75f2",
+            },
+            explanation:
+              "The 'any' type should be avoided as it defeats the purpose of TypeScript's type checking.",
           },
           {
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: typescriptModule._id,
-            questionText: "Which configuration option enables strict type checking in TypeScript?",
-            type: 'mcq',
+            questionText:
+              "Which configuration option enables strict type checking in TypeScript?",
+            type: "mcq",
             order: 2,
             points: 10,
             options: [
-              { id: '68f89e453c7450ea2f1d75f6', type: 'mcq', content: 'strict: true', isCorrect: true },
-              { id: '68f89e453c7450ea2f1d75f7', type: 'mcq', content: 'strictMode: true', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f8', type: 'mcq', content: 'typeCheck: true', isCorrect: false },
-              { id: '68f89e453c7450ea2f1d75f9', type: 'mcq', content: 'strictTypes: true', isCorrect: false }
+              {
+                id: "68f89e453c7450ea2f1d75f6",
+                type: "mcq",
+                content: "strict: true",
+                isCorrect: true,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f7",
+                type: "mcq",
+                content: "strictMode: true",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f8",
+                type: "mcq",
+                content: "typeCheck: true",
+                isCorrect: false,
+              },
+              {
+                id: "68f89e453c7450ea2f1d75f9",
+                type: "mcq",
+                content: "strictTypes: true",
+                isCorrect: false,
+              },
             ],
-            answer: { type: 'mcq', content: 'strict: true', optionId: '68f89e453c7450ea2f1d75f6' },
-            explanation: "The 'strict: true' option enables strict type checking in tsconfig.json."
+            answer: {
+              type: "mcq",
+              content: "strict: true",
+              optionId: "68f89e453c7450ea2f1d75f6",
+            },
+            explanation:
+              "The 'strict: true' option enables strict type checking in tsconfig.json.",
           },
           {
             quizId: quiz._id,
@@ -620,47 +852,50 @@ Requirements:
 - Use array methods like \`filter\` and \`reduce\`
 
 Write your code in the editor below. The language is set to TypeScript.`,
-            type: 'subjective',
+            type: "subjective",
             order: 3,
             points: 20,
-            answer: { type: 'subjective', content: 'function sumEvenNumbers(numbers: number[]): number {\n  return numbers\n    .filter(n => n % 2 === 0)\n    .reduce((sum, n) => sum + n, 0);\n}' },
-            evaluationCriteria: "Should include function declaration, parameter types, return type, and logic to filter and sum even numbers",
-            explanation: "The function should demonstrate proper TypeScript syntax with array methods and type safety."
+            answer: {
+              type: "subjective",
+              content:
+                "function sumEvenNumbers(numbers: number[]): number {\n  return numbers\n    .filter(n => n % 2 === 0)\n    .reduce((sum, n) => sum + n, 0);\n}",
+            },
+            evaluationCriteria:
+              "Should include function declaration, parameter types, return type, and logic to filter and sum even numbers",
+            explanation:
+              "The function should demonstrate proper TypeScript syntax with array methods and type safety.",
           }
         );
       }
 
       // Create questions in database
       for (const questionData of questions) {
-        console.log('Creating question:', questionData.questionText);
+        console.log("Creating question:", questionData.questionText);
         const createdQuestion = await Question.create(questionData);
-        console.log('Created question with ID:', createdQuestion._id);
+        console.log("Created question with ID:", createdQuestion._id);
       }
-      
-      console.log(`✅ Created quiz with ${questions.length} questions for lesson: ${lesson.name}`);
+
+      console.log(
+        `✅ Created quiz with ${questions.length} questions for lesson: ${lesson.name}`
+      );
     }
 
-    console.log('🎉 TypeScript module seeding completed successfully!');
-    
+    console.log("🎉 TypeScript module seeding completed successfully!");
+
     return NextResponse.json({
       success: true,
-      message: 'TypeScript module seeded successfully',
+      message: "TypeScript module seeded successfully",
       data: {
         module: typescriptModule,
         lessons: createdLessons.length,
         quizzes: quizLessons.length,
-        questions: quizLessons.reduce((sum, _, i) => sum + 3, 0)
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Error seeding TypeScript module:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to seed TypeScript module',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        questions: quizLessons.reduce((sum, _) => sum + 3, 0),
       },
+    });
+  } catch (error) {
+    console.error("❌ Error seeding TypeScript module:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to seed TypeScript module" },
       { status: 500 }
     );
   }

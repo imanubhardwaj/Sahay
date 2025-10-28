@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/Button";
 import { getAllModulesForUserType, getUserTypeDisplayName, Module } from "@/lib/modules";
 
 // Helper function to get time ago string

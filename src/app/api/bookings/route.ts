@@ -6,8 +6,8 @@ import User from '@/models/User';
 import MentorProfile from '@/models/MentorProfile';
 import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
-import { createZoomMeeting, deleteZoomMeeting } from '@/lib/zoom';
-import { sendBookingConfirmation, sendCancellationEmail, sendApprovalRequest, sendBookingRequestConfirmation } from '@/lib/email';
+import { deleteZoomMeeting } from '@/lib/zoom';
+import {sendCancellationEmail, sendApprovalRequest, sendBookingRequestConfirmation } from '@/lib/email';
 import crypto from 'crypto';
 
 // GET - Get bookings

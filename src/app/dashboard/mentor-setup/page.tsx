@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -15,10 +14,40 @@ import {
 } from "react-icons/fa";
 import { SiZoom } from "react-icons/si";
 
+interface MentorProfile {
+  _id: string;
+  userId: string;
+  bio: string;
+  headline: string;
+  expertise: string[];
+  languages: string[];
+  yearsOfExperience: number;
+  currentRole: string;
+  currentCompany: string;
+  hourlyRate: number;
+  sessionTypes: {
+    name: string;
+    duration: number;
+    price: number;
+    description: string;
+  }[];
+  linkedIn: string;
+  twitter: string;
+  github: string;
+  website: string;
+  zoomConnected: boolean;
+  totalSessions: number;
+  completedSessions: number;
+  averageRating: number;
+  totalEarnings: number;
+}
+
 export default function MentorSetupPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [mentorProfile, setMentorProfile] = useState<any>(null);
+  const [mentorProfile, setMentorProfile] = useState<MentorProfile | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     bio: "",
     headline: "",
@@ -128,7 +157,11 @@ export default function MentorSetupPage() {
     }));
   };
 
-  const updateSessionType = (index: number, field: string, value: any) => {
+  const updateSessionType = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
     setFormData((prev) => ({
       ...prev,
       sessionTypes: prev.sessionTypes.map((session, i) =>
@@ -255,8 +288,7 @@ export default function MentorSetupPage() {
                   <button
                     type="button"
                     onClick={handleDisconnectZoom}
-                    variant="outline"
-                    size="sm"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg border border-gray-300"
                   >
                     Disconnect
                   </button>
@@ -430,7 +462,11 @@ export default function MentorSetupPage() {
                 <label className="block text-sm font-semibold text-gray-700">
                   Session Types & Pricing
                 </label>
-                <button type="button" onClick={addSessionType} size="sm">
+                <button
+                  type="button"
+                  onClick={addSessionType}
+                  className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                >
                   + Add Session Type
                 </button>
               </div>
@@ -490,8 +526,7 @@ export default function MentorSetupPage() {
                       <button
                         type="button"
                         onClick={() => removeSessionType(index)}
-                        variant="outline"
-                        size="sm"
+                        className="bg-red-600 hover:bg-red-700 text-white cursor-pointer font-medium py-2 px-4 rounded-lg border border-red-300"
                       >
                         Remove
                       </button>
@@ -587,7 +622,6 @@ export default function MentorSetupPage() {
                 </div>
               </div>
             )}
-
 
             {/* Submit */}
             <button

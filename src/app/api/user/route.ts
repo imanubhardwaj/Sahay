@@ -2,40 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
-import College from "@/models/College";
-import Skill from "@/models/Skill";
 
 // GET /api/user - Get current user or all users (with optional filters)
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    
+
     const { searchParams } = new URL(req.url);
     const getCurrentUser = searchParams.get("current") === "true";
-    
+
     // If requesting current user, get from session
     if (getCurrentUser) {
       const userId = req.cookies.get("user_id")?.value;
-      
+
       if (!userId) {
         return NextResponse.json(
           { error: "Not authenticated" },
           { status: 401 }
         );
       }
-      
+
       const user = await User.findById(userId);
-      
+
       if (!user) {
-        return NextResponse.json(
-          { error: "User not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
-      
+
       return NextResponse.json({ user });
     }
-    
+
     // Otherwise, get all users with filters
     const userType = searchParams.get("userType");
     const role = searchParams.get("role");
@@ -46,7 +41,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
 
     const query: Record<string, unknown> = {};
-    
+
     if (userType) query.userType = userType;
     if (role) query.role = role;
     if (status) query.status = status;
@@ -71,9 +66,10 @@ export async function GET(req: NextRequest) {
         .sort({ createdAt: -1 });
     }
 
-    const total = userType === "working_professional" 
-      ? await WorkingProfessional.countDocuments(query)
-      : await User.countDocuments(query);
+    const total =
+      userType === "working_professional"
+        ? await WorkingProfessional.countDocuments(query)
+        : await User.countDocuments(query);
 
     return NextResponse.json({
       users,
@@ -81,8 +77,8 @@ export async function GET(req: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Get users error:", error);
@@ -97,7 +93,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    
+
     const userData = await req.json();
     const { userType, ...otherData } = userData;
 
@@ -139,11 +135,13 @@ export async function PUT(req: NextRequest) {
     const updates = await req.json();
 
     await connectDB();
-    
+
     // Try to find in both User and WorkingProfessional collections
     let user = await User.findByIdAndUpdate(userId, updates, { new: true });
     if (!user) {
-      user = await WorkingProfessional.findByIdAndUpdate(userId, updates, { new: true });
+      user = await WorkingProfessional.findByIdAndUpdate(userId, updates, {
+        new: true,
+      });
     }
 
     if (!user) {
@@ -170,11 +168,19 @@ export async function DELETE(req: NextRequest) {
     }
 
     await connectDB();
-    
+
     // Try to soft delete in both User and WorkingProfessional collections
-    let user = await User.findByIdAndUpdate(userId, { deletedAt: new Date() }, { new: true });
+    let user = await User.findByIdAndUpdate(
+      userId,
+      { deletedAt: new Date() },
+      { new: true }
+    );
     if (!user) {
-      user = await WorkingProfessional.findByIdAndUpdate(userId, { deletedAt: new Date() }, { new: true });
+      user = await WorkingProfessional.findByIdAndUpdate(
+        userId,
+        { deletedAt: new Date() },
+        { new: true }
+      );
     }
 
     if (!user) {
