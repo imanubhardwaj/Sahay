@@ -238,3 +238,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 Built with ❤️ by the Sahay Team
+
+Powered by Devin
