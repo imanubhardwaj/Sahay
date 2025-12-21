@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { getAuthHeaders } from '@/lib/token-storage';
+import { usePolling } from '@/hooks/usePolling';
 
 interface Question {
   _id: string;
@@ -18,13 +20,15 @@ interface Question {
   } | null;
   answers: Answer[];
   upvotes: number;
+  upvotedBy?: string[]; // Array of user IDs who upvoted
   createdAt: string;
   views?: number;
 }
 
 interface Answer {
   _id?: string;
-  content: string;
+  content: string; // Comment/answer text content
+  text?: string; // Legacy field name (for backward compatibility)
   userId: {
     _id: string;
     firstName?: string;
@@ -32,6 +36,7 @@ interface Answer {
     email: string;
   };
   upvotes: number;
+  downvotes?: number;
   createdAt: string;
 }
 
@@ -57,28 +62,58 @@ export default function CommunityPage() {
     'MongoDB', 'Express', 'Vue', 'Angular', 'Docker', 'AWS'
   ];
 
+  const loadQuestions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/community-questions', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch questions');
+      
+      const data = await response.json();
+      const newQuestions = data.questions || [];
+      
+      // Only update state if data actually changed (compare by IDs and counts)
+      setQuestions((prevQuestions) => {
+        // Quick check: if counts or IDs are different, data changed
+        if (
+          prevQuestions.length !== newQuestions.length ||
+          prevQuestions.some((q, idx) => {
+            const newQ = newQuestions[idx];
+            return !newQ || 
+              q._id !== newQ._id ||
+              (q.answers?.length || 0) !== (newQ.answers?.length || 0) ||
+              (q.upvotes || 0) !== (newQ.upvotes || 0);
+          })
+        ) {
+          return newQuestions;
+        }
+        return prevQuestions; // No change, keep previous state
+      });
+      
+      return newQuestions;
+    } catch (error) {
+      console.error('Failed to load questions:', error);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
     loadQuestions();
-  }, [user, router]);
+  }, [user, router, loadQuestions]);
 
-  const loadQuestions = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/community-questions');
-      if (!response.ok) throw new Error('Failed to fetch questions');
-      
-      const data = await response.json();
-      setQuestions(data.questions || []);
-    } catch (error) {
-      console.error('Failed to load questions:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Auto-refetch every 30 seconds (reduced frequency to avoid unnecessary calls)
+  usePolling(loadQuestions, {
+    enabled: !!user,
+    interval: 30000, // 30 seconds instead of 5
+  });
 
   const handlePostQuestion = async () => {
     if (!user || !newPost.title.trim() || !newPost.body.trim()) {
@@ -89,7 +124,8 @@ export default function CommunityPage() {
     try {
       const response = await fetch('/api/community-questions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
         body: JSON.stringify({
           title: newPost.title,
           body: newPost.body,
@@ -100,10 +136,16 @@ export default function CommunityPage() {
 
       if (!response.ok) throw new Error('Failed to post question');
 
+      const data = await response.json();
+      
+      // Optimistically add new question to the top of the list
+      if (data.success && data.question) {
+        setQuestions((prevQuestions) => [data.question, ...prevQuestions]);
+      }
+
       setNewPost({ title: '', body: '', tags: [] });
       setSelectedTags([]);
       setShowPostForm(false);
-      await loadQuestions();
     } catch (error) {
       console.error('Failed to post question:', error);
       alert('Failed to post question. Please try again.');
@@ -111,16 +153,70 @@ export default function CommunityPage() {
   };
 
   const handleUpvote = async (questionId: string) => {
+    if (!user) return;
+    
+    // Optimistically update UI
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId
+          ? {
+              ...q,
+              upvotes: (q.upvotes || 0) + 1,
+              upvotedBy: [...(q.upvotedBy || []), user._id],
+            }
+          : q
+      )
+    );
+    
     try {
       const response = await fetch(`/api/community-questions/${questionId}/upvote`, {
         method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
       });
 
-      if (!response.ok) throw new Error('Failed to upvote');
-      await loadQuestions();
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Revert optimistic update on error
+        setQuestions((prevQuestions) =>
+          prevQuestions.map((q) =>
+            q._id === questionId
+              ? {
+                  ...q,
+                  upvotes: Math.max(0, (q.upvotes || 0) - 1),
+                  upvotedBy: (q.upvotedBy || []).filter((id) => id !== user._id),
+                }
+              : q
+          )
+        );
+        
+        if (errorData.error?.includes('already upvoted')) {
+          alert('You have already upvoted this question');
+        } else {
+          throw new Error('Failed to upvote');
+        }
+        return;
+      }
+      
+      // Update with server response to ensure consistency
+      const data = await response.json();
+      if (data.success && data.question) {
+        setQuestions((prevQuestions) =>
+          prevQuestions.map((q) =>
+            q._id === questionId ? data.question : q
+          )
+        );
+      }
     } catch (error) {
       console.error('Failed to upvote:', error);
+      alert('Failed to upvote. Please try again.');
     }
+  };
+
+  const hasUserUpvoted = (question: Question): boolean => {
+    if (!user || !question.upvotedBy) return false;
+    return question.upvotedBy.includes(user._id);
   };
 
   const handleComment = async (questionId: string) => {
@@ -130,11 +226,39 @@ export default function CommunityPage() {
       return;
     }
 
+    // Optimistically add comment to UI immediately
+    const optimisticComment: Answer = {
+      content,
+      userId: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email || '',
+      },
+      upvotes: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update the specific question's answers array without reloading all questions
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId
+          ? {
+              ...q,
+              answers: [...(q.answers || []), optimisticComment],
+            }
+          : q
+      )
+    );
+
+    // Clear the comment input immediately
+    setCommentText({ ...commentText, [questionId]: '' });
+
     try {
-      console.log('Posting comment to question:', questionId);
       const response = await fetch(`/api/community-questions/${questionId}/comment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
         body: JSON.stringify({
           content,
           userId: user._id,
@@ -144,12 +268,36 @@ export default function CommunityPage() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Comment failed:', errorData);
+        
+        // Revert optimistic update on error
+        setQuestions((prevQuestions) =>
+          prevQuestions.map((q) =>
+            q._id === questionId
+              ? {
+                  ...q,
+                  answers: q.answers.filter((a, idx) => 
+                    idx !== q.answers.length - 1 || a.content !== content
+                  ),
+                }
+              : q
+          )
+        );
+        
+        // Restore comment text
+        setCommentText({ ...commentText, [questionId]: content });
+        
         throw new Error('Failed to comment');
       }
 
-      setCommentText({ ...commentText, [questionId]: '' });
-      await loadQuestions();
-      console.log('Comment posted successfully');
+      // On success, refetch only this question to get the actual comment with all fields
+      const data = await response.json();
+      if (data.success && data.question) {
+        setQuestions((prevQuestions) =>
+          prevQuestions.map((q) =>
+            q._id === questionId ? data.question : q
+          )
+        );
+      }
     } catch (error) {
       console.error('Failed to comment:', error);
       alert('Failed to post comment. Please try again.');
@@ -397,13 +545,18 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-6 pt-4 border-t border-gray-100">
                       <button
                         onClick={() => handleUpvote(question._id)}
-                        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
+                        disabled={hasUserUpvoted(question)}
+                        className={`flex items-center gap-2 transition-colors group ${
+                          hasUserUpvoted(question)
+                            ? 'text-blue-600 cursor-not-allowed'
+                            : 'text-gray-600 hover:text-blue-600'
+                        }`}
                       >
                         <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
                         <span className="font-medium">{question.upvotes || 0}</span>
-                        <span className="text-sm">Upvote</span>
+                        <span className="text-sm">{hasUserUpvoted(question) ? 'Upvoted' : 'Upvote'}</span>
                       </button>
 
                       <button
@@ -484,7 +637,7 @@ export default function CommunityPage() {
                                   </span>
                                 </div>
                                 <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                                  {answer.content}
+                                  {answer.content || answer.text || 'No content'}
                                 </p>
                                 <div className="flex items-center gap-4">
                                   <button 

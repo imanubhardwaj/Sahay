@@ -5,17 +5,27 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { getAllModulesForUserType, getUserTypeDisplayName, Module } from "@/lib/modules";
+import {
+  getAllModulesForUserType,
+  getUserTypeDisplayName,
+} from "@/lib/modules";
+import Image from "next/image";
+import Loader from "@/components/Loader";
+
+// Default icon URL for modules without icons
+const DEFAULT_MODULE_ICON =
+  "https://imgs.search.brave.com/0amGyAiF3uFKKjlFLdALYRLoeTeTOygh1JCd-4MlrA8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZy/ZWVwaWsuY29tLzI1/Ni83ODM3Lzc4Mzcx/NTcucG5nP3NlbXQ9/YWlzX3doaXRlX2xh/YmVs";
 
 // Helper function to get time ago string
 const getTimeAgo = (date: Date): string => {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
+
+  if (diffInSeconds < 60) return "Just now";
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   return date.toLocaleDateString();
 };
 
@@ -36,15 +46,39 @@ interface RecentActivity {
   icon: string;
 }
 
+interface ApiModule {
+  _id: string;
+  id?: string;
+  name: string;
+  title?: string;
+  description: string;
+  icon?: string;
+  image?: string;
+  lessonsCount?: number;
+  lessons?: unknown[];
+  points?: number;
+  level?: string;
+  duration?: number;
+  skillId?: {
+    _id: string;
+    name: string;
+  };
+  totalPoints?: number;
+}
+
 interface ModuleProgress {
-  module: Module & {
+  module: {
+    id: string;
+    title: string;
+    description: string;
     icon?: string;
+    image?: string;
     lessons?: number;
     points?: number;
     level?: string;
     progress?: number;
   };
-  status: 'not_started' | 'in_progress' | 'completed';
+  status: "not_started" | "in_progress" | "completed";
   progress: number;
 }
 
@@ -65,7 +99,7 @@ export default function DashboardPage() {
   const loadDashboardData = useCallback(async () => {
     let completedModules = 0;
     let inProgressModules = 0;
-    
+
     try {
       setIsLoading(true);
 
@@ -75,106 +109,197 @@ export default function DashboardPage() {
       }
 
       // Fetch modules from API
-      let allModules: any[] = [];
+      let allModules: ApiModule[] = [];
       try {
-        const modulesResponse = await fetch('/api/modules');
+        // Use authenticated fetch to include token
+        const { authenticatedFetch } = await import("@/lib/api-client");
+        const modulesResponse = await authenticatedFetch("/api/modules");
         if (modulesResponse.ok) {
           const modulesData = await modulesResponse.json();
           allModules = modulesData.modules || [];
         } else {
-          // Fallback to local modules if API fails
-          allModules = getAllModulesForUserType(user.userType);
+          // Fallback to local modules if API fails - convert to ApiModule format
+          const localModules = getAllModulesForUserType(user.userType);
+          allModules = localModules.map((m) => ({
+            _id: m.id,
+            id: m.id,
+            name: m.title,
+            title: m.title,
+            description: m.description,
+            icon: "📚",
+            lessonsCount: 0,
+            points: 0,
+            level: "Beginner",
+          }));
         }
       } catch (error) {
-        console.error('Failed to fetch modules from API, using fallback:', error);
-        allModules = getAllModulesForUserType(user.userType);
+        console.error(
+          "Failed to fetch modules from API, using fallback:",
+          error
+        );
+        // Fallback to local modules
+        const localModules = getAllModulesForUserType(user.userType);
+        allModules = localModules.map((m) => ({
+          _id: m.id,
+          id: m.id,
+          name: m.title,
+          title: m.title,
+          description: m.description,
+          icon: "📚",
+          lessonsCount: 0,
+          points: 0,
+          level: "Beginner",
+        }));
       }
-      
+
       const totalModules = allModules.length;
 
       // Fetch user's module progress from API
       const moduleProgress: ModuleProgress[] = [];
 
       try {
-        const progressResponse = await fetch(`/api/module-progress?userId=${user._id}`);
+        // Use authenticated fetch to automatically include token
+        const { authenticatedFetch } = await import("@/lib/api-client");
+        const progressResponse = await authenticatedFetch(
+          `/api/module-progress?userId=${user._id}`
+        );
         if (progressResponse.ok) {
           const progressData = await progressResponse.json();
           const userProgress = progressData.progress || [];
 
           // Create a map of module progress
-          const progressMap = userProgress.reduce((map: any, p: any) => {
-            map[p.moduleId._id || p.moduleId] = p;
-            return map;
-          }, {});
+          const progressMap = userProgress.reduce(
+            (
+              map: Record<
+                string,
+                { status?: string; completionPercentage?: number }
+              >,
+              p: {
+                moduleId?: { _id?: string } | string;
+                status?: string;
+                completionPercentage?: number;
+              }
+            ) => {
+              // Handle null moduleId (module might have been deleted)
+              if (p.moduleId) {
+                const moduleId =
+                  typeof p.moduleId === "object" && p.moduleId._id
+                    ? p.moduleId._id
+                    : typeof p.moduleId === "string"
+                    ? p.moduleId
+                    : null;
+                if (moduleId) {
+                  map[moduleId] = p;
+                }
+              }
+              return map;
+            },
+            {}
+          );
 
           // Calculate stats
-          completedModules = userProgress.filter((p: any) => p.status === 'completed').length;
-          inProgressModules = userProgress.filter((p: any) => p.status === 'in_progress').length;
+          completedModules = userProgress.filter(
+            (p: { status?: string }) => p.status === "completed"
+          ).length;
+          inProgressModules = userProgress.filter(
+            (p: { status?: string }) => p.status === "in_progress"
+          ).length;
 
           // Map modules with progress
-          allModules.forEach((module: any) => {
-            const progress = progressMap[module._id];
+          allModules.forEach((module: ApiModule) => {
+            const moduleId = module._id || module.id || "";
+            const progress = progressMap[moduleId];
             moduleProgress.push({
               module: {
-                id: module._id,
-                title: module.name,
-                description: module.description,
-                icon: '📚',
+                id: moduleId,
+                title: module.name || module.title || "",
+                description: module.description || "",
+                icon: module.icon || DEFAULT_MODULE_ICON,
+                image: module.image,
                 progress: progress?.completionPercentage || 0,
                 lessons: module.lessonsCount || module.lessons?.length || 0,
-                totalTime: module.duration || 0,
-                category: module.skillId?.name || 'General',
                 points: module.points || 0,
-                level: module.level || 'Beginner'
+                level: module.level || "Beginner",
               },
-              status: progress ? progress.status : 'not_started',
-              progress: progress?.completionPercentage || 0
+              status:
+                (progress?.status as
+                  | "not_started"
+                  | "in_progress"
+                  | "completed") || "not_started",
+              progress: progress?.completionPercentage || 0,
             });
           });
         } else {
           // Fallback: use user's selectedModules if progress API fails
-          completedModules = user.selectedModules?.filter((module: any) => module.status === 'completed').length || 0;
-          inProgressModules = user.selectedModules?.filter((module: any) => module.status === 'in_progress').length || 0;
+          completedModules =
+            user.selectedModules?.filter(
+              (module: { status?: string }) => module.status === "completed"
+            ).length || 0;
+          inProgressModules =
+            user.selectedModules?.filter(
+              (module: { status?: string }) => module.status === "in_progress"
+            ).length || 0;
 
-          allModules.forEach((module: any) => {
-            const userModule = user.selectedModules?.find((um: any) => um.moduleId === (module._id || module.id));
+          allModules.forEach((module: ApiModule) => {
+            const moduleId = module._id || module.id || "";
+            const userModule = user.selectedModules?.find(
+              (um: { moduleId?: string }) => um.moduleId === moduleId
+            );
             moduleProgress.push({
               module: {
-                id: module._id || module.id,
-                title: module.name || module.title,
-                description: module.description,
-                icon: '📚',
-                progress: userModule?.progress || 0,
+                id: moduleId,
+                title: module.name || module.title || "",
+                description: module.description || "",
+                icon: module.icon || DEFAULT_MODULE_ICON,
+                image: module.image,
+                progress: (userModule as { progress?: number })?.progress || 0,
                 lessons: module.lessonsCount || module.lessons?.length || 0,
-                totalTime: module.duration || module.totalTime || 0,
-                category: module.skillId?.name || module.category || 'General'
+                points: module.points || 0,
+                level: module.level || "Beginner",
               },
-              status: userModule?.status || 'not_started',
-              progress: userModule?.progress || 0
+              status:
+                ((userModule as { status?: string })?.status as
+                  | "not_started"
+                  | "in_progress"
+                  | "completed") || "not_started",
+              progress: (userModule as { progress?: number })?.progress || 0,
             });
           });
         }
       } catch (error) {
-        console.error('Failed to fetch module progress:', error);
+        console.error("Failed to fetch module progress:", error);
         // Use fallback data
-        completedModules = user.selectedModules?.filter((module: any) => module.status === 'completed').length || 0;
-        inProgressModules = user.selectedModules?.filter((module: any) => module.status === 'in_progress').length || 0;
+        completedModules =
+          user.selectedModules?.filter(
+            (module: any) => module.status === "completed"
+          ).length || 0;
+        inProgressModules =
+          user.selectedModules?.filter(
+            (module: any) => module.status === "in_progress"
+          ).length || 0;
       }
 
       setModules(moduleProgress);
 
-      const overallCompletionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+      const overallCompletionPercentage =
+        totalModules > 0
+          ? Math.round((completedModules / totalModules) * 100)
+          : 0;
 
       // Fetch user's real rank
       let currentRank = 0;
       try {
-        const rankResponse = await fetch(`/api/user/rank?userId=${user._id}`);
+        const { getAuthHeaders } = await import("@/lib/token-storage");
+        const rankResponse = await fetch(`/api/user/rank?userId=${user._id}`, {
+          headers: getAuthHeaders(),
+          credentials: "include",
+        });
         if (rankResponse.ok) {
           const rankData = await rankResponse.json();
           currentRank = rankData.rank || 1;
         }
       } catch (error) {
-        console.error('Failed to fetch user rank:', error);
+        console.error("Failed to fetch user rank:", error);
         currentRank = 1; // Default to rank 1 if fetch fails
       }
 
@@ -188,20 +313,27 @@ export default function DashboardPage() {
 
       // Fetch recent activity from actual lesson completions
       const recentActivityData: RecentActivity[] = [];
-      
+
       try {
         // Fetch recent lesson completions
-        const recentLessonsResponse = await fetch(`/api/lesson-progress?userId=${user._id}&recent=true`);
+        const recentLessonsResponse = await fetch(
+          `/api/lesson-progress?userId=${user._id}&recent=true`
+        );
         if (recentLessonsResponse.ok) {
           const recentData = await recentLessonsResponse.json();
-          const recentCompletions = recentData.lessonsWithProgress?.filter((lp: any) => 
-            lp.progress?.status === 'completed' && lp.progress?.completedAt
-          ).slice(0, 3) || [];
+          const recentCompletions =
+            recentData.lessonsWithProgress
+              ?.filter(
+                (lp: any) =>
+                  lp.progress?.status === "completed" &&
+                  lp.progress?.completedAt
+              )
+              .slice(0, 3) || [];
 
           recentCompletions.forEach((completion: any, index: number) => {
             const completedAt = new Date(completion.progress.completedAt);
             const timeAgo = getTimeAgo(completedAt);
-            
+
             recentActivityData.push({
               id: index + 1,
               type: "lesson_completed",
@@ -213,7 +345,7 @@ export default function DashboardPage() {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch recent activity:', error);
+        console.error("Failed to fetch recent activity:", error);
       }
 
       // Add module-level activities if no recent lessons
@@ -222,7 +354,9 @@ export default function DashboardPage() {
           recentActivityData.push({
             id: 1,
             type: "module_completed",
-            title: `Completed ${completedModules} module${completedModules > 1 ? 's' : ''}`,
+            title: `Completed ${completedModules} module${
+              completedModules > 1 ? "s" : ""
+            }`,
             points: completedModules * 50,
             time: "Recently",
             icon: "📚",
@@ -233,7 +367,9 @@ export default function DashboardPage() {
           recentActivityData.push({
             id: 2,
             type: "module_started",
-            title: `Started ${inProgressModules} module${inProgressModules > 1 ? 's' : ''}`,
+            title: `Started ${inProgressModules} module${
+              inProgressModules > 1 ? "s" : ""
+            }`,
             points: inProgressModules * 10,
             time: "Recently",
             icon: "🚀",
@@ -244,7 +380,9 @@ export default function DashboardPage() {
           recentActivityData.push({
             id: 3,
             type: "skills_updated",
-            title: `Added ${user.skills.length} skill${user.skills.length > 1 ? 's' : ''} to profile`,
+            title: `Added ${user.skills.length} skill${
+              user.skills.length > 1 ? "s" : ""
+            } to profile`,
             points: user.skills.length * 5,
             time: "Recently",
             icon: "🎯",
@@ -276,7 +414,7 @@ export default function DashboardPage() {
   }, [user, router, loadDashboardData]);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (
@@ -329,7 +467,9 @@ export default function DashboardPage() {
                 {stats.totalPoints}
               </span>
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">Total Points</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">
+              Total Points
+            </h3>
             <p className="text-xs text-gray-500">Earned through learning</p>
           </div>
 
@@ -342,7 +482,9 @@ export default function DashboardPage() {
                 #{stats.currentRank || "N/A"}
               </span>
             </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">Current Rank</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">
+              Current Rank
+            </h3>
             <p className="text-xs text-gray-500">Among all learners</p>
           </div>
 
@@ -371,8 +513,8 @@ export default function DashboardPage() {
                 {getUserTypeDisplayName(user.userType)} - {user.domain}
               </p>
             </div>
-            <Link href="/dashboard/modules">
-              <button variant="outline" size="sm">
+            <Link href="/dashboard/explore">
+              <button className="bg-white text-black rounded-lg hover:scale-105 transition-all duration-300 cursor-pointer">
                 View All Modules
               </button>
             </Link>
@@ -381,7 +523,10 @@ export default function DashboardPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="animate-pulse bg-gray-100 rounded-lg p-4 h-32"></div>
+                <div
+                  key={i}
+                  className="animate-pulse bg-gray-100 rounded-lg p-4 h-32"
+                ></div>
               ))}
             </div>
           ) : (
@@ -389,46 +534,68 @@ export default function DashboardPage() {
               {modules.slice(0, 6).map((moduleProgress) => (
                 <div
                   key={moduleProgress.module.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                      {moduleProgress.module.title}
-                    </h3>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      moduleProgress.status === 'completed' 
-                        ? 'bg-green-100 text-green-700'
-                        : moduleProgress.status === 'in_progress'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {moduleProgress.status === 'completed' ? '✓' : 
-                       moduleProgress.status === 'in_progress' ? '⏳' : '○'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                    {moduleProgress.module.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 text-xs text-gray-500">
-                      <span>📚 {moduleProgress.module.lessons} lessons</span>
-                      <span>⭐ {moduleProgress.module.points} pts</span>
-                      <span className={`px-1 py-0.5 rounded text-xs ${
-                        moduleProgress.module.level === 'Beginner' ? 'bg-green-100 text-green-700' :
-                        moduleProgress.module.level === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {moduleProgress.module.level}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        {moduleProgress.module.icon && (
+                          <Image
+                            width={32}
+                            height={32}
+                            src={moduleProgress.module.icon}
+                            alt={moduleProgress.module.title}
+                            className="object-contain flex-shrink-0 rounded-lg"
+                          />
+                        )}
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                          {moduleProgress.module.title}
+                        </h3>
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2 ${
+                          moduleProgress.status === "completed"
+                            ? "bg-green-100 text-green-700"
+                            : moduleProgress.status === "in_progress"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {moduleProgress.status === "completed"
+                          ? "✓"
+                          : moduleProgress.status === "in_progress"
+                          ? "⏳"
+                          : "○"}
                       </span>
                     </div>
-                    {moduleProgress.status === 'in_progress' && (
-                      <div className="w-16 bg-gray-200 rounded-full h-1">
-                        <div 
-                          className="bg-blue-500 h-1 rounded-full transition-all duration-300"
-                          style={{ width: `${moduleProgress.progress}%` }}
-                        ></div>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                      {moduleProgress.module.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <span>📚 {moduleProgress.module.lessons} lessons</span>
+                        <span>⭐ {moduleProgress.module.points} pts</span>
+                        <span
+                          className={`px-1 py-0.5 rounded text-xs ${
+                            moduleProgress.module.level === "Beginner"
+                              ? "bg-green-100 text-green-700"
+                              : moduleProgress.module.level === "Intermediate"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {moduleProgress.module.level}
+                        </span>
                       </div>
-                    )}
+                      {moduleProgress.status === "in_progress" && (
+                        <div className="w-16 bg-gray-200 rounded-full h-1">
+                          <div
+                            className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                            style={{ width: `${moduleProgress.progress}%` }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -507,8 +674,8 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-500 mb-3">
                     Start learning to see your progress here!
                   </p>
-                  <Link href="/dashboard/modules">
-                    <button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                  <Link href="/dashboard/explore">
+                    <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                       Explore Modules
                     </button>
                   </Link>
@@ -524,26 +691,35 @@ export default function DashboardPage() {
             </h3>
             <div className="space-y-3">
               {(() => {
-                const inProgressModule = modules.find(m => m.status === 'in_progress');
-                const completedModule = modules.find(m => m.status === 'completed');
-                const nextModule = modules.find(m => m.status === 'not_started');
-                
-                const displayModule = inProgressModule || completedModule || nextModule;
-                
+                const inProgressModule = modules.find(
+                  (m) => m.status === "in_progress"
+                );
+                const completedModule = modules.find(
+                  (m) => m.status === "completed"
+                );
+                const nextModule = modules.find(
+                  (m) => m.status === "not_started"
+                );
+
+                const displayModule =
+                  inProgressModule || completedModule || nextModule;
+
                 if (!displayModule) {
                   return (
                     <div className="text-center py-4">
                       <span className="text-2xl mb-2 block">📚</span>
-                      <p className="text-xs text-gray-500 mb-3">No modules available</p>
-                      <Link href="/dashboard/modules">
-                        <button size="sm" className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+                      <p className="text-xs text-gray-500 mb-3">
+                        No modules available
+                      </p>
+                      <Link href="/dashboard/explore">
+                        <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
                           Explore Modules
                         </button>
                       </Link>
                     </div>
                   );
                 }
-                
+
                 return (
                   <>
                     <div className="bg-gray-50 rounded-lg p-3">
@@ -557,13 +733,19 @@ export default function DashboardPage() {
                         ></div>
                       </div>
                       <p className="text-xs text-gray-500">
-                        {displayModule.progress}% complete • {displayModule.module.lessons} lessons
+                        {displayModule.progress}% complete •{" "}
+                        {displayModule.module.lessons} lessons
                       </p>
                     </div>
-                    <Link href={`/dashboard/modules/${displayModule.module.id}`}>
-                      <button size="sm" className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
-                        {displayModule.status === 'in_progress' ? 'Continue' : 
-                         displayModule.status === 'completed' ? 'Review' : 'Start'}
+                    <Link
+                      href={`/dashboard/modules/${displayModule.module.id}`}
+                    >
+                      <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white cursor-pointer px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
+                        {displayModule.status === "in_progress"
+                          ? "Continue"
+                          : displayModule.status === "completed"
+                          ? "Review"
+                          : "Start"}
                       </button>
                     </Link>
                   </>
@@ -579,31 +761,19 @@ export default function DashboardPage() {
             </h3>
             <div className="flex flex-col gap-2">
               <Link href="/dashboard/community">
-                <button
-                  size="sm"
-                  variant="outline"
-                  className="w-full justify-start text-left border-gray-200 hover:bg-gray-50"
-                >
+                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
                   <span className="mr-2 text-xs">💬</span>
                   Ask a Question
                 </button>
               </Link>
               <Link href="/dashboard/portfolio">
-                <button
-                  size="sm"
-                  variant="outline"
-                  className="w-full justify-start text-left border-gray-200 hover:bg-gray-50"
-                >
+                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
                   <span className="mr-2 text-xs">🎨</span>
                   Add Project
                 </button>
               </Link>
               <Link href="/dashboard/mentors">
-                <button
-                  size="sm"
-                  variant="outline"
-                  className="w-full justify-start text-left border-gray-200 hover:bg-gray-50"
-                >
+                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
                   <span className="mr-2 text-xs">👨‍🏫</span>
                   Book Mentor
                 </button>
@@ -616,12 +786,14 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Learning Progress */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Learning Progress</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Learning Progress
+            </h3>
             <div className="space-y-3">
               {modules.slice(0, 3).map((moduleProgress, index) => {
-                const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500'];
-                const color = colors[index] || 'bg-gray-500';
-                
+                const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500"];
+                const color = colors[index] || "bg-gray-500";
+
                 return (
                   <div key={moduleProgress.module.id}>
                     <div className="flex items-center justify-between">
@@ -633,19 +805,21 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div 
-                        className={`${color} h-1.5 rounded-full transition-all duration-300`} 
+                      <div
+                        className={`${color} h-1.5 rounded-full transition-all duration-300`}
                         style={{ width: `${moduleProgress.progress}%` }}
                       ></div>
                     </div>
                   </div>
                 );
               })}
-              
+
               {modules.length === 0 && !isLoading && (
                 <div className="text-center py-4">
                   <span className="text-2xl mb-2 block">📊</span>
-                  <p className="text-xs text-gray-500">Start learning to see progress</p>
+                  <p className="text-xs text-gray-500">
+                    Start learning to see progress
+                  </p>
                 </div>
               )}
             </div>
@@ -653,12 +827,16 @@ export default function DashboardPage() {
 
           {/* Quick Stats */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Stats</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Quick Stats
+            </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm">📚</span>
-                  <span className="text-xs font-medium text-gray-900">Total Lessons</span>
+                  <span className="text-xs font-medium text-gray-900">
+                    Total Lessons
+                  </span>
                 </div>
                 <span className="text-xs font-bold text-blue-600">
                   {modules.reduce((sum, m) => sum + (m.module.lessons || 0), 0)}
@@ -667,7 +845,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm">✅</span>
-                  <span className="text-xs font-medium text-gray-900">Completed</span>
+                  <span className="text-xs font-medium text-gray-900">
+                    Completed
+                  </span>
                 </div>
                 <span className="text-xs font-bold text-green-600">
                   {stats.completedModules}
@@ -676,7 +856,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm">⭐</span>
-                  <span className="text-xs font-medium text-gray-900">Total Points</span>
+                  <span className="text-xs font-medium text-gray-900">
+                    Total Points
+                  </span>
                 </div>
                 <span className="text-xs font-bold text-yellow-600">
                   {user.points || 0}
@@ -685,10 +867,12 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm">🎯</span>
-                  <span className="text-xs font-medium text-gray-900">In Progress</span>
+                  <span className="text-xs font-medium text-gray-900">
+                    In Progress
+                  </span>
                 </div>
                 <span className="text-xs font-bold text-purple-600">
-                  {modules.filter(m => m.status === 'in_progress').length}
+                  {modules.filter((m) => m.status === "in_progress").length}
                 </span>
               </div>
             </div>

@@ -6,27 +6,22 @@ import { useRouter } from "next/navigation";
 export default function LandingPage() {
   const router = useRouter();
 
-
   return (
     <div className="min-h-screen w-full flex">
-      
       {/* Main Content */}
-      <div
-        className='flex-1 transition-all duration-300'
-      >
+      <div className="flex-1 transition-all duration-300">
         {/* Navigation */}
         <nav className="w-full bg-white/80 backdrop-blur-xl shadow-sm sticky top-0 z-40">
           <div className="w-full px-8 md:px-16 lg:px-24 xl:px-32 flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-black gradient-text tracking-tight">
-                  Sahay
-                </h1>
+              <h1 className="text-xl font-black gradient-text tracking-tight">
+                Sahay
+              </h1>
             </div>
 
             <div className="flex space-x-3">
               <button
-                variant="ghost"
-                className="px-5 py-2 font-semibold text-sm"
+                className="px-5 py-2 font-semibold text-sm cursor-pointer border-2 border-gray-300 rounded-md hover:bg-gray-100 hover:scale-105 transition-all duration-300"
                 onClick={() => {
                   router.push("/login");
                 }}
@@ -34,11 +29,10 @@ export default function LandingPage() {
                 Sign In
               </button>
               <button
-                className="px-5 py-2 bg-black font-semibold text-sm text-white"
+                className="px-5 py-2 bg-black font-semibold text-sm cursor-pointer text-white rounded-md hover:bg-gray-800 hover:scale-105 transition-all duration-300"
                 onClick={() => {
                   router.push("/login");
                 }}
-                icon={<span>🚀</span>}
               >
                 Get Started
               </button>

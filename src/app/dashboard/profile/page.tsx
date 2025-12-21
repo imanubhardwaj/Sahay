@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { NotificationsTab } from '@/components/NotificationsTab';
+import Loader from '@/components/Loader';
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'profile';
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,14 +111,43 @@ export default function ProfilePage() {
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader message="Loading profile data..." />;
   }
 
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Points Summary Card */}
-        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-xl p-6 text-white shadow-lg">
+        {/* Tabs */}
+        <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg">
+          <a
+            href="/dashboard/profile?tab=profile"
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors text-center ${
+              activeTab === 'profile'
+                ? 'bg-purple-600 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Profile
+          </a>
+          <a
+            href="/dashboard/profile?tab=notifications"
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors text-center ${
+              activeTab === 'notifications'
+                ? 'bg-purple-600 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Notifications
+          </a>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'notifications' ? (
+          <NotificationsTab />
+        ) : (
+          <>
+            {/* Points Summary Card */}
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Your Progress</h2>
@@ -416,6 +449,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

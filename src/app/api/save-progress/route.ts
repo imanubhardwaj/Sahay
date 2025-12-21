@@ -4,6 +4,7 @@ import Lesson from "@/models/Lesson";
 import ModuleProgress from "@/models/ModuleProgress";
 import LessonProgress from "@/models/LessonProgress";
 import Wallet from "@/models/Wallet";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 interface SaveProgressRequest {
   userId: string;
@@ -14,16 +15,39 @@ interface SaveProgressRequest {
 // POST - Save lesson progress and advance to next lesson (SECURE - handles all progression on backend)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const body: SaveProgressRequest = await request.json();
-    const { userId, moduleId, lessonId } = body;
+    const { userId: requestedUserId, moduleId, lessonId } = body;
 
-    if (!userId || !moduleId || !lessonId) {
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only save their own progress
+    if (userId !== authenticatedUserId) {
       return NextResponse.json(
         {
           success: false,
-          error: "userId, moduleId, and lessonId are required",
+          error: "Forbidden: You can only save your own progress",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!moduleId || !lessonId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "moduleId and lessonId are required",
         },
         { status: 400 }
       );

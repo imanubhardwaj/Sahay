@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Question from "@/models/Question";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/questions/[id] - Get a specific question
+// GET /api/questions/[id] - Get a specific question (requires auth)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { id } = await params;
@@ -32,12 +42,15 @@ export async function GET(
   }
 }
 
-// PUT /api/questions/[id] - Update a question
+// PUT /api/questions/[id] - Update a question (requires auth)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { title, body, tags, userId } = await request.json();
@@ -85,16 +98,23 @@ export async function PUT(
   }
 }
 
-// DELETE /api/questions/[id] - Delete a question
+// DELETE /api/questions/[id] - Delete a question (requires auth)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const authenticatedUserId = await authenticateRequest(request);
+
     await connectDB();
 
-    const { userId } = await request.json();
+    const body = await request.json();
+    const requestedUserId = body.userId;
     const { id: questionId } = await params;
+
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
 
     const question = await Question.findById(questionId);
     if (!question) {

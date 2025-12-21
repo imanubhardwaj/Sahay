@@ -76,6 +76,7 @@ import { seedUserQuizAnswers } from './userQuizAnswers';
 import { seedUserQuizSubmissions } from './userQuizSubmissions';
 import { seedSchedules } from './schedules';
 import { seedBookings } from './bookings';
+import { seedCodingProblems } from './codingProblems';
 
 const connectDB = async () => {
   try {
@@ -184,6 +185,7 @@ const seedDatabase = async () => {
     
     const schedules = await seedSchedules(users);
     const bookings = await seedBookings(users, schedules);
+    const codingProblems = await seedCodingProblems();
     
     console.log('✅ Database seeding completed successfully!');
     console.log(`📊 Seeded ${skills.length} skills`);

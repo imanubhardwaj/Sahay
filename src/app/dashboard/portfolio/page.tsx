@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import Loader from "@/components/Loader";
 // Removed mock API - using real API calls
 
 interface Project {
@@ -152,7 +153,7 @@ export default function PortfolioPage() {
   });
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader message="Loading portfolio data..." />;
   }
 
   return (

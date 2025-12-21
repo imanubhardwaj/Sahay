@@ -2,10 +2,12 @@ import mongoose from 'mongoose';
 import { baseSchema, updateUpdatedAt } from './BaseModel';
 
 const answerSchema = new mongoose.Schema({
-  text: { type: String, required: true },
+  content: { type: String, required: true }, // Changed from 'text' to 'content' to match API and frontend
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  upvotes: { type: Number, default: 0 },
+  downvotes: { type: Number, default: 0 }
 });
 
 const communityQuestionSchema = new mongoose.Schema({
@@ -16,6 +18,7 @@ const communityQuestionSchema = new mongoose.Schema({
   askedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   answers: [answerSchema],
   upvotes: { type: Number, default: 0 },
+  upvotedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track users who upvoted
   downvotes: { type: Number, default: 0 },
   views: { type: Number, default: 0 },
   isResolved: { type: Boolean, default: false },

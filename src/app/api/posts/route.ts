@@ -3,10 +3,20 @@ import connectDB from "@/lib/mongodb";
 import Post from "@/models/Post";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/posts - Get all posts (with optional filters)
+// GET /api/posts - Get all posts (with optional filters) - requires auth
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -53,9 +63,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/posts - Create a new post
+// POST /api/posts - Create a new post - requires auth
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const postData = await request.json();

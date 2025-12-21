@@ -2,14 +2,29 @@ import { NextResponse } from "next/server";
 import { workos } from "@/lib/workos";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import { generateToken } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
+    const stateParam = url.searchParams.get("state");
+    
+    // Parse state to get redirect URL
+    let redirectTo = "/dashboard";
+    if (stateParam) {
+      try {
+        const state = JSON.parse(decodeURIComponent(stateParam));
+        if (state.redirectTo) {
+          redirectTo = state.redirectTo;
+        }
+      } catch {
+        console.log("Failed to parse state parameter");
+      }
+    }
 
     console.log("Callback received with code:", code ? "present" : "missing");
-    console.log("Full URL:", req.url);
+    console.log("Redirect to:", redirectTo);
 
     if (!code) {
       console.log("No code provided, redirecting to login");
@@ -57,7 +72,10 @@ export async function GET(req: Request) {
         firstName: user.firstName || user.email.split("@")[0],
         lastName: user.lastName || "",
         email: user.email,
-        username: user.email.split("@")[0] + "_" + Math.random().toString(36).substr(2, 5),
+        username:
+          user.email.split("@")[0] +
+          "_" +
+          Math.random().toString(36).substr(2, 5),
         workosId: user.id,
         role: "student", // Default role
         userType: "student_fresher", // Default user type
@@ -73,10 +91,10 @@ export async function GET(req: Request) {
         mentors: [],
         progress: {
           currentGoal: "",
-          completionRate: 0
+          completionRate: 0,
         },
         completionRate: 0,
-        selectedModules: []
+        selectedModules: [],
       });
       isNewUser = true;
       console.log("New user created:", dbUser._id);
@@ -84,14 +102,22 @@ export async function GET(req: Request) {
       console.log("Existing user found:", dbUser._id);
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: dbUser._id.toString(),
+      email: dbUser.email,
+      role: dbUser.role,
+    });
+
     // Create response and set session cookie
-    const redirectUrl = isNewUser ? "/onboarding" : "/dashboard";
-    console.log("Redirecting to:", redirectUrl);
+    // New users go to onboarding, existing users go to their intended destination
+    const finalRedirectUrl = isNewUser ? "/onboarding" : redirectTo;
+    console.log("Redirecting to:", finalRedirectUrl);
     const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}${redirectUrl}`
+      `${process.env.NEXT_PUBLIC_APP_URL}${finalRedirectUrl}`
     );
 
-    // Set secure session cookie
+    // Set secure session cookie (for backward compatibility)
     response.cookies.set("user_id", dbUser._id.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -99,7 +125,15 @@ export async function GET(req: Request) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log("Session cookie set for user:", dbUser._id);
+    // Set token in cookie (optional, for easier access)
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    console.log("Session cookie and token set for user:", dbUser._id);
     return response;
   } catch (error) {
     console.error("Auth callback error:", error);

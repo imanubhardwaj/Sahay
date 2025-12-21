@@ -2,10 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Schedule from "@/models/Schedule";
 import Booking from "@/models/Booking";
+import MentorProfile from "@/models/MentorProfile";
+import { getUserIdFromRequest } from "@/lib/auth";
 
-// GET /api/schedules/open-slots - Get available time slots
+// Helper function to get dayOfWeek (Monday = 1, Sunday = 7)
+function getDayOfWeek(date: Date): number {
+  const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  return day === 0 ? 7 : day; // Convert to Monday = 1, Sunday = 7
+}
+
+// Helper function to get day name from dayOfWeek
+function getDayName(dayOfWeek: number): string {
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  return days[dayOfWeek === 7 ? 0 : dayOfWeek];
+}
+
+// GET /api/schedules/open-slots - Get available time slots (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -25,6 +48,14 @@ export async function GET(request: NextRequest) {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
+
+    // Get dayOfWeek (Monday = 1, Sunday = 7)
+    const dayOfWeek = getDayOfWeek(targetDate);
+    const dayName = getDayName(dayOfWeek);
+
+    // Get mentor profile to check weekly availability
+    const mentorProfile = await MentorProfile.findOne({ userId: professionalId });
+    const weeklyAvailability = mentorProfile?.defaultAvailability || {};
 
     // Get all schedules for the professional on the given date
     const schedules = await Schedule.find({
@@ -79,15 +110,19 @@ export async function GET(request: NextRequest) {
           availableSpots,
           totalSpots: schedule.maxBookings,
           isAvailable: availableSpots > 0,
+          currentBookings: bookings.length,
         };
       })
       .filter((slot) => slot.isAvailable);
 
     return NextResponse.json({
       date: targetDate.toISOString().split("T")[0],
+      dayOfWeek, // Monday = 1, Sunday = 7
+      dayName,
       professionalId,
       availableSlots,
       totalSlots: availableSlots.length,
+      hasWeeklyAvailability: !!(weeklyAvailability[dayName] && weeklyAvailability[dayName].length > 0),
     });
   } catch (error) {
     console.error("Error fetching open slots:", error);

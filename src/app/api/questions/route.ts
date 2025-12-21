@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import CommunityQuestion from "@/models/CommunityQuestion";
 import User from "@/models/User";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/questions - Get all questions
-export async function GET() {
+// GET /api/questions - Get all questions (requires auth)
+export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const questions = await CommunityQuestion.find({ deletedAt: null })
@@ -24,9 +34,12 @@ export async function GET() {
   }
 }
 
-// POST /api/questions - Create a new community question
+// POST /api/questions - Create a new community question (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const questionData = await request.json();
@@ -55,7 +68,7 @@ export async function POST(request: NextRequest) {
       upvotes: 0,
       downvotes: 0,
       views: 0,
-      isResolved: false
+      isResolved: false,
     });
 
     await question.save();

@@ -2,20 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ModuleProgress from "@/models/ModuleProgress";
 import Lesson from "@/models/Lesson";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
 // GET /api/module-progress - Get module progress for a user
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
     const moduleId = searchParams.get("moduleId");
 
-    if (!userId) {
+    // Use authenticated user's ID if not provided, or validate that requested userId matches authenticated user
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only access their own progress
+    if (userId !== authenticatedUserId) {
       return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
+        { error: "Forbidden: You can only access your own progress" },
+        { status: 403 }
       );
     }
 
@@ -47,13 +61,27 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { userId, moduleId } = body;
+    // Require authentication
+    const authenticatedUserId = await authenticateRequest(request);
 
-    if (!userId || !moduleId) {
+    const body = await request.json();
+    const { userId: requestedUserId, moduleId } = body;
+
+    if (!moduleId) {
       return NextResponse.json(
-        { error: "User ID and Module ID are required" },
+        { error: "Module ID is required" },
         { status: 400 }
+      );
+    }
+
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only create/update their own progress
+    if (userId !== authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only update your own progress" },
+        { status: 403 }
       );
     }
 
@@ -101,13 +129,32 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { userId, moduleId, lessonId, completed = false } = body;
+    // Require authentication
+    const authenticatedUserId = await authenticateRequest(request);
 
-    if (!userId || !moduleId) {
+    const body = await request.json();
+    const {
+      userId: requestedUserId,
+      moduleId,
+      lessonId,
+      completed = false,
+    } = body;
+
+    if (!moduleId) {
       return NextResponse.json(
-        { error: "User ID and Module ID are required" },
+        { error: "Module ID is required" },
         { status: 400 }
+      );
+    }
+
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only update their own progress
+    if (userId !== authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only update your own progress" },
+        { status: 403 }
       );
     }
 

@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Schedule from "@/models/Schedule";
 import MentorProfile from "@/models/MentorProfile";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET - Get schedules
+// GET - Get schedules (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -74,9 +84,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create schedule
+// POST - Create schedule (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const body = await request.json();
@@ -85,6 +98,14 @@ export async function POST(request: NextRequest) {
     if (!professionalId) {
       return NextResponse.json(
         { success: false, error: "Professional ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate duration (max 30 minutes)
+    if (scheduleData.duration && scheduleData.duration > 30) {
+      return NextResponse.json(
+        { success: false, error: "Maximum session duration is 30 minutes" },
         { status: 400 }
       );
     }
@@ -133,6 +154,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check daily limit (max 6 schedules per day)
+    const scheduleDate = new Date(scheduleData.date);
+    const startOfDay = new Date(scheduleDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(scheduleDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const schedulesOnDay = await Schedule.countDocuments({
+      professionalId,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+      isActive: true,
+    });
+
+    if (schedulesOnDay >= 6) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Daily limit reached. You can only create 6 schedules per day.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check weekly limit (max 40 schedules per week)
+    const startOfWeek = new Date(scheduleDate);
+    startOfWeek.setDate(scheduleDate.getDate() - scheduleDate.getDay()); // Start of week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week (Saturday)
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const schedulesThisWeek = await Schedule.countDocuments({
+      professionalId,
+      date: {
+        $gte: startOfWeek,
+        $lte: endOfWeek,
+      },
+      isActive: true,
+    });
+
+    if (schedulesThisWeek >= 40) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Weekly limit reached. You can only create 40 schedules per week.",
+        },
+        { status: 400 }
+      );
+    }
+
     const schedule = await Schedule.create({
       professionalId,
       ...scheduleData,
@@ -160,9 +234,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH - Update schedule
+// PATCH - Update schedule (requires auth)
 export async function PATCH(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const body = await request.json();
@@ -249,9 +326,12 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE - Delete schedule
+// DELETE - Delete schedule (requires auth)
 export async function DELETE(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);

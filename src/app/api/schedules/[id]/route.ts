@@ -2,13 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Schedule from "@/models/Schedule";
 import Booking from "@/models/Booking";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/schedules/[id] - Get a specific schedule
+// GET /api/schedules/[id] - Get a specific schedule (requires auth)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { id } = await params;
@@ -34,12 +44,15 @@ export async function GET(
   }
 }
 
-// PUT /api/schedules/[id] - Update a schedule
+// PUT /api/schedules/[id] - Update a schedule (requires auth)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const updateData = await request.json();
@@ -85,11 +98,12 @@ export async function PUT(
       }
     }
 
-    const updatedSchedule = await Schedule.findByIdAndUpdate(
-      id,
-      otherData,
-      { new: true }
-    ).populate("professionalId", "name email avatar company experience domain");
+    const updatedSchedule = await Schedule.findByIdAndUpdate(id, otherData, {
+      new: true,
+    }).populate(
+      "professionalId",
+      "name email avatar company experience domain"
+    );
 
     return NextResponse.json(updatedSchedule);
   } catch (error) {
@@ -101,12 +115,15 @@ export async function PUT(
   }
 }
 
-// DELETE /api/schedules/[id] - Delete a schedule
+// DELETE /api/schedules/[id] - Delete a schedule (requires auth)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { professionalId } = await request.json();

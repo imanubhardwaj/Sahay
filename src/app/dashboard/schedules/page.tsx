@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 
 interface Schedule {
   _id: string;
@@ -72,7 +70,7 @@ export default function SchedulesPage() {
 
   const sessionTypes = useMemo(() => [
     { value: "one-on-one", label: "One-on-One" },
-    { value: "group", label: "Group Session" },
+    { value: "group", label: "Group" },
     { value: "workshop", label: "Workshop" },
     { value: "consultation", label: "Consultation" },
   ], []);
@@ -83,38 +81,9 @@ export default function SchedulesPage() {
   ], []);
 
   const commonSkills = useMemo(() => [
-    "JavaScript",
-    "Python",
-    "React",
-    "Node.js",
-    "TypeScript",
-    "Java",
-    "C++",
-    "Data Structures",
-    "Algorithms",
-    "System Design",
-    "AWS",
-    "Docker",
-    "Kubernetes",
-    "Machine Learning",
-    "AI",
-    "Web Development",
-    "Mobile Development",
-    "DevOps",
-    "Cybersecurity",
-    "Blockchain",
-  ], []);
-
-  const commonRequirements = useMemo(() => [
-    "Laptop with stable internet",
-    "Code editor installed",
-    "Git installed",
-    "Basic programming knowledge",
-    "Specific project files",
-    "Camera and microphone",
-    "Quiet environment",
-    "Notebook for notes",
-    "Previous session materials",
+    "JavaScript", "Python", "React", "Node.js", "TypeScript", "Java",
+    "Data Structures", "Algorithms", "System Design", "AWS", "Docker",
+    "Machine Learning", "Web Development", "DevOps"
   ], []);
 
   const loadSchedules = useCallback(async () => {
@@ -218,7 +187,7 @@ export default function SchedulesPage() {
 
   const handleDeleteSchedule = useCallback(
     async (scheduleId: string) => {
-      if (!user || !confirm("Are you sure you want to delete this schedule?"))
+      if (!user || !confirm("Delete this schedule?"))
         return;
 
       try {
@@ -280,9 +249,8 @@ export default function SchedulesPage() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
+      weekday: "short",
+      month: "short",
       day: "numeric",
     });
   };
@@ -296,287 +264,190 @@ export default function SchedulesPage() {
   };
 
   if (!user || user.role !== "mentor") {
-    return <div>Loading...</div>;
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border border-gray-700 border-t-white" />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            My Schedules 📅
-          </h1>
-          <p className="text-xl text-white max-w-2xl mx-auto">
-            Manage your availability and create sessions for students to book.
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">Schedules</h1>
+            <p className="text-sm text-gray-500">Manage your availability</p>
+          </div>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showCreateForm
+                ? "bg-gray-800 text-gray-400 border border-gray-700"
+                : "bg-white text-black hover:bg-gray-100"
+            }`}
+          >
+            {showCreateForm ? "Cancel" : "+ New Schedule"}
+          </button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-200/50">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1">
-              <Input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                className="w-full"
-                placeholder="Filter by date"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="all">All Schedules</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+        <div className="flex flex-wrap gap-3 mb-6">
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-400 focus:outline-none focus:border-gray-700"
+          />
+          <div className="flex gap-1 bg-gray-900 p-1 rounded-lg border border-gray-800">
+            {["all", "active", "inactive"].map((status) => (
               <button
-                onClick={() => setShowCreateForm(!showCreateForm)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  filterStatus === status
+                    ? "bg-white text-black"
+                    : "text-gray-400 hover:text-white"
+                }`}
               >
-                {showCreateForm ? "Cancel" : "Create Schedule"}
+                {status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
-            </div>
+            ))}
           </div>
+          {filterDate && (
+            <button
+              onClick={() => setFilterDate("")}
+              className="px-3 py-2 text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Create Schedule Form */}
         {showCreateForm && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-6 border border-blue-200/50 shadow-lg">
-            <h2 className="text-2xl font-bold text-black mb-6">
-              Create New Schedule
-            </h2>
+          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 mb-6">
+            <h2 className="text-lg font-semibold text-white mb-5">New Schedule</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
-                </label>
-                <Input
+                <label className="block text-xs font-medium text-gray-500 mb-2">Title *</label>
+                <input
                   value={newSchedule.title}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g., JavaScript Fundamentals Session"
-                  className="w-full"
+                  onChange={(e) => setNewSchedule((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., JavaScript Fundamentals"
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Session Type
-                </label>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Session Type</label>
                 <select
                   value={newSchedule.sessionType}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      sessionType: e.target.value,
-                    }))
-                  }
-                  className="w-full p-3 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                  onChange={(e) => setNewSchedule((prev) => ({ ...prev, sessionType: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
                 >
                   {sessionTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
+                    <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date *
-                </label>
-                <Input
+                <label className="block text-xs font-medium text-gray-500 mb-2">Date *</label>
+                <input
                   type="date"
                   value={newSchedule.date}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      date: e.target.value,
-                    }))
-                  }
-                  className="w-full"
+                  onChange={(e) => setNewSchedule((prev) => ({ ...prev, date: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time *
-                </label>
-                <Input
-                  type="time"
-                  value={newSchedule.startTime}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      startTime: e.target.value,
-                    }))
-                  }
-                  className="w-full"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Start *</label>
+                  <input
+                    type="time"
+                    value={newSchedule.startTime}
+                    onChange={(e) => setNewSchedule((prev) => ({ ...prev, startTime: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">End *</label>
+                  <input
+                    type="time"
+                    value={newSchedule.endTime}
+                    onChange={(e) => setNewSchedule((prev) => ({ ...prev, endTime: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Duration (min)</label>
+                  <input
+                    type="number"
+                    value={newSchedule.duration}
+                    onChange={(e) => setNewSchedule((prev) => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Price (pts)</label>
+                  <input
+                    type="number"
+                    value={newSchedule.price}
+                    onChange={(e) => setNewSchedule((prev) => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Time *
-                </label>
-                <Input
-                  type="time"
-                  value={newSchedule.endTime}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      endTime: e.target.value,
-                    }))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Duration (minutes)
-                </label>
-                <Input
-                  type="number"
-                  value={newSchedule.duration}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      duration: parseInt(e.target.value) || 30,
-                    }))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price (₹)
-                </label>
-                <Input
-                  type="number"
-                  value={newSchedule.price}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      price: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Location</label>
                 <select
                   value={newSchedule.location}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      location: e.target.value,
-                    }))
-                  }
-                  className="w-full p-3 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                  onChange={(e) => setNewSchedule((prev) => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-600"
                 >
-                  {locations.map((location) => (
-                    <option key={location.value} value={location.value}>
-                      {location.label}
-                    </option>
+                  {locations.map((loc) => (
+                    <option key={loc.value} value={loc.value}>{loc.label}</option>
                   ))}
                 </select>
               </div>
 
               {newSchedule.location === "online" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meeting Link
-                  </label>
-                  <Input
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Meeting Link</label>
+                  <input
                     value={newSchedule.meetingLink}
-                    onChange={(e) =>
-                      setNewSchedule((prev) => ({
-                        ...prev,
-                        meetingLink: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setNewSchedule((prev) => ({ ...prev, meetingLink: e.target.value }))}
                     placeholder="https://meet.google.com/..."
-                    className="w-full"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
                   />
                 </div>
               )}
-
-              {newSchedule.location === "in-person" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <Input
-                    value={newSchedule.address}
-                    onChange={(e) =>
-                      setNewSchedule((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter meeting address"
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Bookings
-                </label>
-                <Input
-                  type="number"
-                  value={newSchedule.maxBookings}
-                  onChange={(e) =>
-                    setNewSchedule((prev) => ({
-                      ...prev,
-                      maxBookings: parseInt(e.target.value) || 1,
-                    }))
-                  }
-                  className="w-full"
-                />
-              </div>
             </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-500 mb-2">Description</label>
               <textarea
                 value={newSchedule.description}
-                onChange={(e) =>
-                  setNewSchedule((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-                className="w-full p-3 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none resize-none"
-                placeholder="Describe what this session will cover..."
+                onChange={(e) => setNewSchedule((prev) => ({ ...prev, description: e.target.value }))}
+                rows={2}
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600 resize-none"
+                placeholder="What will you cover..."
               />
             </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Skills Covered
-              </label>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-500 mb-2">Skills</label>
+              <div className="flex flex-wrap gap-1.5">
                 {commonSkills.map((skill) => (
                   <button
                     key={skill}
@@ -586,10 +457,10 @@ export default function SchedulesPage() {
                         : [...newSchedule.skills, skill];
                       setNewSchedule((prev) => ({ ...prev, skills }));
                     }}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                       newSchedule.skills.includes(skill)
-                        ? "bg-blue-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-white text-black"
+                        : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"
                     }`}
                   >
                     {skill}
@@ -598,53 +469,19 @@ export default function SchedulesPage() {
               </div>
             </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Requirements
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {commonRequirements.map((req) => (
-                  <button
-                    key={req}
-                    onClick={() => {
-                      const requirements = newSchedule.requirements.includes(
-                        req
-                      )
-                        ? newSchedule.requirements.filter((r) => r !== req)
-                        : [...newSchedule.requirements, req];
-                      setNewSchedule((prev) => ({ ...prev, requirements }));
-                    }}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                      newSchedule.requirements.includes(req)
-                        ? "bg-green-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {req}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-3 mt-6">
+            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-800">
               <button
-                variant="outline"
                 onClick={() => setShowCreateForm(false)}
-                className="px-6 py-2 rounded-2xl"
+                className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateSchedule}
-                disabled={
-                  !newSchedule.title.trim() ||
-                  !newSchedule.date ||
-                  !newSchedule.startTime ||
-                  !newSchedule.endTime
-                }
-                className="px-6 py-2 rounded-2xl bg-gradient-to-r from-green-600 to-blue-600 text-white"
+                disabled={!newSchedule.title.trim() || !newSchedule.date || !newSchedule.startTime || !newSchedule.endTime}
+                className="px-5 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Schedule
+                Create
               </button>
             </div>
           </div>
@@ -652,141 +489,108 @@ export default function SchedulesPage() {
 
         {/* Schedules List */}
         {isLoading ? (
-          <div className="space-y-6">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-3xl p-6 shadow-lg border border-gray-200/50 animate-pulse"
-              >
-                <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
-              </div>
-            ))}
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border border-gray-700 border-t-white" />
+          </div>
+        ) : schedules.length === 0 ? (
+          <div className="bg-gray-900 rounded-xl p-12 text-center border border-gray-800">
+            <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-700">
+              <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-medium text-white mb-2">No Schedules</h3>
+            <p className="text-sm text-gray-500 mb-6">Create your first schedule</p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="px-5 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              Create Schedule
+            </button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {schedules.map((schedule) => (
               <div
                 key={schedule._id}
-                className="bg-white rounded-3xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300"
+                className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden hover:border-gray-700 transition-colors"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {schedule.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4">{schedule.description}</p>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-700">Date:</span>
-                        <p className="text-gray-600">
-                          {formatDate(schedule.date)}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Time:</span>
-                        <p className="text-gray-600">
-                          {formatTime(schedule.startTime)} -{" "}
-                          {formatTime(schedule.endTime)}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">
-                          Price:
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-medium text-white">{schedule.title}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                          !schedule.isActive
+                            ? "bg-gray-800 text-gray-500 border-gray-700"
+                            : schedule.currentBookings >= schedule.maxBookings
+                            ? "bg-white text-black border-white"
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        }`}>
+                          {!schedule.isActive ? "Inactive" : schedule.currentBookings >= schedule.maxBookings ? "Full" : "Available"}
                         </span>
-                        <p className="text-gray-600">₹{schedule.price}</p>
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-700">
-                          Bookings:
-                        </span>
-                        <p className="text-gray-600">
-                          {schedule.currentBookings}/{schedule.maxBookings}
-                        </p>
+                      {schedule.description && (
+                        <p className="text-xs text-gray-500 mb-3">{schedule.description}</p>
+                      )}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div>
+                          <span className="text-gray-500">Date</span>
+                          <p className="text-white mt-0.5">{formatDate(schedule.date)}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Time</span>
+                          <p className="text-white mt-0.5">{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Price</span>
+                          <p className="text-amber-400 mt-0.5">{schedule.price} pts</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Bookings</span>
+                          <p className="text-white mt-0.5">{schedule.currentBookings}/{schedule.maxBookings}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          schedule.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {schedule.isActive ? "Active" : "Inactive"}
-                      </span>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                        {schedule.sessionType}
-                      </span>
-                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-                        {schedule.location}
-                      </span>
-                    </div>
-
-                    {schedule.skills.length > 0 && (
-                      <div className="mt-4">
-                        <span className="text-sm font-medium text-gray-700">
-                          Skills:
-                        </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
+                      {schedule.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
                           {schedule.skills.map((skill) => (
                             <span
                               key={skill}
-                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                              className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded text-[10px] border border-gray-700"
                             >
                               {skill}
                             </span>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  <div className="flex items-center space-x-2 ml-4">
-                    <button
-                      onClick={() =>
-                        toggleScheduleStatus(schedule._id, schedule.isActive)
-                      }
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                        schedule.isActive
-                          ? "bg-red-100 text-red-700 hover:bg-red-200"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
-                      }`}
-                    >
-                      {schedule.isActive ? "Deactivate" : "Activate"}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSchedule(schedule._id)}
-                      className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium hover:bg-red-200 transition-all duration-200"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleScheduleStatus(schedule._id, schedule.isActive)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          schedule.isActive
+                            ? "bg-gray-800 text-gray-400 hover:text-rose-400 border border-gray-700"
+                            : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20"
+                        }`}
+                      >
+                        {schedule.isActive ? "Deactivate" : "Activate"}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSchedule(schedule._id)}
+                        className="p-1.5 text-gray-500 hover:text-rose-400 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {schedules.length === 0 && !isLoading && (
-          <div className="text-center py-20">
-            <div className="text-8xl mb-6">📅</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              No schedules found
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Create your first schedule to start offering sessions to students.
-            </p>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-            >
-              Create First Schedule
-            </button>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import Loader from "@/components/Loader";
 // Removed mock API - using real API calls
 
 interface User {
@@ -113,7 +114,7 @@ export default function LeaderboardPage() {
   const topThree = leaderboard.slice(0, 3);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader message="Loading leaderboard data..." />;
   }
 
   return (

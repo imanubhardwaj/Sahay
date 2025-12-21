@@ -7,12 +7,18 @@ import { useAuth } from "@/contexts/AuthContext";
 // Button component removed - using native button elements
 import Image from "next/image";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { FaHome, FaSearch, FaPeopleArrows } from "react-icons/fa";
+import { FaHome, FaSearch, FaPeopleArrows, FaCode } from "react-icons/fa";
 import { RiUserCommunityFill, RiAccountCircleFill } from "react-icons/ri";
 import { BsFillPassportFill } from "react-icons/bs";
-import { MdLeaderboard, MdAttachMoney, MdLogout, MdSchedule } from "react-icons/md";
+import {
+  MdLeaderboard,
+  MdAttachMoney,
+  MdLogout,
+  MdSchedule,
+} from "react-icons/md";
 import { SiSession } from "react-icons/si";
 import { GiTeacher } from "react-icons/gi";
+import { SidebarNotifications } from "@/components/SidebarNotifications";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -56,87 +62,94 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Redirect to onboarding if not completed
   useEffect(() => {
     if (user && !user.isOnboardingComplete) {
-      router.push('/onboarding-simplified');
+      router.push("/onboarding-simplified");
     }
   }, [user, router]);
 
   const isSidebarExpanded = !sidebarCollapsed || isHovering;
 
-  const navigation = useMemo(
-    () => {
-      // Check if user is a working professional (any type that includes "professional")
-      const isWorkingProfessional = user?.userType?.includes("professional");
-      
-      if (isWorkingProfessional) {
-        // Navigation for working professionals (who can be mentors)
-        return [
-          { name: "Home", href: "/dashboard", icon: <FaHome /> },
-          {
-            name: "Community",
-            href: "/dashboard/community",
-            icon: <RiUserCommunityFill />,
-          },
-          {
-            name: "Mentors",
-            href: "/dashboard/mentors",
-            icon: <FaPeopleArrows />,
-          },
-                  {
-                    name: "Become a Mentor",
-                    href: "/dashboard/mentor-setup",
-                    icon: <GiTeacher />,
-                  },
-                  {
-                    name: "My Profile",
-                    href: "/dashboard/mentor-profile",
-                    icon: <RiUserCommunityFill />,
-                  },
-          {
-            name: "My Schedule",
-            href: "/dashboard/mentor-schedule",
-            icon: <MdSchedule />,
-          },
-          {
-            name: "Sessions",
-            href: "/dashboard/sessions",
-            icon: <SiSession />,
-          },
-          {
-            name: "Earnings",
-            href: "/dashboard/earnings",
-            icon: <MdAttachMoney />,
-          },
-        ];
-      } else {
-        // Navigation for students/freshers
-        return [
-          { name: "Home", href: "/dashboard", icon: <FaHome /> },
-          { name: "Explore", href: "/dashboard/explore", icon: <FaSearch /> },
-          {
-            name: "Community",
-            href: "/dashboard/community",
-            icon: <RiUserCommunityFill size={25} />,
-          },
-          {
-            name: "Mentors",
-            href: "/dashboard/mentors",
-            icon: <FaPeopleArrows />,
-          },
-          {
-            name: "Portfolio",
-            href: "/dashboard/portfolio",
-            icon: <BsFillPassportFill />,
-          },
-          {
-            name: "Leaderboard",
-            href: "/dashboard/leaderboard",
-            icon: <MdLeaderboard />,
-          },
-        ];
-      }
-    },
-    [user?.userType]
-  );
+  const navigation = useMemo(() => {
+    // Check if user is a working professional (any type that includes "professional")
+    const isWorkingProfessional = user?.userType?.includes("professional");
+
+    if (isWorkingProfessional) {
+      // Navigation for working professionals (who can be mentors)
+      return [
+        { name: "Home", href: "/dashboard", icon: <FaHome /> },
+        {
+          name: "Community",
+          href: "/dashboard/community",
+          icon: <RiUserCommunityFill />,
+        },
+        {
+          name: "Mentors",
+          href: "/dashboard/mentors",
+          icon: <FaPeopleArrows />,
+        },
+        {
+          name: "Become a Mentor",
+          href: "/dashboard/mentor-setup",
+          icon: <GiTeacher />,
+        },
+        {
+          name: "My Profile",
+          href: "/dashboard/mentor-profile",
+          icon: <RiUserCommunityFill />,
+        },
+        {
+          name: "My Schedule",
+          href: "/dashboard/mentor-schedule",
+          icon: <MdSchedule />,
+        },
+        {
+          name: "Sessions",
+          href: "/dashboard/sessions",
+          icon: <SiSession />,
+        },
+        {
+          name: "Earnings",
+          href: "/dashboard/earnings",
+          icon: <MdAttachMoney />,
+        },
+      ];
+    } else {
+      // Navigation for students/freshers
+      return [
+        { name: "Home", href: "/dashboard", icon: <FaHome /> },
+        { name: "Explore", href: "/dashboard/explore", icon: <FaSearch /> },
+        {
+          name: "Practice",
+          href: "/dashboard/practice",
+          icon: <FaCode />,
+        },
+        {
+          name: "Community",
+          href: "/dashboard/community",
+          icon: <RiUserCommunityFill size={25} />,
+        },
+        {
+          name: "Mentors",
+          href: "/dashboard/mentors",
+          icon: <FaPeopleArrows />,
+        },
+        {
+          name: "My Sessions",
+          href: "/dashboard/my-sessions",
+          icon: <SiSession />,
+        },
+        {
+          name: "Portfolio",
+          href: "/dashboard/portfolio",
+          icon: <BsFillPassportFill />,
+        },
+        {
+          name: "Leaderboard",
+          href: "/dashboard/leaderboard",
+          icon: <MdLeaderboard />,
+        },
+      ];
+    }
+  }, [user?.userType]);
 
   return (
     <div className="min-h-screen bg-black">
@@ -150,7 +163,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       )}
 
-      {/* Left Sidebar - Modern Design */}
+      {/* Left Sidebar */}
       <div
         className={`fixed left-0 top-0 z-50 bg-black shadow-xl transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -171,6 +184,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </div>
             )}
+            {/* Notifications */}
+            <div className="mt-2">
+              <SidebarNotifications />
+            </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="p-2 rounded-xl hover:bg-white transition-all duration-200 group"
@@ -191,7 +208,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center mx-auto w-full rounded-xl ${
+                  className={`group flex items-center mx-auto w-full rounded-xl transition-all duration-300 ${
                     !isSidebarExpanded ? "justify-center" : "justify-start"
                   } ${
                     isActive
@@ -200,18 +217,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   }`}
                   title={!isSidebarExpanded ? item.name : undefined}
                 >
-                  <div
-                    className={`flex items-center group justify-center w-8 h-8 rounded-xl transition-all duration-300 ${
-                      isActive
-                        ? " text-black "
-                        : "text-white hover:text-gray-900"
-                    }`}
-                  >
-                    <span className="text-lg">{item.icon}</span>
+                  <div className="flex items-center">
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${
+                        isActive
+                          ? "text-black"
+                          : "text-white group-hover:text-gray-900"
+                      }`}
+                    >
+                      <span className="text-lg">{item.icon}</span>
+                    </div>
+                    {isSidebarExpanded && (
+                      <span className="ml-4 font-semibold group-hover:text-gray-900 transition-colors duration-300">{item.name}</span>
+                    )}
                   </div>
-                  {isSidebarExpanded && (
-                    <span className="ml-4 font-semibold">{item.name}</span>
-                  )}
                 </Link>
               );
             })}
@@ -238,19 +257,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         {user?.name}
                       </p>
                       <p className="text-xs text-white truncate">
-                        @{user?.username || user?.name?.toLowerCase().replace(/\s+/g, "")}
+                        @
+                        {user?.username ||
+                          user?.name?.toLowerCase().replace(/\s+/g, "")}
                       </p>
                     </div>
                   </div>
                 )}
-              {!isSidebarExpanded && (
-                <div className="flex items-center justify-center px-3 my-2 mx-auto">
-                  <RiAccountCircleFill className="text-white" size={30} />
-                </div>
-              )}
+                {!isSidebarExpanded && (
+                  <div className="flex items-center justify-center px-3 my-2 mx-auto">
+                    <RiAccountCircleFill className="text-white" size={30} />
+                  </div>
+                )}
               </div>
             </Link>
-            
+
             {/* Points Display */}
             {isSidebarExpanded && (
               <div className="px-3 mt-3">
@@ -262,7 +283,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </div>
             )}
-            
+
             {!isSidebarExpanded && (
               <div className="flex items-center justify-center px-3 mt-2">
                 <div className="flex items-center justify-center space-x-1 bg-gradient-to-r from-yellow-50 to-orange-50 px-2 py-1 rounded-lg border border-yellow-200">
@@ -337,11 +358,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="flex items-center space-x-3">
                 <h1 className="text-lg font-bold text-black">Sahay</h1>
               </div>
-              <div className="flex items-center space-x-3 bg-gradient-to-r from-yellow-50 to-orange-50 px-3 py-2 rounded-2xl border border-yellow-200">
-                <span className="text-yellow-600">⭐</span>
-                <span className="text-black font-bold text-sm">
-                  {user?.points || 0}
-                </span>
+              <div className="flex items-center space-x-3">
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-3 py-2 rounded-2xl border border-yellow-200">
+                  <span className="text-yellow-600">⭐</span>
+                  <span className="text-black font-bold text-sm">
+                    {user?.points || 0}
+                  </span>
+                </div>
               </div>
             </div>
 

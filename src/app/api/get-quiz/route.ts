@@ -4,19 +4,43 @@ import Lesson from "@/models/Lesson";
 import ModuleProgress from "@/models/ModuleProgress";
 import Quiz from "@/models/Quiz";
 import Question from "@/models/Question";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 // GET - Get quiz questions for a lesson (secure - doesn't expose correct answers)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get("lessonId");
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
 
-    if (!lessonId || !userId) {
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only access their own quizzes
+    if (userId !== authenticatedUserId) {
       return NextResponse.json(
-        { success: false, error: "lessonId and userId are required" },
+        {
+          success: false,
+          error: "Forbidden: You can only access your own quizzes",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!lessonId) {
+      return NextResponse.json(
+        { success: false, error: "lessonId is required" },
         { status: 400 }
       );
     }
@@ -110,13 +134,12 @@ export async function GET(request: NextRequest) {
     const response = {
       quiz: {
         _id: associatedQuiz._id,
-        title: associatedQuiz.title || `Quiz for ${lesson.name}`,
+        name: associatedQuiz.name,
         description: associatedQuiz.description,
         totalQuestions: questions.length,
         totalPoints: questions.reduce((sum, q) => sum + (q.points || 0), 0),
-        passingScore: associatedQuiz.passingScore || 70,
-        timeLimit: associatedQuiz.timeLimit,
-        attempts: associatedQuiz.attempts || 3,
+        duration: associatedQuiz.duration,
+        points: associatedQuiz.points,
       },
       questions: questions,
     };

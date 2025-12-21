@@ -3,9 +3,19 @@ import connectToDatabase from "@/lib/mongodb";
 import Lesson from "@/models/Lesson";
 import Module from "@/models/Module";
 import Skill from "@/models/Skill";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
@@ -36,6 +46,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectToDatabase();
 
     const body = await request.json();

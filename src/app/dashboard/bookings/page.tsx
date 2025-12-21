@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/Input";
+import Loader from "@/components/Loader";
 
 interface Booking {
   _id: string;
@@ -268,7 +269,7 @@ export default function BookingsPage() {
   }, []);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader message="Loading bookings data..." />;
   }
 
   return (

@@ -2,16 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Post from "@/models/Post";
 import PostReaction from "@/models/PostReaction";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// POST /api/posts/[id]/react - React to a post
+// POST /api/posts/[id]/react - React to a post (requires auth)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const authenticatedUserId = await authenticateRequest(request);
+
     await connectDB();
 
-    const { userId, reactionType } = await request.json();
+    const body = await request.json();
+    const { userId: requestedUserId, reactionType } = body;
+
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
 
     if (!userId || !reactionType) {
       return NextResponse.json(
@@ -24,16 +32,13 @@ export async function POST(
     // Check if post exists
     const post = await Post.findById(id);
     if (!post || post.deletedAt) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Check if user already reacted
     const existingReaction = await PostReaction.findOne({
       postId: id,
-      userId
+      userId,
     });
 
     if (existingReaction) {
@@ -45,7 +50,7 @@ export async function POST(
       const reaction = new PostReaction({
         postId: id,
         userId,
-        reactionType
+        reactionType,
       });
       await reaction.save();
     }
@@ -53,7 +58,7 @@ export async function POST(
     // Update post reaction count
     const reactionCounts = await PostReaction.aggregate([
       { $match: { postId: id } },
-      { $group: { _id: "$reactionType", count: { $sum: 1 } } }
+      { $group: { _id: "$reactionType", count: { $sum: 1 } } },
     ]);
 
     const reactions: Record<string, number> = {};
@@ -73,16 +78,36 @@ export async function POST(
   }
 }
 
-// DELETE /api/posts/[id]/react - Remove reaction from a post
+// DELETE /api/posts/[id]/react - Remove reaction from a post (requires auth)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
+
+    // Use authenticated user's ID
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only remove their own reactions
+    if (userId !== authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only remove your own reactions" },
+        { status: 403 }
+      );
+    }
 
     if (!userId) {
       return NextResponse.json(
@@ -95,13 +120,13 @@ export async function DELETE(
     // Remove reaction
     await PostReaction.findOneAndDelete({
       postId: id,
-      userId
+      userId,
     });
 
     // Update post reaction count
     const reactionCounts = await PostReaction.aggregate([
       { $match: { postId: id } },
-      { $group: { _id: "$reactionType", count: { $sum: 1 } } }
+      { $group: { _id: "$reactionType", count: { $sum: 1 } } },
     ]);
 
     const reactions: Record<string, number> = {};

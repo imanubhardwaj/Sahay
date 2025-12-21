@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { workos } from '@/lib/workos';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import { generateToken } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -73,15 +74,32 @@ export async function POST(req: Request) {
 
     console.log('User authenticated successfully:', dbUser.email, 'New user:', isNewUser);
     
+    // Generate JWT token
+    const token = generateToken({
+      userId: dbUser._id.toString(),
+      email: dbUser.email,
+      role: dbUser.role,
+    });
+    
     // Set session cookie
     const response = NextResponse.json({ 
       message: 'Code verified successfully!', 
       userId: dbUser._id.toString(),
+      token, // Send token in response for frontend to store
       isNewUser,
       user: dbUser
     });
     
+    // Set cookie for backward compatibility
     response.cookies.set('user_id', dbUser._id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    });
+
+    // Set token in cookie (optional)
+    response.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

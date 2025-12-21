@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import Loader from '@/components/Loader';
 
 const USER_TYPES = [
   {
@@ -130,7 +130,7 @@ export default function SimplifiedOnboardingPage() {
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <Loader message="Loading onboarding data..." />;
   }
 
   return (

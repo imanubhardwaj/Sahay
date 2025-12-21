@@ -3,10 +3,20 @@ import connectDB from "@/lib/mongodb";
 import Course from "@/models/Course";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/courses - Get all courses
+// GET /api/courses - Get all courses (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     const { searchParams } = new URL(request.url);
@@ -54,9 +64,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/courses - Create a new course
+// POST /api/courses - Create a new course (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+    
     await connectDB();
     
     const courseData = await request.json();

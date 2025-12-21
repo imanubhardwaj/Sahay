@@ -4,15 +4,25 @@ import Comment from "@/models/Comment";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
 import Post from "@/models/Post";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/comments - Get all comments
+// GET /api/comments - Get all comments (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
     const limit = parseInt(searchParams.get("limit") || "20");
     const page = parseInt(searchParams.get("page") || "1");
 
@@ -50,9 +60,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/comments - Create a new comment
+// POST /api/comments - Create a new comment (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+    
     await connectDB();
     
     const commentData = await request.json();

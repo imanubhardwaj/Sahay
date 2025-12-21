@@ -27,8 +27,22 @@ export async function POST() {
       console.log("✅ Created TypeScript skill");
     }
 
+    // Check if TypeScript module already exists
+    let typescriptModule = await Module.findOne({
+      name: "TypeScript Fundamentals",
+      skillId: typescriptSkill._id,
+    });
+
+    if (typescriptModule) {
+      console.log("⚠️  TypeScript module already exists, skipping creation");
+      return NextResponse.json({
+        message: "TypeScript module already exists",
+        module: typescriptModule,
+      });
+    }
+
     // Create TypeScript module
-    const typescriptModule = await Module.create({
+    typescriptModule = await Module.create({
       name: "TypeScript Fundamentals",
       description:
         "Learn TypeScript from basics to advanced concepts including types, interfaces, generics, and more.",
@@ -889,7 +903,7 @@ Write your code in the editor below. The language is set to TypeScript.`,
         module: typescriptModule,
         lessons: createdLessons.length,
         quizzes: quizLessons.length,
-        questions: quizLessons.reduce((sum, _) => sum + 3, 0),
+        questions: quizLessons.length * 3,
       },
     });
   } catch (error) {

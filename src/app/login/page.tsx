@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,46 +14,56 @@ export default function LoginPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  
+
   // Check for error from callback
-  const authError = searchParams.get('error');
+  const authError = searchParams.get("error");
+  
+  // Get redirect URL from query params (if user was redirected from a protected page)
+  const redirectTo = searchParams.get("redirect") || searchParams.get("callbackUrl");
 
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       if (user.isOnboardingComplete) {
-        router.push('/dashboard');
+        // Redirect to the original page if specified, otherwise dashboard
+        const destination = redirectTo || "/dashboard";
+        router.push(destination);
       } else {
-        router.push('/onboarding');
+        router.push("/onboarding");
       }
     }
-  }, [user, authLoading, router]);
-  
+  }, [user, authLoading, router, redirectTo]);
+
   const handleGoogleLogin = () => {
     setIsLoading(true);
     setError("");
-    
+
     // Use real WorkOS Google OAuth
     const clientId = process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID;
-    
+
     if (!clientId) {
-      setError('Google login not configured');
+      setError("Google login not configured");
       setIsLoading(false);
       return;
     }
 
-    // Redirect to WorkOS OAuth
+    // Redirect to WorkOS OAuth - include redirect URL in state
     const redirectUri = `${window.location.origin}/api/auth/callback`;
-    const workosAuthUrl = `https://api.workos.com/oauth/authorize?` +
+    const state = JSON.stringify({ 
+      provider: "google",
+      redirectTo: redirectTo || "/dashboard"
+    });
+    const workosAuthUrl =
+      `https://api.workos.com/oauth/authorize?` +
       `client_id=${clientId}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `response_type=code&` +
       `provider=google&` +
-      `state=${encodeURIComponent(JSON.stringify({ provider: 'google' }))}`;
+      `state=${encodeURIComponent(state)}`;
 
     window.location.href = workosAuthUrl;
   };
@@ -62,20 +71,22 @@ export default function LoginPage() {
   const handleLogout = async () => {
     try {
       // Call logout API to clear server-side session
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
-      
+
       // Clear client-side cookie as backup
-      document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      
+      document.cookie =
+        "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
       // Force reload to clear any cached state
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // Fallback: just clear cookie and reload
-      document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie =
+        "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       window.location.reload();
     }
   };
@@ -86,10 +97,10 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch('/api/auth/magiclink', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: magicLinkEmail })
+      const response = await fetch("/api/auth/magiclink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: magicLinkEmail }),
       });
 
       const data = await response.json();
@@ -98,11 +109,11 @@ export default function LoginPage() {
         setMagicLinkSent(true);
         setUserExists(data.userExists || false);
       } else {
-        setError(data.error || 'Failed to send verification code');
+        setError(data.error || "Failed to send verification code");
       }
     } catch (err) {
-      console.error('Magic link error:', err);
-      setError('Failed to send verification code');
+      console.error("Magic link error:", err);
+      setError("Failed to send verification code");
     } finally {
       setIsMagicLinkLoading(false);
     }
@@ -114,35 +125,42 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch('/api/auth/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const response = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           email: magicLinkEmail,
-          code: verificationCode 
-        })
+          code: verificationCode,
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.user) {
+        // Store token if provided
+        if (data.token) {
+          const { setToken } = await import('@/lib/token-storage');
+          setToken(data.token);
+        }
+        
         // Redirect based on onboarding status
         if (data.user.isOnboardingComplete) {
-          window.location.href = '/dashboard';
+          // Use redirect URL if available, otherwise dashboard
+          const destination = redirectTo || "/dashboard";
+          window.location.href = destination;
         } else {
-          window.location.href = '/onboarding';
+          window.location.href = "/onboarding";
         }
       } else {
-        setError(data.error || 'Invalid verification code');
+        setError(data.error || "Invalid verification code");
         setIsVerifying(false);
       }
     } catch (err) {
-      console.error('Verification error:', err);
-      setError('Verification failed. Please try again.');
+      console.error("Verification error:", err);
+      setError("Verification failed. Please try again.");
       setIsVerifying(false);
     }
   };
-
 
   // Show loading while checking auth
   if (authLoading) {
@@ -150,7 +168,7 @@ export default function LoginPage() {
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p>Loading authentication...</p>
         </div>
       </div>
     );
@@ -187,8 +205,10 @@ export default function LoginPage() {
         {/* Show auth error if present */}
         {authError && (
           <div className="mb-6 text-red-400 text-sm text-center bg-red-900/20 border border-red-800 p-3 rounded-xl">
-            {authError === 'no_code' && 'Authentication failed. Please try again.'}
-            {authError === 'auth_failed' && 'Authentication failed. Please try again.'}
+            {authError === "no_code" &&
+              "Authentication failed. Please try again."}
+            {authError === "auth_failed" &&
+              "Authentication failed. Please try again."}
           </div>
         )}
 
@@ -196,10 +216,8 @@ export default function LoginPage() {
         <div className="mb-6">
           <button
             onClick={handleGoogleLogin}
-            variant="outline"
-            className="w-full hover:bg-white hover:!text-black font-semibold"
-            isLoading={isLoading}
-            icon={<span>🔍</span>}
+            className="w-full bg-white hover:!bg-white hover:!text-black font-semibold py-3 text-black rounded-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+            disabled={isLoading}
           >
             Continue with Google
           </button>
@@ -239,10 +257,8 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              variant="outline"
-              className="w-full hover:bg-white hover:!text-black font-semibold"
-              isLoading={isMagicLinkLoading}
-              icon={<span>✉️</span>}
+              className="w-full bg-white hover:!bg-white hover:!text-black font-semibold py-3 text-black rounded-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+              disabled={isMagicLinkLoading}
             >
               Continue with Email
             </button>
@@ -256,15 +272,19 @@ export default function LoginPage() {
             <p className="text-gray-400 mb-6">
               {userExists ? (
                 <>
-                  We&apos;ve sent a verification code to <span className="text-white">{magicLinkEmail}</span> to log you in.
+                  We&apos;ve sent a verification code to{" "}
+                  <span className="text-white">{magicLinkEmail}</span> to log
+                  you in.
                 </>
               ) : (
                 <>
-                  We&apos;ve sent a verification code to <span className="text-white">{magicLinkEmail}</span> to create your account.
+                  We&apos;ve sent a verification code to{" "}
+                  <span className="text-white">{magicLinkEmail}</span> to create
+                  your account.
                 </>
               )}
             </p>
-            
+
             <form onSubmit={handleCodeVerification} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-white mb-3">
@@ -289,10 +309,8 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                variant="outline"
-                className="w-full hover:bg-white hover:!text-black font-semibold"
-                isLoading={isVerifying}
-                icon={<span>🔐</span>}
+                className="w-full bg-white hover:!bg-white hover:!text-black font-semibold py-3 text-black rounded-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+                disabled={isVerifying}
               >
                 Verify Code
               </button>
@@ -305,13 +323,13 @@ export default function LoginPage() {
                   setMagicLinkEmail("");
                   setVerificationCode("");
                 }}
-                className="text-gray-400 hover:text-white text-sm transition-colors block"
+                className="text-white hover:scale-105  text-sm transition-colors cursor-pointer font-semibold block"
               >
                 Try a different email
               </button>
               <button
                 onClick={handleMagicLink}
-                className="text-gray-400 hover:text-white text-sm transition-colors block"
+                className="text-white hover:scale-105  text-sm transition-colors cursor-pointer font-semibold block"
               >
                 Resend code
               </button>
@@ -322,12 +340,11 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="text-white hover:scale-105 text-sm transition-colors cursor-pointer font-semibold"
           >
             ← Back to home
           </Link>
         </div>
-
       </div>
     </div>
   );

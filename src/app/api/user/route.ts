@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 // GET /api/user - Get current user or all users (with optional filters)
 export async function GET(req: NextRequest) {
@@ -11,9 +12,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const getCurrentUser = searchParams.get("current") === "true";
 
-    // If requesting current user, get from session
+    // If requesting current user, get from session (token or cookie)
     if (getCurrentUser) {
-      const userId = req.cookies.get("user_id")?.value;
+      const userId = await getUserIdFromRequest(req);
 
       if (!userId) {
         return NextResponse.json(
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
 // PUT /api/user - Update current user
 export async function PUT(req: NextRequest) {
   try {
-    const userId = req.cookies.get("user_id")?.value;
+    const userId = await getUserIdFromRequest(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -161,7 +162,7 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/user - Soft delete current user
 export async function DELETE(req: NextRequest) {
   try {
-    const userId = req.cookies.get("user_id")?.value;
+    const userId = await getUserIdFromRequest(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

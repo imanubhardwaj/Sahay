@@ -6,6 +6,8 @@ import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
 import { createZoomMeeting } from '@/lib/zoom';
 import { sendBookingConfirmation, sendCancellationEmail } from '@/lib/email';
+import { notifyBookingEvent } from '@/lib/notifications';
+import { TRANSACTION_TYPE, TRANSACTION_SOURCE } from '@/lib/constants';
 
 // GET - Handle approval/rejection from email link
 export async function GET(request: NextRequest) {
@@ -187,6 +189,28 @@ export async function GET(request: NextRequest) {
         booking.emailSentToMentor = true;
         await booking.save();
 
+        // Send real-time notifications
+        try {
+          await Promise.all([
+            notifyBookingEvent(booking.studentId._id.toString(), "booking_confirmed", {
+              bookingId: booking._id.toString(),
+              mentorName: `${booking.professionalId.firstName} ${booking.professionalId.lastName}`,
+              sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
+              sessionTime: booking.sessionTime,
+              price: booking.price,
+            }),
+            notifyBookingEvent(booking.professionalId._id.toString(), "booking_confirmed", {
+              bookingId: booking._id.toString(),
+              studentName: `${booking.studentId.firstName} ${booking.studentId.lastName}`,
+              sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
+              sessionTime: booking.sessionTime,
+              price: booking.price,
+            }),
+          ]);
+        } catch (notifError) {
+          console.error("Error sending notifications:", notifError);
+        }
+
         return new NextResponse(
           `
           <!DOCTYPE html>
@@ -245,28 +269,35 @@ export async function GET(request: NextRequest) {
     } else if (action === 'reject') {
       // Reject the booking
       try {
-        // Refund points to student
-        const studentWallet = await Wallet.findOne({ userId: booking.studentId._id });
-        if (studentWallet) {
-          studentWallet.balance += booking.price;
-          await studentWallet.save();
+        // Points were already debited when booking was created
+        // Refund full amount to student when mentor rejects
+        if (booking.paymentStatus === 'paid') {
+          const studentWallet = await Wallet.findOne({ userId: booking.studentId._id });
+          if (studentWallet) {
+            studentWallet.balance += booking.price;
+            await studentWallet.save();
 
-          // Create refund transaction
-          await Transaction.create({
-            userId: booking.studentId._id,
-            type: 'credit',
-            amount: booking.price,
-            description: `Refund for declined session with ${booking.professionalId.firstName} ${booking.professionalId.lastName}`,
-            status: 'completed',
-            category: 'refund',
-          });
+            // Create refund transaction (student earns points back)
+            await Transaction.create({
+              userId: booking.studentId._id,
+              walletId: studentWallet._id,
+              type: TRANSACTION_TYPE.Earn,
+              points: booking.price,
+              source: TRANSACTION_SOURCE.Mentor,
+              description: `Refund for declined session with ${booking.professionalId.firstName} ${booking.professionalId.lastName}`,
+              referenceId: booking._id.toString(),
+            });
+          }
         }
 
         // Update booking
         booking.approvalStatus = 'rejected';
         booking.rejectedAt = new Date();
         booking.status = 'cancelled';
-        booking.paymentStatus = 'refunded';
+        // Only mark as refunded if payment was already processed
+        if (booking.paymentStatus === 'paid') {
+          booking.paymentStatus = 'refunded';
+        }
         booking.cancelledBy = 'professional';
         booking.cancellationReason = 'Mentor declined the session';
         await booking.save();
@@ -280,6 +311,19 @@ export async function GET(request: NextRequest) {
           cancelledBy: `${booking.professionalId.firstName} ${booking.professionalId.lastName}`,
           reason: 'The mentor was unable to accept this session at the requested time.',
         });
+
+        // Send real-time notification
+        try {
+          await notifyBookingEvent(booking.studentId._id.toString(), "booking_cancelled", {
+            bookingId: booking._id.toString(),
+            mentorName: `${booking.professionalId.firstName} ${booking.professionalId.lastName}`,
+            sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
+            sessionTime: booking.sessionTime,
+            price: booking.price,
+          });
+        } catch (notifError) {
+          console.error("Error sending notification:", notifError);
+        }
 
         return new NextResponse(
           `

@@ -2,19 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import MentorProfile from "@/models/MentorProfile";
 import User from "@/models/User";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET - Get mentor profile
+// GET - Get mentor profile (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
     const mentorId = searchParams.get("mentorId");
     const approved = searchParams.get("approved");
 
-    // Get all approved mentors
-    if (!userId && !mentorId) {
+    // Get all approved mentors (if no specific userId or mentorId requested)
+    if (!requestedUserId && !mentorId) {
       const query: Record<string, unknown> = { isMentor: true };
       if (approved === "true") {
         query.isApproved = true;
@@ -32,7 +42,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Get specific mentor profile
-    const query = userId ? { userId } : { _id: mentorId };
+    const query = requestedUserId
+      ? { userId: requestedUserId }
+      : { _id: mentorId };
     const mentorProfile = await MentorProfile.findOne(query).populate(
       "userId",
       "firstName lastName email avatar bio title yoe"
@@ -58,9 +70,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create or update mentor profile
+// POST - Create or update mentor profile (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     console.log("Starting mentor profile creation...");
     console.log("MONGODB_URI exists:", !!process.env.MONGODB_URI);
 
@@ -157,9 +172,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH - Update specific fields
+// PATCH - Update specific fields (requires auth)
 export async function PATCH(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const body = await request.json();
@@ -200,9 +218,12 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE - Delete mentor profile (soft delete - set isMentor to false)
+// DELETE - Delete mentor profile (soft delete - set isMentor to false) (requires auth)
 export async function DELETE(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);

@@ -103,6 +103,16 @@ export const seedSkills = async () => {
       name: 'Blockchain',
       description: 'A distributed ledger technology that maintains a continuously growing list of records',
       parentSkillId: null
+    },
+    {
+      name: 'Angular',
+      description: 'A TypeScript-based web application framework for building dynamic single-page applications',
+      parentSkillId: null
+    },
+    {
+      name: 'Express',
+      description: 'A fast, unopinionated, minimalist web framework for Node.js',
+      parentSkillId: null
     }
   ];
 

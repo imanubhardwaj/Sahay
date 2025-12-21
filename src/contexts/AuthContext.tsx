@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
+import { setToken, getAuthHeader } from '@/lib/token-storage';
+import { usePolling } from '@/hooks/usePolling';
 
 interface User {
   _id: string;
@@ -57,11 +59,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const lastPointsRef = useRef<number | null>(null);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
-      // Real authentication - check for session cookie
+      // Real authentication - check for session cookie or token
+      const headers: HeadersInit = {
+        credentials: 'include',
+      };
+      
+      // Add token to header if available
+      const authHeader = getAuthHeader();
+      if (authHeader) {
+        headers['Authorization'] = authHeader;
+      }
+
       const response = await fetch('/api/user?current=true', {
+        headers,
         credentials: 'include'
       });
 
@@ -72,23 +86,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data.user.name = `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim();
         }
         
+        // Store token if provided in response (from verify-code endpoint)
+        if (data.token) {
+          setToken(data.token);
+        }
+
         // Fetch user points from wallet
         if (data.user && data.user._id) {
           try {
-            const pointsResponse = await fetch(`/api/user/points?userId=${data.user._id}`);
+            const pointsHeaders: HeadersInit = {};
+            const authHeader = getAuthHeader();
+            if (authHeader) {
+              pointsHeaders['Authorization'] = authHeader;
+            }
+            
+            const pointsResponse = await fetch(`/api/user/points?userId=${data.user._id}`, {
+              headers: pointsHeaders,
+              credentials: 'include'
+            });
             if (pointsResponse.ok) {
               const pointsData = await pointsResponse.json();
-              data.user.points = pointsData.points || 0;
+              const newPoints = pointsData.points || 0;
+              data.user.points = newPoints;
+              
+              // Only update user if points changed (to prevent unnecessary re-renders)
+              const pointsChanged = lastPointsRef.current !== null && lastPointsRef.current !== newPoints;
+              lastPointsRef.current = newPoints;
+              
+              // Always set user, but we track points changes for polling
+              setUser(data.user);
             } else {
               data.user.points = 0;
+              setUser(data.user);
             }
           } catch (error) {
             console.error('Failed to fetch user points:', error);
             data.user.points = 0;
+            setUser(data.user);
           }
+        } else {
+          setUser(data.user);
         }
-        
-        setUser(data.user);
       } else {
         setUser(null);
       }
@@ -96,21 +134,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to fetch user:', error);
       setUser(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
+      // First, try to get token from API if we have a cookie but no token in localStorage
+      const { getToken } = await import('@/lib/token-storage');
+      if (!getToken()) {
+        try {
+          const tokenResponse = await fetch('/api/auth/token', {
+            credentials: 'include'
+          });
+          if (tokenResponse.ok) {
+            const tokenData = await tokenResponse.json();
+            if (tokenData.token) {
+              const { setToken } = await import('@/lib/token-storage');
+              setToken(tokenData.token);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to get token:', error);
+        }
+      }
+      
       await fetchUser();
       setIsLoading(false);
     };
 
     checkSession();
-  }, []);
+  }, [fetchUser]);
+
+  // Auto-refresh wallet points every 30 seconds (only when points actually change)
+  // This ensures mentor sees updated points when student marks session as complete
+  const refreshWalletPoints = useCallback(async () => {
+    if (user?._id) {
+      try {
+        const pointsHeaders: HeadersInit = {};
+        const authHeader = getAuthHeader();
+        if (authHeader) {
+          pointsHeaders['Authorization'] = authHeader;
+        }
+        
+        const pointsResponse = await fetch(`/api/user/points?userId=${user._id}`, {
+          headers: pointsHeaders,
+          credentials: 'include'
+        });
+        
+        if (pointsResponse.ok) {
+          const pointsData = await pointsResponse.json();
+          const newPoints = pointsData.points || 0;
+          
+          // Only update if points actually changed
+          if (lastPointsRef.current !== null && lastPointsRef.current !== newPoints) {
+            // Points changed, refresh full user data
+            await fetchUser();
+          } else if (lastPointsRef.current === null) {
+            // First time, just set the reference
+            lastPointsRef.current = newPoints;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh wallet points:', error);
+      }
+    }
+  }, [user?._id, fetchUser]);
+
+  usePolling(refreshWalletPoints, {
+    enabled: !!user?._id && !isLoading,
+    interval: 30000, // 30 seconds
+  });
 
   const logout = async () => {
     try {
-      // Bypass logout for development - just clear user and redirect
+      // Clear token from storage
+      const { removeToken } = await import('@/lib/token-storage');
+      removeToken();
+      
+      // Clear user state
       setUser(null);
+      
+      // Redirect to login
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);
@@ -124,9 +227,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('AuthContext: Updating user with:', updates);
       
       // Make API call to update user in database
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      const authHeader = getAuthHeader();
+      if (authHeader) {
+        headers['Authorization'] = authHeader;
+      }
+
       const response = await fetch('/api/user', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify(updates)
       });

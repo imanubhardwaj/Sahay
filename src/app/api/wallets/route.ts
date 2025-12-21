@@ -3,19 +3,39 @@ import connectDB from "@/lib/mongodb";
 import Wallet from "@/models/Wallet";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/wallets - Get all wallets
+// GET /api/wallets - Get all wallets (requires auth)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
+
+    // Security: Ensure user can only access their own wallet
+    if (requestedUserId && requestedUserId !== authenticatedUserId) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only access your own wallet" },
+        { status: 403 }
+      );
+    }
+
+    const userId = requestedUserId || authenticatedUserId;
     const limit = parseInt(searchParams.get("limit") || "50");
     const page = parseInt(searchParams.get("page") || "1");
 
     const query: Record<string, unknown> = { deletedAt: null };
-    
+
     if (userId) query.userId = userId;
 
     const skip = (page - 1) * limit;
@@ -34,8 +54,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching wallets:", error);
@@ -46,11 +66,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/wallets - Create a new wallet
+// POST /api/wallets - Create a new wallet (requires auth)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
-    
+
     const walletData = await request.json();
     const { userId, ...otherData } = walletData;
 
@@ -68,10 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if user already has a wallet
@@ -88,7 +108,7 @@ export async function POST(request: NextRequest) {
       userId,
       balance: 0,
       totalEarned: 0,
-      totalSpent: 0
+      totalSpent: 0,
     });
 
     await wallet.save();

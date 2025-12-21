@@ -3,20 +3,44 @@ import connectDB from "@/lib/mongodb";
 import ModuleProgress from "@/models/ModuleProgress";
 import Module from "@/models/Module";
 import Lesson from "@/models/Lesson";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 // GET - Get module state for a user
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    // Require authentication
+    const authenticatedUserId = await getUserIdFromRequest(request);
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
     const moduleId = searchParams.get("moduleId");
 
-    if (!userId || !moduleId) {
+    if (!moduleId) {
       return NextResponse.json(
-        { success: false, error: "userId and moduleId are required" },
+        { success: false, error: "moduleId is required" },
         { status: 400 }
+      );
+    }
+
+    // Use authenticated user's ID if not provided
+    const userId = requestedUserId || authenticatedUserId;
+
+    // Security: Ensure user can only access their own module state
+    if (userId !== authenticatedUserId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden: You can only access your own module state",
+        },
+        { status: 403 }
       );
     }
 

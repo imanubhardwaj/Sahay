@@ -9,7 +9,9 @@ const moduleSchema = new mongoose.Schema({
   skillId: { type: mongoose.Schema.Types.ObjectId, ref: 'Skill', required: true },
   duration: { type: Number, required: true }, // in minutes
   points: { type: Number, required: true, default: 0 },
-  lessonsCount: { type: Number, default: 0 }
+  lessonsCount: { type: Number, default: 0 },
+  icon: { type: String }, // Icon URL or emoji
+  image: { type: String } // Image URL
 });
 
 moduleSchema.pre('save', updateUpdatedAt);

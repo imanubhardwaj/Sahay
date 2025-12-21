@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Module from "@/models/Module";
 import Skill from "@/models/Skill";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/modules - Get all modules
+// GET /api/modules - Get all modules (requires authentication)
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -33,8 +43,31 @@ export async function GET(request: NextRequest) {
 
     const total = await Module.countDocuments(query);
 
+    // Calculate total points for each module (module points + lesson points)
+    const modulesWithTotalPoints = await Promise.all(
+      modules.map(async (module) => {
+        const moduleObj = module.toObject();
+        
+        // Get all lessons for this module to calculate total lesson points
+        const Lesson = (await import("@/models/Lesson")).default;
+        const lessons = await Lesson.find({ moduleId: module._id }).select("points");
+        
+        const totalLessonPoints = lessons.reduce((sum, lesson) => sum + (lesson.points || 0), 0);
+        const totalPoints = (module.points || 0) + totalLessonPoints;
+        
+        return {
+          ...moduleObj,
+          totalPoints,
+          totalLessonPoints,
+          lessonsCount: lessons.length || module.lessonsCount || 0,
+          icon: module.icon,
+          image: module.image,
+        };
+      })
+    );
+
     return NextResponse.json({
-      modules,
+      modules: modulesWithTotalPoints,
       pagination: {
         page,
         limit,
@@ -51,9 +84,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/modules - Create a new module
+// POST /api/modules - Create a new module (requires authentication)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const moduleData = await request.json();
@@ -77,7 +113,7 @@ export async function POST(request: NextRequest) {
       description,
       skillId,
       duration: duration || 0,
-      points: points || 0
+      points: points || 0,
     });
 
     await newModule.save();

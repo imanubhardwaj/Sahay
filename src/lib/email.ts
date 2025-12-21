@@ -2,12 +2,14 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 
 // Email configuration
+const EMAIL_SENDER = process.env.EMAIL_USER || 'bhardwaj93karriekey@gmail.com';
+
 const transporter: Transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.EMAIL_PORT || '587'),
   secure: process.env.EMAIL_SECURE === 'true',
   auth: {
-    user: process.env.EMAIL_USER,
+    user: EMAIL_SENDER,
     pass: process.env.EMAIL_PASSWORD,
   },
 });
@@ -67,6 +69,16 @@ interface ReminderEmailData {
   zoomJoinUrl: string;
   duration: number;
   role: 'student' | 'mentor';
+}
+
+interface BookingCreatedEmailData {
+  studentName: string;
+  studentEmail: string;
+  mentorName: string;
+  mentorEmail: string;
+  sessionDate: string;
+  sessionTime: string;
+  meetingLink: string;
 }
 
 // Email Templates
@@ -138,7 +150,8 @@ const bookingConfirmationStudentTemplate = (data: BookingEmailData) => `
       
       <div class="footer">
         <p>Need to cancel? Please do so at least 24 hours in advance.</p>
-        <p>Questions? Contact us at support@sahay.com</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
       </div>
     </div>
   </div>
@@ -218,7 +231,8 @@ const bookingConfirmationMentorTemplate = (data: BookingEmailData) => `
       
       <div class="footer">
         <p>Earnings will be credited to your wallet after session completion.</p>
-        <p>Questions? Contact us at support@sahay.com</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
       </div>
     </div>
   </div>
@@ -312,7 +326,8 @@ const cancellationTemplate = (data: CancellationEmailData) => `
       
       <div class="footer">
         <p>Feel free to book another session anytime!</p>
-        <p>Questions? Contact us at support@sahay.com</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
       </div>
     </div>
   </div>
@@ -403,7 +418,8 @@ const approvalRequestTemplate = (data: ApprovalRequestEmailData) => `
       
       <div class="footer">
         <p>This is an automated request. Please respond by clicking one of the buttons above.</p>
-        <p>Questions? Contact us at support@sahay.com</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
       </div>
     </div>
   </div>
@@ -416,7 +432,7 @@ export async function sendBookingConfirmation(data: BookingEmailData): Promise<{
   try {
     // Send to student
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
       subject: '🎉 Your Mentorship Session is Confirmed!',
       html: bookingConfirmationStudentTemplate(data),
@@ -424,7 +440,7 @@ export async function sendBookingConfirmation(data: BookingEmailData): Promise<{
 
     // Send to mentor
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
       subject: '💼 New Session Booked!',
       html: bookingConfirmationMentorTemplate(data),
@@ -440,7 +456,7 @@ export async function sendBookingConfirmation(data: BookingEmailData): Promise<{
 export async function sendSessionReminder(data: ReminderEmailData): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
       subject: '⏰ Your Session Starts Soon!',
       html: reminderTemplate(data),
@@ -456,7 +472,7 @@ export async function sendSessionReminder(data: ReminderEmailData): Promise<{ su
 export async function sendCancellationEmail(data: CancellationEmailData): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
       subject: '❌ Session Cancelled',
       html: cancellationTemplate(data),
@@ -537,7 +553,8 @@ const bookingRequestConfirmationTemplate = (data: BookingRequestConfirmationData
       
       <div class="footer">
         <p>We'll notify you as soon as the mentor responds!</p>
-        <p>Questions? Contact us at support@sahay.com</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
       </div>
     </div>
   </div>
@@ -548,7 +565,7 @@ const bookingRequestConfirmationTemplate = (data: BookingRequestConfirmationData
 export async function sendApprovalRequest(data: ApprovalRequestEmailData): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
       subject: '📬 New Session Request - Action Required',
       html: approvalRequestTemplate(data),
@@ -564,7 +581,7 @@ export async function sendApprovalRequest(data: ApprovalRequestEmailData): Promi
 export async function sendBookingRequestConfirmation(data: BookingRequestConfirmationData): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
-      from: `"Sahay Mentorship" <${process.env.EMAIL_USER}>`,
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
       subject: '✅ Session Request Sent - Pending Approval',
       html: bookingRequestConfirmationTemplate(data),
@@ -573,6 +590,155 @@ export async function sendBookingRequestConfirmation(data: BookingRequestConfirm
     return { success: true };
   } catch (error) {
     console.error('Error sending booking request confirmation:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+const bookingCreatedStudentTemplate = (data: BookingCreatedEmailData) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .content { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { color: #667eea; margin: 0; font-size: 28px; }
+    .details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+    .detail-label { font-weight: 600; color: #6c757d; }
+    .detail-value { color: #212529; }
+    .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="header">
+        <h1>🎉 Session Booked!</h1>
+        <p>Your mentorship session is confirmed</p>
+      </div>
+      
+      <p>Hi ${data.studentName},</p>
+      <p>Your session has been booked with <strong>${data.mentorName}</strong>.</p>
+      
+      <div class="details">
+        <div class="detail-row">
+          <span class="detail-label">👤 Mentor:</span>
+          <span class="detail-value">${data.mentorName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📅 Date:</span>
+          <span class="detail-value">${data.sessionDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">🕐 Time:</span>
+          <span class="detail-value">${data.sessionTime}</span>
+        </div>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${data.meetingLink}" class="button">Join Session</a>
+      </div>
+      
+      <p><strong>Meeting Link (Dummy):</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>
+      <p style="color: #6c757d; font-size: 12px; font-style: italic;">Note: This is a dummy/test meeting link for demonstration purposes.</p>
+      
+      <div class="footer">
+        <p>We look forward to your session!</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+const bookingCreatedMentorTemplate = (data: BookingCreatedEmailData) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .content { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { color: #11998e; margin: 0; font-size: 28px; }
+    .details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+    .detail-label { font-weight: 600; color: #6c757d; }
+    .detail-value { color: #212529; }
+    .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="header">
+        <h1>💼 New Session Booked!</h1>
+        <p>You have a new mentorship session</p>
+      </div>
+      
+      <p>Hi ${data.mentorName},</p>
+      <p><strong>${data.studentName}</strong> has booked a session with you.</p>
+      
+      <div class="details">
+        <div class="detail-row">
+          <span class="detail-label">👤 Student:</span>
+          <span class="detail-value">${data.studentName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📅 Date:</span>
+          <span class="detail-value">${data.sessionDate}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">🕐 Time:</span>
+          <span class="detail-value">${data.sessionTime}</span>
+        </div>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${data.meetingLink}" class="button">Start Session</a>
+      </div>
+      
+      <p><strong>Meeting Link (Dummy):</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>
+      <p style="color: #6c757d; font-size: 12px; font-style: italic;">Note: This is a dummy/test meeting link for demonstration purposes.</p>
+      
+      <div class="footer">
+        <p>Thank you for being a great mentor!</p>
+        <p>Questions? Contact us at ${EMAIL_SENDER}</p>
+        <p style="font-size: 11px; color: #999;">This email was sent from ${EMAIL_SENDER}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+export async function sendBookingCreatedEmail(data: BookingCreatedEmailData): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Send to student
+    await transporter.sendMail({
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
+      to: data.studentEmail,
+      subject: '🎉 Your Session is Booked!',
+      html: bookingCreatedStudentTemplate(data),
+    });
+
+    // Send to mentor
+    await transporter.sendMail({
+      from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
+      to: data.mentorEmail,
+      subject: '💼 New Session Booked!',
+      html: bookingCreatedMentorTemplate(data),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending booking created email:', error);
     return { success: false, error: (error as Error).message };
   }
 }

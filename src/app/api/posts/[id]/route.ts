@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Post from "@/models/Post";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/posts/[id] - Get a specific post
+// GET /api/posts/[id] - Get a specific post (requires auth)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { id } = await params;
@@ -18,10 +28,7 @@ export async function GET(
       .populate("comments.userId", "firstName lastName");
 
     if (!post || post.deletedAt) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Increment view count
@@ -37,12 +44,15 @@ export async function GET(
   }
 }
 
-// PUT /api/posts/[id] - Update a specific post
+// PUT /api/posts/[id] - Update a specific post (requires auth)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const updates = await request.json();
@@ -57,10 +67,7 @@ export async function PUT(
       .populate("communityId", "name");
 
     if (!post || post.deletedAt) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     return NextResponse.json(post);
@@ -73,12 +80,15 @@ export async function PUT(
   }
 }
 
-// DELETE /api/posts/[id] - Soft delete a specific post
+// DELETE /api/posts/[id] - Soft delete a specific post (requires auth)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { id } = await params;
@@ -89,10 +99,7 @@ export async function DELETE(
     );
 
     if (!post) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     return NextResponse.json({ message: "Post deleted successfully" });

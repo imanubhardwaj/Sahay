@@ -1,26 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Quiz from "@/models/Quiz";
+import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET /api/quizzes/[id] - Get a specific quiz
+// GET /api/quizzes/[id] - Get a specific quiz (requires auth)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     const { id } = await params;
     const quiz = await Quiz.findById(id)
       .populate("createdBy", "firstName lastName email avatar userType")
       .populate("moduleId", "title description")
-      .populate("questions", "questionText options correctAnswer points questionType");
+      .populate(
+        "questions",
+        "questionText options correctAnswer points questionType"
+      );
 
     if (!quiz || quiz.deletedAt) {
-      return NextResponse.json(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
     return NextResponse.json(quiz);
@@ -33,12 +43,15 @@ export async function GET(
   }
 }
 
-// PUT /api/quizzes/[id] - Update a specific quiz
+// PUT /api/quizzes/[id] - Update a specific quiz (requires auth)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const updates = await request.json();
@@ -46,7 +59,10 @@ export async function PUT(
     // Recalculate totals if questions are updated
     if (updates.questions) {
       updates.totalQuestions = updates.questions.length;
-      updates.totalPoints = updates.questions.reduce((sum: number, q: { points: number; }) => sum + (q.points || 0), 0);
+      updates.totalPoints = updates.questions.reduce(
+        (sum: number, q: { points: number }) => sum + (q.points || 0),
+        0
+      );
     }
 
     const { id } = await params;
@@ -59,10 +75,7 @@ export async function PUT(
       .populate("moduleId", "title description");
 
     if (!quiz || quiz.deletedAt) {
-      return NextResponse.json(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
     return NextResponse.json(quiz);
@@ -75,12 +88,15 @@ export async function PUT(
   }
 }
 
-// DELETE /api/quizzes/[id] - Soft delete a specific quiz
+// DELETE /api/quizzes/[id] - Soft delete a specific quiz (requires auth)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    await authenticateRequest(request);
+
     await connectDB();
 
     const { id } = await params;
@@ -91,10 +107,7 @@ export async function DELETE(
     );
 
     if (!quiz) {
-      return NextResponse.json(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
     return NextResponse.json({ message: "Quiz deleted successfully" });
