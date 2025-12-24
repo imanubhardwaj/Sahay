@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Sahay - Connect, Learn, Grow",
   description:
-    "A platform connecting students and professionals for mentorship, peer learning, and career growth",
+    "A platform connecting many students and professionals for mentorship, peer learning, and career growth",
 };
 
 export default function RootLayout({
