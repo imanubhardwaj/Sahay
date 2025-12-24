@@ -89,3 +89,25 @@ export enum BOOKING_STATUS {
   Completed = "completed",
   NoShow = "no-show",
 }
+
+// Mentor Tiers - Admin-managed levels
+export enum MENTOR_LEVEL {
+  L1 = "L1", // Elite/Consultants: High-net-worth individuals, investors, founders, or consultants with >1 Cr packages
+  L2 = "L2", // Top Tier Tech: High earners working at top product companies (FAANG, Apple, Google)
+  L3 = "L3", // Standard: Regular employees, largely from the startup ecosystem
+}
+
+// Admin emails - only these users can access admin features
+export const ADMIN_EMAILS: string[] = [
+  "kartikeyebhardwaj2003@gmail.com",
+  "bhardwaj93kartiekey@gmail.com",
+  "admin@sahay.com",
+  // Add more admin emails as needed
+];
+
+// Default point rates per level (can be overridden with customPointRate)
+export const MENTOR_LEVEL_RATES = {
+  [MENTOR_LEVEL.L1]: 500, // Elite mentors charge 500 points/hour
+  [MENTOR_LEVEL.L2]: 300, // Top tier tech charge 300 points/hour
+  [MENTOR_LEVEL.L3]: 100, // Standard mentors charge 100 points/hour
+};

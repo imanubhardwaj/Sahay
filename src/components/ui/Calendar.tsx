@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 interface CalendarProps {
@@ -9,30 +9,40 @@ interface CalendarProps {
   minDate?: string; // YYYY-MM-DD format
 }
 
-export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps) {
-  const today = new Date();
+export function Calendar({
+  selectedDate,
+  onDateSelect,
+  minDate,
+}: CalendarProps) {
+  const today = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }, []);
   today.setHours(0, 0, 0, 0);
-  
+
   // Initialize currentMonth from selectedDate or today
-  const getInitialMonth = () => {
+  const getInitialMonth = useMemo(() => {
     if (selectedDate) {
-      const date = new Date(selectedDate + 'T00:00:00');
+      const date = new Date(selectedDate + "T00:00:00");
       return new Date(date.getFullYear(), date.getMonth(), 1);
     }
     return new Date(today.getFullYear(), today.getMonth(), 1);
-  };
+  }, [selectedDate, today]);
 
   const [currentMonth, setCurrentMonth] = useState(getInitialMonth);
 
   // Update currentMonth when selectedDate changes
   useEffect(() => {
     if (selectedDate) {
-      const date = new Date(selectedDate + 'T00:00:00');
+      const date = new Date(selectedDate + "T00:00:00");
       setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
     }
   }, [selectedDate]);
 
-  const minDateObj = minDate ? new Date(minDate + 'T00:00:00') : today;
+  const minDateObj = useMemo(() => {
+    return minDate ? new Date(minDate + "T00:00:00") : today;
+  }, [minDate, today]);
   minDateObj.setHours(0, 0, 0, 0);
 
   const monthNames = [
@@ -52,7 +62,7 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const getDaysInMonth = (date: Date) => {
+  const getDaysInMonth = useCallback((date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -61,62 +71,78 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
     const startingDayOfWeek = firstDay.getDay();
 
     return { daysInMonth, startingDayOfWeek, year, month };
-  };
+  }, []);
 
-  const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(
-    currentMonth
+  const { daysInMonth, startingDayOfWeek, year, month } =
+    getDaysInMonth(currentMonth);
+
+  const isDateDisabled = useCallback(
+    (day: number) => {
+      const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
+      return date < minDateObj;
+    },
+    [minDateObj, year, month]
   );
 
-  const isDateDisabled = (day: number) => {
-    const date = new Date(year, month, day);
-    date.setHours(0, 0, 0, 0);
-    return date < minDateObj;
-  };
+  const isDateSelected = useCallback(
+    (day: number) => {
+      if (!selectedDate) return false;
+      // Create date string in YYYY-MM-DD format for comparison
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+        day
+      ).padStart(2, "0")}`;
+      return dateStr === selectedDate;
+    },
+    [selectedDate, year, month]
+  );
 
-  const isDateSelected = (day: number) => {
-    if (!selectedDate) return false;
-    // Create date string in YYYY-MM-DD format for comparison
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return dateStr === selectedDate;
-  };
+  const isToday = useCallback(
+    (day: number) => {
+      return (
+        day === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear()
+      );
+    },
+    [month, today, year]
+  );
 
-  const isToday = (day: number) => {
-    return (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    );
-  };
+  const handleDateClick = useCallback(
+    (day: number) => {
+      if (isDateDisabled(day)) return;
 
-  const handleDateClick = (day: number) => {
-    if (isDateDisabled(day)) return;
-    
-    // Create date string in YYYY-MM-DD format
-    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    onDateSelect(dateString);
-  };
+      // Create date string in YYYY-MM-DD format
+      const dateString = `${year}-${String(month + 1).padStart(
+        2,
+        "0"
+      )}-${String(day).padStart(2, "0")}`;
+      onDateSelect(dateString);
+    },
+    [year, month, onDateSelect, isDateDisabled]
+  );
 
-  const goToPreviousMonth = () => {
+  const goToPreviousMonth = useCallback(() => {
     setCurrentMonth(new Date(year, month - 1, 1));
-  };
+  }, [year, month]);
 
-  const goToNextMonth = () => {
+  const goToNextMonth = useCallback(() => {
     setCurrentMonth(new Date(year, month + 1, 1));
-  };
+  }, [year, month]);
 
-  const canGoPrevious = () => {
+  const canGoPrevious = useCallback(() => {
     const prevMonth = new Date(year, month - 1, 1);
-    return prevMonth >= new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
-  };
+    return (
+      prevMonth >= new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1)
+    );
+  }, [year, month, minDateObj]);
 
-  const renderCalendarDays = () => {
+  const renderCalendarDays = useCallback(() => {
     const days = [];
-    
+
     // Empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(
-        <div key={`empty-${i}`} className="aspect-square"></div>
-      );
+      days.push(<div key={`empty-${i}`} className="aspect-square"></div>);
     }
 
     // Days of the month
@@ -132,13 +158,15 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
           disabled={disabled}
           className={`
             aspect-square rounded-lg transition-all
-            ${disabled
-              ? "text-gray-300 cursor-not-allowed bg-gray-50"
-              : selected
-              ? "bg-purple-600 text-white font-semibold shadow-md scale-105"
-              : todayCheck
-              ? "bg-purple-100 text-purple-700 font-semibold hover:bg-purple-200"
-              : "bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-700 border border-gray-200"}
+            ${
+              disabled
+                ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                : selected
+                ? "bg-purple-600 text-white font-semibold shadow-md scale-105"
+                : todayCheck
+                ? "bg-purple-100 text-purple-700 font-semibold hover:bg-purple-200"
+                : "bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-700 border border-gray-200"
+            }
             ${!disabled && !selected ? "hover:scale-105" : ""}
           `}
         >
@@ -148,7 +176,14 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
     }
 
     return days;
-  };
+  }, [
+    startingDayOfWeek,
+    daysInMonth,
+    isDateDisabled,
+    isDateSelected,
+    isToday,
+    handleDateClick,
+  ]);
 
   return (
     <div className="w-full">
@@ -158,20 +193,22 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
           onClick={goToPreviousMonth}
           disabled={!canGoPrevious()}
           className={`
-            p-2 rounded-lg transition-colors
-            ${canGoPrevious()
-              ? "hover:bg-gray-100 text-gray-700"
-              : "text-gray-300 cursor-not-allowed"}
+            p-2 rounded-lg transition-colors cursor-pointer
+            ${
+              canGoPrevious()
+                ? "hover:bg-gray-100 text-gray-700"
+                : "text-gray-300 cursor-not-allowed"
+            }
           `}
         >
           <FaChevronLeft />
         </button>
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-white">
           {monthNames[month]} {year}
         </h3>
         <button
           onClick={goToNextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer"
         >
           <FaChevronRight />
         </button>
@@ -190,9 +227,7 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {renderCalendarDays()}
-      </div>
+      <div className="grid grid-cols-7 gap-1">{renderCalendarDays()}</div>
 
       {/* Legend */}
       <div className="mt-4 flex items-center justify-center gap-4 text-xs">
@@ -212,4 +247,3 @@ export function Calendar({ selectedDate, onDateSelect, minDate }: CalendarProps)
     </div>
   );
 }
-

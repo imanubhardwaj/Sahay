@@ -2,6 +2,7 @@ import * as jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import User from '@/models/User';
 import WorkingProfessional from '@/models/WorkingProfessional';
+import { ADMIN_EMAILS } from '@/lib/constants';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -107,4 +108,51 @@ export async function getUserFromToken(token: string) {
 
   const user = await User.findById(payload.userId) || await WorkingProfessional.findById(payload.userId);
   return user;
+}
+
+/**
+ * Check if email is an admin email
+ */
+export function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+/**
+ * Check if current user is an admin
+ */
+export async function isAdmin(request: NextRequest): Promise<boolean> {
+  const userId = await getUserIdFromRequest(request);
+  if (!userId) {
+    return false;
+  }
+
+  const user = await User.findById(userId) || await WorkingProfessional.findById(userId);
+  if (!user || !user.email) {
+    return false;
+  }
+
+  return isAdminEmail(user.email);
+}
+
+/**
+ * Authenticate request as admin
+ * Throws error if not authenticated or not an admin
+ */
+export async function authenticateAdminRequest(request: NextRequest): Promise<string> {
+  const userId = await getUserIdFromRequest(request);
+  
+  if (!userId) {
+    throw new Error('Not authenticated');
+  }
+
+  const user = await User.findById(userId) || await WorkingProfessional.findById(userId);
+  if (!user || !user.email) {
+    throw new Error('User not found');
+  }
+
+  if (!isAdminEmail(user.email)) {
+    throw new Error('Admin access required');
+  }
+
+  return userId;
 }

@@ -436,7 +436,7 @@ export default function MentorsPage() {
                   </div>
                   <button
                     onClick={() => setSelectedMentor(null)}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
                   >
                     <FaTimes className="text-gray-400 w-5 h-5" />
                   </button>

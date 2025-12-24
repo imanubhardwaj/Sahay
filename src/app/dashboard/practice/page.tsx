@@ -391,7 +391,7 @@ function solution(input: string): string {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setSelectedProblem(null)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer "
                 >
                   <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

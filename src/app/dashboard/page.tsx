@@ -11,10 +11,8 @@ import {
 } from "@/lib/modules";
 import Image from "next/image";
 import Loader from "@/components/Loader";
-
-// Default icon URL for modules without icons
-const DEFAULT_MODULE_ICON =
-  "https://imgs.search.brave.com/0amGyAiF3uFKKjlFLdALYRLoeTeTOygh1JCd-4MlrA8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZy/ZWVwaWsuY29tLzI1/Ni83ODM3Lzc4Mzcx/NTcucG5nP3NlbXQ9/YWlzX3doaXRlX2xh/YmVs";
+import { DEFAULT_MODULE_ICON } from "@/app/dashboard/utils/constants";
+import { Button } from "@mui/material";
 
 // Helper function to get time ago string
 const getTimeAgo = (date: Date): string => {
@@ -514,9 +512,9 @@ export default function DashboardPage() {
               </p>
             </div>
             <Link href="/dashboard/explore">
-              <button className="bg-white text-black rounded-lg hover:scale-105 transition-all duration-300 cursor-pointer">
+              <Button variant="outlined" className=" !bg-white !text-black !rounded-lg !hover:scale-105 !transition-all !duration-300 !cursor-pointer">
                 View All Modules
-              </button>
+              </Button>
             </Link>
           </div>
 
@@ -675,9 +673,9 @@ export default function DashboardPage() {
                     Start learning to see your progress here!
                   </p>
                   <Link href="/dashboard/explore">
-                    <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                    <Button variant="contained" className="!bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white">
                       Explore Modules
-                    </button>
+                    </Button>
                   </Link>
                 </div>
               )}
@@ -712,9 +710,9 @@ export default function DashboardPage() {
                         No modules available
                       </p>
                       <Link href="/dashboard/explore">
-                        <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+                        <Button variant="contained" className="!w-full !bg-gradient-to-r !from-indigo-500 !to-blue-500 !text-white">
                           Explore Modules
-                        </button>
+                        </Button>
                       </Link>
                     </div>
                   );
@@ -740,13 +738,13 @@ export default function DashboardPage() {
                     <Link
                       href={`/dashboard/modules/${displayModule.module.id}`}
                     >
-                      <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white cursor-pointer px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
+                      <Button variant="outlined" className="!w-full !text-black !px-4 !py-2 !rounded-lg !hover:scale-105 !transition-all !duration-300">
                         {displayModule.status === "in_progress"
                           ? "Continue"
                           : displayModule.status === "completed"
                           ? "Review"
                           : "Start"}
-                      </button>
+                      </Button>
                     </Link>
                   </>
                 );
@@ -761,22 +759,22 @@ export default function DashboardPage() {
             </h3>
             <div className="flex flex-col gap-2">
               <Link href="/dashboard/community">
-                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
                   <span className="mr-2 text-xs">💬</span>
                   Ask a Question
-                </button>
+                </Button>
               </Link>
               <Link href="/dashboard/portfolio">
-                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
                   <span className="mr-2 text-xs">🎨</span>
                   Add Project
-                </button>
+                </Button>
               </Link>
               <Link href="/dashboard/mentors">
-                <button className="w-full justify-start text-left border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
                   <span className="mr-2 text-xs">👨‍🏫</span>
                   Book Mentor
-                </button>
+                </Button>
               </Link>
             </div>
           </div>

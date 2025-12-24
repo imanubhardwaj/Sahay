@@ -15,10 +15,12 @@ import {
   MdAttachMoney,
   MdLogout,
   MdSchedule,
+  MdAdminPanelSettings,
 } from "react-icons/md";
 import { SiSession } from "react-icons/si";
 import { GiTeacher } from "react-icons/gi";
 import { SidebarNotifications } from "@/components/SidebarNotifications";
+import { getAuthHeader } from "@/lib/token-storage";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,11 +40,39 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return false;
   });
   const [isHovering, setIsHovering] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Save sidebar state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const headers: HeadersInit = {};
+        const authHeader = getAuthHeader();
+        if (authHeader) {
+          headers['Authorization'] = authHeader;
+        }
+
+        const response = await fetch('/api/admin/check', {
+          headers,
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+        setIsAdmin(data.isAdmin || false);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -294,6 +324,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </div>
             )}
+
+            {/* Admin Panel Link - Only shown to admin users */}
+            {isAdmin && (
+              <div className="px-3 mt-3">
+                {isSidebarExpanded ? (
+                  <Link
+                    href="/admin"
+                    className={`w-full p-2 text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                      pathname === "/admin"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                        : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20"
+                    }`}
+                  >
+                    <MdAdminPanelSettings size={18} />
+                    <span className="font-semibold">Admin Panel</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/admin"
+                    className={`w-full p-2 text-xs rounded-xl transition-all duration-300 flex items-center justify-center group relative ${
+                      pathname === "/admin"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                        : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20"
+                    }`}
+                    title="Admin Panel"
+                  >
+                    <MdAdminPanelSettings size={20} />
+                    <div className="absolute top-0 left-20 bg-gray-900 text-white rounded-xl px-4 py-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 shadow-2xl">
+                      Admin Panel
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+                    </div>
+                  </Link>
+                )}
+              </div>
+            )}
+
             <div className="px-3">
               {isSidebarExpanded && (
                 <button

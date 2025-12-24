@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "../../packages/ui/components/Button/Button";
 import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
@@ -19,23 +19,25 @@ export default function LandingPage() {
               </h1>
             </div>
 
-            <div className="flex space-x-3">
-              <button
-                className="px-5 py-2 font-semibold text-sm cursor-pointer border-2 border-gray-300 rounded-md hover:bg-gray-100 hover:scale-105 transition-all duration-300"
+            <div className="flex gap-4">
+              <Button
+                variant="outlined"
+                className="!px-5 !py-2 !text-black !font-semibold !text-sm !rounded-md !hover:bg-gray-100 !hover:scale-105 !transition-all !duration-300"
                 onClick={() => {
                   router.push("/login");
                 }}
               >
                 Sign In
-              </button>
-              <button
-                className="px-5 py-2 bg-black font-semibold text-sm cursor-pointer text-white rounded-md hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+              </Button>
+              <Button
+                variant="contained"
+                className="!px-5 !py-2 !bg-black !font-semibold !text-sm !text-white !rounded-md !hover:bg-gray-800 !hover:scale-105 !transition-all !duration-300"
                 onClick={() => {
                   router.push("/login");
                 }}
               >
                 Get Started
-              </button>
+              </Button>
             </div>
           </div>
         </nav>
@@ -100,25 +102,20 @@ export default function LandingPage() {
 
               {/* Enhanced CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                <button
-                  size="lg"
-                  className="group relative overflow-hidden transition-all duration-300 hover:scale-105"
+                <Button
+                  variant="contained"
+                  className="!group !relative !px-5 !py-2 !bg-black !text-white !overflow-hidden !transition-all !duration-300 !hover:scale-105"
                   onClick={() => {
                     router.push("/login");
                   }}
+                  startIcon={<span className="text-xl">🎓</span>}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span className="text-xl">🎓</span>
-                    <span className="text-base font-semibold text-black">
-                      Start Learning Journey
-                    </span>
-                  </div>
-                </button>
+                  Start Learning Journey
+                </Button>
 
-                <button
-                  variant="outline"
-                  size="lg"
-                  className=" transition-all duration-300 hover:scale-105"
+                <Button
+                  variant="outlined"
+                  className="!transition-all !duration-300 !hover:scale-105"
                   onClick={() => {
                     router.push("/login");
                   }}
@@ -129,7 +126,7 @@ export default function LandingPage() {
                       Become a Mentor
                     </span>
                   </div>
-                </button>
+                </Button>
               </div>
 
               {/* Enhanced Stats Grid */}
@@ -234,7 +231,7 @@ export default function LandingPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="relative my-20 overflow-hidden">
+        <div className="relative  overflow-hidden">
           <div className="relative w-full px-8 md:px-16 lg:px-24 text-center">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-black mb-4">
               Ready to Transform Your Career? 🚀
@@ -244,28 +241,26 @@ export default function LandingPage() {
               accelerating their growth with Sahay
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button
-                size="lg"
-                variant="secondary"
-                className="bg-black text-white hover:bg-neutral-100"
+              <Button
+                variant="contained"
+                className="!bg-black !text-white !hover:bg-neutral-100"
                 onClick={() => {
                   router.push("/login");
                 }}
-                icon={<span className="text-xl">🎯</span>}
+                startIcon={<span className="text-xl">🎯</span>}
               >
                 Join Sahay Today
-              </button>
-              <button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white text-black hover:bg-white hover:text-primary"
+              </Button>
+              <Button
+                variant="outlined"
+                className="!text-black !hover:bg-white !hover:text-primary"
                 onClick={() => {
                   router.push("/login");
                 }}
-                icon={<span className="text-xl">💼</span>}
+                startIcon={<span className="text-xl">💼</span>}
               >
                 Become a Mentor
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -273,7 +268,7 @@ export default function LandingPage() {
           <footer className="bg-neutral-800 py-8 mt-12">
             <div className="w-full px-8 text-center">
               <p className="text-neutral-400 text-sm">
-                &copy; 2024 Sahay. All rights reserved.
+                &copy; {new Date().getFullYear()} Sahay. All rights reserved.
               </p>
             </div>
           </footer>

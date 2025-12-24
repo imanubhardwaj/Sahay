@@ -81,10 +81,7 @@ export function getModuleById(moduleId: string, userType: string): Module | null
 export function getUserTypeDisplayName(userType: string): string {
   const displayNames: { [key: string]: string } = {
     'student_fresher': 'Student / Fresher',
-    'working_professional_2_3_yr': 'Working Professional (2-3 Yrs)',
-    'experienced_professional_4_6_yr': 'Experienced Professional (4-6 Yrs)',
-    'industry_expert_8_plus_yr': 'Industry Expert (8+ Yrs)',
-    'company': 'Company'
+    'working_professional': 'Working Professional'
   };
   
   return displayNames[userType] || userType;

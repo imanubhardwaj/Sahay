@@ -10,7 +10,7 @@ export interface User {
   username?: string;
   workosId: string;
   role: 'student' | 'mentor';
-  userType?: 'student_fresher' | 'working_professional_2_3_yr' | 'experienced_professional_4_6_yr' | 'industry_expert_8_plus_yr' | 'company';
+  userType?: 'student_fresher' | 'working_professional';
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   collegeId?: string;
   bio?: string;
@@ -58,7 +58,7 @@ export interface CreateUserData {
   username?: string;
   workosId: string;
   role: 'student' | 'mentor';
-  userType?: 'student_fresher' | 'working_professional_2_3_yr' | 'experienced_professional_4_6_yr' | 'industry_expert_8_plus_yr' | 'company';
+  userType?: 'student_fresher' | 'working_professional';
   bio?: string;
   yoe?: number;
   title?: string;

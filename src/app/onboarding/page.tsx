@@ -42,37 +42,16 @@ const USER_TYPES = [
   {
     id: 'student_fresher',
     title: 'Student / Fresher',
-    description: 'Just starting your tech journey',
+    description: 'Just starting your tech journey or recently graduated',
     icon: '🎓',
     color: 'blue'
   },
   {
-    id: 'working_professional_2_3_yr',
-    title: 'Working Professional (2-3 Yrs)',
-    description: 'Looking to advance your skills',
+    id: 'working_professional',
+    title: 'Working Professional',
+    description: 'Currently working and looking to upskill',
     icon: '💼',
     color: 'green'
-  },
-  {
-    id: 'experienced_professional_4_6_yr',
-    title: 'Experienced Professional (4-6 Yrs)',
-    description: 'Ready for senior-level challenges',
-    icon: '🚀',
-    color: 'purple'
-  },
-  {
-    id: 'industry_expert_8_plus_yr',
-    title: 'Industry Expert (8+ Yrs)',
-    description: 'Leading technical strategy',
-    icon: '👑',
-    color: 'gold'
-  },
-  {
-    id: 'company',
-    title: 'Company',
-    description: 'Training your team',
-    icon: '🏢',
-    color: 'gray'
   }
 ];
 
@@ -114,7 +93,7 @@ const getSectionsForUserType = (userType: string): Section[] => {
       { id: 'year', label: 'Current Year', type: 'select', options: ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate'], required: true },
       { id: 'major', label: 'Major/Field of Study', type: 'text', placeholder: 'Computer Science, Engineering, etc.', required: true }
     );
-  } else if (userType.startsWith('working_professional') || userType.startsWith('experienced_professional') || userType.startsWith('industry_expert')) {
+  } else if (userType === 'working_professional') {
     baseSections[0].questions.push(
       { id: 'company', label: 'Current Company', type: 'text', placeholder: 'Your company name', required: true },
       { id: 'currentRole', label: 'Current Role', type: 'text', placeholder: 'Software Engineer, Product Manager, etc.', required: true },
@@ -235,7 +214,7 @@ export default function OnboardingPage() {
       const updateData = {
         firstName: firstName,
         lastName: lastName,
-        userType: selectedUserType as 'student_fresher' | 'working_professional_2_3_yr' | 'experienced_professional_4_6_yr' | 'industry_expert_8_plus_yr' | 'company',
+        userType: selectedUserType as 'student_fresher' | 'working_professional',
         // Skip college field for now since it expects ObjectId but we have string
         // college: formData.college,
         year: formData.year ? parseInt(formData.year.toString().split(' ')[0]) : undefined,

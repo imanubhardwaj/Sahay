@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { baseSchema, updateUpdatedAt } from './BaseModel';
+import { MENTOR_LEVEL } from '@/lib/constants';
 
 const mentorProfileSchema = new mongoose.Schema({
   userId: { 
@@ -16,6 +17,18 @@ const mentorProfileSchema = new mongoose.Schema({
   isApproved: { 
     type: Boolean, 
     default: false 
+  },
+  // Admin-managed fields (not exposed to frontend)
+  level: {
+    type: String,
+    enum: [MENTOR_LEVEL.L1, MENTOR_LEVEL.L2, MENTOR_LEVEL.L3],
+    default: MENTOR_LEVEL.L3, // New mentors default to L3
+    select: false // Don't include in queries by default (admin only)
+  },
+  customPointRate: {
+    type: Number,
+    default: null, // null means use default rate based on level
+    select: false // Admin only
   },
   // Profile Information
   bio: { 

@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/Input";
 import Loader from "@/components/Loader";
+import { Button } from "@mui/material";
 
 interface Booking {
   _id: string;
@@ -504,19 +505,21 @@ export default function BookingsPage() {
 
                   <div className="flex flex-col space-y-2 ml-4">
                     {user.role === "mentor" && booking.status === "pending" && (
-                      <button
+                      <Button
+                        variant="contained"
                         onClick={() => {
                           setSelectedBooking(booking);
                           setShowConfirmModal(true);
                         }}
-                        className="px-4 py-2 rounded-2xl bg-gradient-to-r from-green-600 to-blue-600 text-white text-sm"
+                        className="!px-4 !py-2 !rounded-2xl !bg-gradient-to-r !from-green-600 !to-blue-600 !text-white !text-sm"
                       >
                         Confirm
-                      </button>
+                      </Button>
                     )}
 
                     {booking.status === "pending" && (
-                      <button
+                      <Button
+                        variant="contained"
                         onClick={() => {
                           const reason = prompt(
                             "Please provide a reason for cancellation:"
@@ -525,19 +528,20 @@ export default function BookingsPage() {
                             handleCancelBooking(booking._id, reason);
                           }
                         }}
-                        className="px-4 py-2 rounded-2xl text-red-600 border-red-200 hover:bg-red-50 text-sm"
+                        className="!px-4 !py-2 !rounded-2xl !text-red-600 !border-red-200 !hover:bg-red-50 !text-sm"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     )}
 
                     {["pending", "cancelled"].includes(booking.status) && (
-                      <button
+                      <Button
+                        variant="contained"
                         onClick={() => handleDeleteBooking(booking._id)}
-                        className="px-4 py-2 rounded-2xl bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                        className="!px-4 !py-2 !rounded-2xl !bg-red-100 !text-red-700 !hover:bg-red-200 !text-sm"
                       >
                         Delete
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -558,12 +562,13 @@ export default function BookingsPage() {
                 : "You haven't booked any sessions yet. Browse available schedules to book your first session."}
             </p>
             {user.role === "mentor" && (
-              <button
+              <Button
+                variant="contained"
                 onClick={() => router.push("/dashboard/schedules")}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                className="!bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white"
               >
                 Create Schedules
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -604,24 +609,26 @@ export default function BookingsPage() {
               </div>
 
               <div className="flex items-center justify-end space-x-3 mt-6">
-                <button
+                <Button
+                  variant="contained"
                   onClick={() => {
                     setShowConfirmModal(false);
                     setSelectedBooking(null);
                     setProfessionalNotes("");
                     setMeetingLink("");
                   }}
-                  className="px-6 py-2 rounded-2xl"
+                  className="!px-6 !py-2 !rounded-2xl"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="contained"
                   onClick={() => handleConfirmBooking(selectedBooking._id)}
                   disabled={!professionalNotes.trim()}
-                  className="px-6 py-2 rounded-2xl bg-gradient-to-r from-green-600 to-blue-600 text-white"
+                  className="!px-6 !py-2 !rounded-2xl !bg-gradient-to-r !from-green-600 !to-blue-600 !text-white"
                 >
                   Confirm Booking
-                </button>
+                </Button>
               </div>
             </div>
           </div>

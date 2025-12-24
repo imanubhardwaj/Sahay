@@ -10,26 +10,14 @@ const USER_TYPES = [
   {
     id: 'student_fresher',
     title: 'Student / Fresher',
-    description: 'Just starting your tech journey',
+    description: 'Just starting your tech journey or recently graduated',
     icon: '🎓',
   },
   {
-    id: 'working_professional_2_3_yr',
-    title: 'Working Professional (2-3 Yrs)',
-    description: 'Looking to advance your skills',
+    id: 'working_professional',
+    title: 'Working Professional',
+    description: 'Currently working and looking to upskill',
     icon: '💼',
-  },
-  {
-    id: 'experienced_professional_4_6_yr',
-    title: 'Experienced Professional (4-6 Yrs)',
-    description: 'Ready for senior-level challenges',
-    icon: '🚀',
-  },
-  {
-    id: 'industry_expert_8_plus_yr',
-    title: 'Industry Expert (8+ Yrs)',
-    description: 'Leading technical strategy',
-    icon: '👑',
   },
 ];
 

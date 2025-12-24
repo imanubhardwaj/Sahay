@@ -17,7 +17,7 @@ interface User {
   yoe?: number;
   workosId: string;
   role: 'student' | 'mentor';
-  userType: 'student_fresher' | 'working_professional_2_3_yr' | 'experienced_professional_4_6_yr' | 'industry_expert_8_plus_yr' | 'company';
+  userType: 'student_fresher' | 'working_professional';
   college?: string;
   year?: number;
   company?: string;

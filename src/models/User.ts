@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: USER_ROLE, default: "student" },
   userType: {
     type: String,
-    enum: ["student_fresher", "working_professional_2_3_yr", "experienced_professional_4_6_yr", "industry_expert_8_plus_yr", "company"],
+    enum: ["student_fresher", "working_professional"],
     required: true,
   },
   // Student-specific fields
