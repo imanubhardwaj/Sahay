@@ -15,6 +15,7 @@ import {
 import {} from "../../../packages/ui/assets";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLoading } from "@/contexts/LoadingContext";
 import { getAuthHeader } from "@/lib/token-storage";
 
 interface MentorUser {
@@ -54,6 +55,7 @@ type ApprovalFilter = "all" | "approved" | "pending";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
   const router = useRouter();
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -74,48 +76,10 @@ export default function AdminPage() {
   const [useCustomRate, setUseCustomRate] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Check admin status
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (authLoading) return;
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        const headers: HeadersInit = {};
-        const authHeader = getAuthHeader();
-        if (authHeader) {
-          headers["Authorization"] = authHeader;
-        }
-
-        const response = await fetch("/api/admin/check", {
-          headers,
-          credentials: "include",
-        });
-
-        const data = await response.json();
-
-        if (data.isAdmin) {
-          setIsAdmin(true);
-          fetchMentors();
-        } else {
-          setIsAdmin(false);
-          setError("You do not have admin access");
-        }
-      } catch {
-        setError("Failed to check admin status");
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdmin();
-  }, [user, authLoading, router]);
-
+  // Fetch mentors
   const fetchMentors = useCallback(async () => {
     setLoading(true);
+    startLoading();
     try {
       const headers: HeadersInit = {};
       const authHeader = getAuthHeader();
@@ -160,8 +124,54 @@ export default function AdminPage() {
       setError("Failed to fetch mentors");
     } finally {
       setLoading(false);
+      stopLoading();
     }
-  }, [levelFilter, approvalFilter, debouncedSearchQuery]);
+  }, [
+    levelFilter,
+    approvalFilter,
+    debouncedSearchQuery,
+    startLoading,
+    stopLoading,
+  ]);
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (authLoading) return;
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const headers: HeadersInit = {};
+        const authHeader = getAuthHeader();
+        if (authHeader) {
+          headers["Authorization"] = authHeader;
+        }
+
+        const response = await fetch("/api/admin/check", {
+          headers,
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (data.isAdmin) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+          setError("You do not have admin access");
+        }
+      } catch {
+        setError("Failed to check admin status");
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [user, authLoading, router]);
 
   // Debounce search query
   useEffect(() => {
@@ -197,6 +207,7 @@ export default function AdminPage() {
     if (!editingMentor) return;
 
     setSaving(true);
+    startLoading();
     try {
       const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -236,6 +247,7 @@ export default function AdminPage() {
       setError("Failed to update mentor");
     } finally {
       setSaving(false);
+      stopLoading();
     }
   };
 
@@ -243,6 +255,7 @@ export default function AdminPage() {
     mentorId: string,
     newLevel: "L1" | "L2" | "L3"
   ) => {
+    startLoading();
     try {
       const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -269,10 +282,13 @@ export default function AdminPage() {
       }
     } catch {
       setError("Failed to update mentor level");
+    } finally {
+      stopLoading();
     }
   };
 
   const toggleApproval = async (mentorId: string, currentStatus: boolean) => {
+    startLoading();
     try {
       const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -299,6 +315,8 @@ export default function AdminPage() {
       }
     } catch {
       setError("Failed to update approval status");
+    } finally {
+      stopLoading();
     }
   };
 
