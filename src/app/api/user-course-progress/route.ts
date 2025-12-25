@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { UserCourseProgress, Lesson } from "@/models";
+import { UserCourseProgress, Lesson, Module, User } from "@/models";
 import mongoose from "mongoose";
 import { getUserIdFromRequest } from "@/lib/auth";
+import {
+  deductCourseStartPoints,
+  awardCourseProgressPoints,
+  awardCourseCompletionBonus,
+  validateWalletBalance,
+} from "@/lib/wallet";
+import { isEligibleForFreeCourse, COURSE_START_COST, type CourseLevel } from "@/lib/points-economy";
 
 // GET /api/user-course-progress - Get course progress for a user
 export async function GET(request: NextRequest) {
@@ -164,6 +171,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get module details for course name and level
+    const moduleData = await Module.findById(moduleObjectId);
+    const courseName = moduleData?.name || "Course";
+    const courseLevel = (moduleData?.level || "Beginner") as CourseLevel;
+
     // Find or create user progress document
     let userProgress = await UserCourseProgress.findOne({
       userId: userObjectId,
@@ -201,6 +213,9 @@ export async function POST(request: NextRequest) {
           )
         : null;
 
+    let pointsInfo = null;
+    let isNewCourse = false;
+
     if (courseProgress) {
       // Update existing progress
       if (lessonId) {
@@ -213,6 +228,59 @@ export async function POST(request: NextRequest) {
         courseProgress.startedAt = new Date();
       }
     } else {
+      // NEW COURSE - Need to check points and deduct
+      isNewCourse = true;
+      
+      // Check if this is user's first course (FREE) or needs points
+      const user = await User.findById(userId);
+      const isFirstCourse = !user?.hasStartedFirstCourse;
+      
+      // CRITICAL VALIDATION: If not first course, validate wallet balance FIRST
+      if (!isFirstCourse) {
+        const validation = await validateWalletBalance(userId, COURSE_START_COST);
+        
+        if (!validation.isValid) {
+          return NextResponse.json(
+            { 
+              error: validation.error,
+              requiredPoints: COURSE_START_COST,
+              currentBalance: validation.currentBalance,
+              shortfall: validation.shortfall,
+            },
+            { status: 400 }
+          );
+        }
+      }
+      
+      // Deduct points for starting course
+      const deductResult = await deductCourseStartPoints(
+        userId,
+        moduleId,
+        courseName,
+        isFirstCourse
+      );
+      
+      if (!deductResult.success) {
+        return NextResponse.json(
+          { error: deductResult.error || "Failed to process course enrollment" },
+          { status: 400 }
+        );
+      }
+      
+      // Mark that user has started their first course
+      if (isFirstCourse) {
+        await User.findByIdAndUpdate(userId, { hasStartedFirstCourse: true });
+      }
+      
+      pointsInfo = {
+        pointsDeducted: deductResult.points,
+        isFree: deductResult.isFree,
+        newBalance: deductResult.newBalance,
+        message: deductResult.isFree 
+          ? "🎉 First course is FREE! Enjoy learning!"
+          : `${COURSE_START_COST} points deducted for course enrollment.`,
+      };
+
       // Create new course progress
       const firstLesson = lessons[0];
       courseProgress = {
@@ -269,7 +337,7 @@ export async function POST(request: NextRequest) {
           "name description level duration"
         );
       }
-      await userProgress.populate("completedCourses.moduleId", "name");
+      await userProgress.populate("completedCourses.moduleId", "name level");
       await userProgress.populate(
         "completedCourses.currentLessonId",
         "name order"
@@ -279,7 +347,12 @@ export async function POST(request: NextRequest) {
       // Continue without population if it fails
     }
 
-    return NextResponse.json({ userProgress, courseProgress }, { status: 200 });
+    return NextResponse.json({ 
+      userProgress, 
+      courseProgress,
+      isNewCourse,
+      pointsInfo,
+    }, { status: 200 });
   } catch (error) {
     console.error("Error creating/updating user course progress:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -293,7 +366,7 @@ export async function PUT(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { moduleId, lessonId, pointsEarned = 0, userId: bodyUserId } = body;
+    const { moduleId, lessonId, userId: bodyUserId } = body;
     const userId = bodyUserId || (await getUserIdFromRequest(request));
 
     if (!userId || !moduleId || !lessonId) {
@@ -340,24 +413,46 @@ export async function PUT(request: NextRequest) {
       order: 1,
     });
 
+    // Get module details for course name and level
+    const moduleData = await Module.findById(moduleObjectId);
+    const courseName = moduleData?.name || "Course";
+    const courseLevel = (moduleData?.level || "Beginner") as CourseLevel;
+
+    // Store previous progress for points calculation
+    const previousProgress = courseProgress.progress;
+
+    // Check if lesson was already completed
+    const lessonAlreadyCompleted = courseProgress.completedLessonIds.some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (l: any) => l.toString() === lessonId
+    );
+
     // Add to completed lessons if not already there
-    if (
-      !courseProgress.completedLessonIds.some(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (l: any) => l.toString() === lessonId
-      )
-    ) {
+    if (!lessonAlreadyCompleted) {
       courseProgress.completedLessonIds.push(lessonObjectId);
     }
 
-    // Update points earned
-    courseProgress.pointsEarned += pointsEarned;
-    userProgress.totalPointsEarned += pointsEarned;
-
-    // Calculate progress percentage
-    courseProgress.progress = Math.round(
+    // Calculate new progress percentage
+    const newProgress = Math.round(
       (courseProgress.completedLessonIds.length / lessons.length) * 100
     );
+    courseProgress.progress = newProgress;
+
+    // Award progress points (60% running pool) - only if progress increased
+    let progressPointsEarned = 0;
+    if (newProgress > previousProgress && !lessonAlreadyCompleted) {
+      const progressResult = await awardCourseProgressPoints(
+        userId,
+        moduleId,
+        courseName,
+        courseLevel,
+        newProgress,
+        previousProgress
+      );
+      progressPointsEarned = progressResult.points;
+      courseProgress.pointsEarned += progressPointsEarned;
+      userProgress.totalPointsEarned += progressPointsEarned;
+    }
 
     // Find next lesson
     const currentLessonIndex = lessons.findIndex(
@@ -369,10 +464,29 @@ export async function PUT(request: NextRequest) {
       courseProgress.currentLessonId = nextLesson._id;
     }
 
-    // Check if module is completed
+    // Check if module is completed and award completion bonus (40%)
+    let completionBonusEarned = 0;
+    const wasAlreadyCompleted = courseProgress.status === "completed";
+    
     if (courseProgress.completedLessonIds.length >= lessons.length) {
       courseProgress.status = "completed";
       courseProgress.completedAt = new Date();
+      
+      // Award completion bonus (40% of total points) - only once
+      if (!wasAlreadyCompleted) {
+        const completionResult = await awardCourseCompletionBonus(
+          userId,
+          moduleId,
+          courseName,
+          courseLevel
+        );
+        
+        if (completionResult.success && !completionResult.alreadyAwarded) {
+          completionBonusEarned = completionResult.points;
+          courseProgress.pointsEarned += completionBonusEarned;
+          userProgress.totalPointsEarned += completionBonusEarned;
+        }
+      }
     } else {
       courseProgress.status = "in_progress";
     }
@@ -381,15 +495,50 @@ export async function PUT(request: NextRequest) {
     await userProgress.save();
 
     // Populate before returning
-    await userProgress.populate(
-      "completedCourses.courseId",
-      "name description level duration"
-    );
-    await userProgress.populate("completedCourses.moduleId", "name");
-    await userProgress.populate(
-      "completedCourses.currentLessonId",
-      "name order"
-    );
+    try {
+      if (
+        userProgress.completedCourses.some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c: any) => c.courseId
+        )
+      ) {
+        await userProgress.populate(
+          "completedCourses.courseId",
+          "name description level duration"
+        );
+      }
+      await userProgress.populate("completedCourses.moduleId", "name level");
+      await userProgress.populate(
+        "completedCourses.currentLessonId",
+        "name order"
+      );
+    } catch (populateError) {
+      console.error("Error populating user progress:", populateError);
+    }
+
+    // Calculate total points earned this session
+    const totalPointsEarned = progressPointsEarned + completionBonusEarned;
+    
+    // Build response message
+    let message = "Lesson completed!";
+    const pointsMessages: string[] = [];
+    
+    if (progressPointsEarned > 0) {
+      pointsMessages.push(`+${progressPointsEarned} progress points`);
+    }
+    if (completionBonusEarned > 0) {
+      pointsMessages.push(`+${completionBonusEarned} completion bonus`);
+    }
+    
+    if (courseProgress.status === "completed") {
+      message = "🎉 Congratulations! You have completed the course!";
+    } else if (nextLesson) {
+      message = "Lesson completed! Moving to next lesson.";
+    }
+    
+    if (pointsMessages.length > 0) {
+      message += ` (${pointsMessages.join(", ")})`;
+    }
 
     return NextResponse.json(
       {
@@ -398,10 +547,12 @@ export async function PUT(request: NextRequest) {
         nextLesson: nextLesson
           ? { _id: nextLesson._id, name: nextLesson.name }
           : null,
-        message:
-          courseProgress.status === "completed"
-            ? "Congratulations! You have completed the module!"
-            : "Lesson completed! Moving to next lesson.",
+        pointsEarned: {
+          progressPoints: progressPointsEarned,
+          completionBonus: completionBonusEarned,
+          total: totalPointsEarned,
+        },
+        message,
       },
       { status: 200 }
     );

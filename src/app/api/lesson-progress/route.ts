@@ -9,6 +9,7 @@ import {
 } from "@/models";
 import mongoose from "mongoose";
 import { getUserIdFromRequest } from "@/lib/auth";
+import { QUIZ_PASSING_PERCENTAGE } from "@/lib/points-economy";
 
 // GET /api/lesson-progress - Get user's lesson progress for a module
 export async function GET(req: NextRequest) {
@@ -218,6 +219,20 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // CRITICAL VALIDATION: Check if score meets 80% passing requirement
+    if (score < QUIZ_PASSING_PERCENTAGE) {
+      return NextResponse.json(
+        { 
+          error: `Quiz score must be at least ${QUIZ_PASSING_PERCENTAGE}% to complete the lesson and unlock the next one.`,
+          score,
+          required: QUIZ_PASSING_PERCENTAGE,
+          passed: false,
+          canProceed: false,
+        },
+        { status: 400 }
+      );
+    }
+
     // Convert string IDs to ObjectIds
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const lessonObjectId = new mongoose.Types.ObjectId(lessonId);
@@ -248,11 +263,12 @@ export async function PUT(req: NextRequest) {
       currentStatus: progress.status,
       isFirstCompletion,
       score,
+      passedThreshold: score >= QUIZ_PASSING_PERCENTAGE,
     });
 
-    // Update quiz score and status - ANY completion counts (no 70% requirement)
+    // Update quiz score and status - ONLY if score >= 80%
     progress.quizScore = score;
-    progress.quizPassed = true; // Completion is based on quiz submission, not score
+    progress.quizPassed = score >= QUIZ_PASSING_PERCENTAGE;
     progress.quizId = quizId;
     progress.status = "completed";
     progress.completedAt = new Date();

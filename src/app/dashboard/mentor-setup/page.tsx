@@ -56,6 +56,14 @@ export default function MentorSetupPage() {
     yearsOfExperience: 0,
     currentRole: "",
     currentCompany: "",
+    pastCompanies: [] as Array<{
+      company: string;
+      role: string;
+      startDate?: string;
+      endDate?: string;
+      isCurrent?: boolean;
+      description?: string;
+    }>,
     hourlyRate: 100,
     sessionTypes: [
       {
@@ -78,6 +86,14 @@ export default function MentorSetupPage() {
   });
   const [newExpertise, setNewExpertise] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
+  const [newPastCompany, setNewPastCompany] = useState({
+    company: "",
+    role: "",
+    startDate: "",
+    endDate: "",
+    isCurrent: false,
+    description: "",
+  });
 
   useEffect(() => {
     if (user) {
@@ -100,6 +116,7 @@ export default function MentorSetupPage() {
           yearsOfExperience: result.data.yearsOfExperience || 0,
           currentRole: result.data.currentRole || "",
           currentCompany: result.data.currentCompany || "",
+          pastCompanies: result.data.pastCompanies || [],
           hourlyRate: result.data.hourlyRate || 100,
           sessionTypes:
             result.data.sessionTypes?.length > 0
@@ -380,6 +397,140 @@ export default function MentorSetupPage() {
                 min="0"
                 max="50"
               />
+            </div>
+
+            {/* Past Companies */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Past Companies (Work Experience)
+              </label>
+              <p className="text-sm text-gray-500 mb-4">
+                Add your previous work experience to showcase your expertise
+              </p>
+              
+              {/* Add Past Company Form */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Company Name"
+                    value={newPastCompany.company}
+                    onChange={(e) =>
+                      setNewPastCompany({ ...newPastCompany, company: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Role/Position"
+                    value={newPastCompany.role}
+                    onChange={(e) =>
+                      setNewPastCompany({ ...newPastCompany, role: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Input
+                    type="month"
+                    placeholder="Start Date (YYYY-MM)"
+                    value={newPastCompany.startDate}
+                    onChange={(e) =>
+                      setNewPastCompany({ ...newPastCompany, startDate: e.target.value })
+                    }
+                  />
+                  <Input
+                    type="month"
+                    placeholder="End Date (YYYY-MM) or leave empty if current"
+                    value={newPastCompany.endDate}
+                    onChange={(e) =>
+                      setNewPastCompany({ ...newPastCompany, endDate: e.target.value })
+                    }
+                    disabled={newPastCompany.isCurrent}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isCurrent"
+                    checked={newPastCompany.isCurrent}
+                    onChange={(e) =>
+                      setNewPastCompany({
+                        ...newPastCompany,
+                        isCurrent: e.target.checked,
+                        endDate: e.target.checked ? "" : newPastCompany.endDate,
+                      })
+                    }
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="isCurrent" className="text-sm text-gray-700">
+                    Current Position
+                  </label>
+                </div>
+                <textarea
+                  placeholder="Description (optional)"
+                  value={newPastCompany.description}
+                  onChange={(e) =>
+                    setNewPastCompany({ ...newPastCompany, description: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={2}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newPastCompany.company && newPastCompany.role) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        pastCompanies: [...prev.pastCompanies, { ...newPastCompany }],
+                      }));
+                      setNewPastCompany({
+                        company: "",
+                        role: "",
+                        startDate: "",
+                        endDate: "",
+                        isCurrent: false,
+                        description: "",
+                      });
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                >
+                  Add Experience
+                </button>
+              </div>
+
+              {/* List of Past Companies */}
+              {formData.pastCompanies.length > 0 && (
+                <div className="space-y-2">
+                  {formData.pastCompanies.map((exp, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{exp.role}</div>
+                        <div className="text-sm text-gray-600">{exp.company}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {exp.startDate || "Unknown"} -{" "}
+                          {exp.isCurrent || !exp.endDate ? "Present" : exp.endDate}
+                        </div>
+                        {exp.description && (
+                          <div className="text-sm text-gray-600 mt-1">{exp.description}</div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            pastCompanies: prev.pastCompanies.filter((_, i) => i !== index),
+                          }));
+                        }}
+                        className="ml-4 text-red-600 hover:text-red-700"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Expertise */}

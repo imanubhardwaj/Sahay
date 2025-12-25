@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Image from "next/image";
 import Loader from "@/components/Loader";
+import { CompleteProfileModal, useProfileGating } from "@/components/CompleteProfileModal";
 
 interface Module {
   _id: string;
@@ -60,6 +61,9 @@ export default function ExplorePage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [selectedSkill, setSelectedSkill] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Profile gating for starting courses
+  const { isProfileComplete, showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
 
   useEffect(() => {
     if (authLoading) return;
@@ -236,8 +240,16 @@ export default function ExplorePage() {
     const isInProgress = progress?.status === "in_progress";
     const isCompleted = progress?.status === "completed";
 
+    const handleCardClick = (e: React.MouseEvent) => {
+      // If profile is incomplete, show modal instead of navigating
+      if (!isProfileComplete) {
+        e.preventDefault();
+        checkAndGate("start this course");
+      }
+    };
+
     return (
-      <Link href={`/dashboard/modules/${module._id}`}>
+      <Link href={`/dashboard/modules/${module._id}`} onClick={handleCardClick}>
         <div
           className={`group relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02] h-full flex flex-col ${
             isInProgress
@@ -345,7 +357,7 @@ export default function ExplorePage() {
         </div>
       </Link>
     );
-  }, []);
+  }, [isProfileComplete, checkAndGate]);
 
   if (authLoading) {
     return (
@@ -366,6 +378,13 @@ export default function ExplorePage() {
 
   return (
     <DashboardLayout>
+      {/* Profile Completion Modal */}
+      <CompleteProfileModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        blockedAction={blockedAction}
+      />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="mb-6">

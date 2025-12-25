@@ -56,6 +56,15 @@ const mentorProfileSchema = new mongoose.Schema({
   currentCompany: { 
     type: String 
   },
+  // Past Companies (work experience)
+  pastCompanies: [{
+    company: { type: String, required: true },
+    role: { type: String, required: true },
+    startDate: { type: String }, // Format: "YYYY-MM" or "YYYY"
+    endDate: { type: String }, // Format: "YYYY-MM" or "YYYY", null for current
+    isCurrent: { type: Boolean, default: false },
+    description: { type: String } // Optional description of role
+  }],
   // Pricing
   hourlyRate: { 
     type: Number, 

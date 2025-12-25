@@ -402,12 +402,8 @@ export default function DashboardPage() {
       return;
     }
 
-    // Redirect to onboarding if not completed
-    if (user && !user.isOnboardingComplete) {
-      router.push("/onboarding-simplified");
-      return;
-    }
-
+    // NON-INTRUSIVE: Allow users to view dashboard without completing onboarding
+    // They can explore freely - action gating will restrict critical actions
     loadDashboardData();
   }, [user, router, loadDashboardData]);
 

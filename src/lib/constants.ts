@@ -74,12 +74,23 @@ export enum TRANSACTION_TYPE {
 }
 
 export enum TRANSACTION_SOURCE {
+  // Earning sources
+  Signup = "signup", // Initial signup bonus
+  ProfileCompletion = "profile_completion", // Profile 100% completion bonus
   Quiz = "quiz",
   Lesson = "lesson",
-  Redeem = "redeem",
-  Mentor = "mentor",
+  PracticeQuestion = "practice_question", // Solving coding problems
+  CourseProgress = "course_progress", // Running points (60% split)
+  CourseCompletion = "course_completion", // Completion bonus (40% split)
+  ProjectAdd = "project_add", // Adding a project
   Referral = "referral",
   Bonus = "bonus",
+
+  // Spending sources
+  CourseStart = "course_start", // Starting a course
+  Mentor = "mentor", // Mentorship calls
+  MockInterview = "mock_interview", // Mock interview sessions
+  Redeem = "redeem",
 }
 
 export enum BOOKING_STATUS {
@@ -99,15 +110,15 @@ export enum MENTOR_LEVEL {
 
 // Admin emails - only these users can access admin features
 export const ADMIN_EMAILS: string[] = [
-  "kartikeyebhardwaj2003@gmail.com",
   "bhardwaj93kartiekey@gmail.com",
   "admin@sahay.com",
   // Add more admin emails as needed
 ];
 
 // Default point rates per level (can be overridden with customPointRate)
+// Based on Sahay Economy: L1=3000, L2=2000, L3=1000 points per session
 export const MENTOR_LEVEL_RATES = {
-  [MENTOR_LEVEL.L1]: 500, // Elite mentors charge 500 points/hour
-  [MENTOR_LEVEL.L2]: 300, // Top tier tech charge 300 points/hour
-  [MENTOR_LEVEL.L3]: 100, // Standard mentors charge 100 points/hour
+  [MENTOR_LEVEL.L1]: 3000, // Elite/Consultants charge 3000 points/session
+  [MENTOR_LEVEL.L2]: 2000, // Top tier tech (FAANG) charge 2000 points/session
+  [MENTOR_LEVEL.L3]: 1000, // Standard mentors charge 1000 points/session
 };

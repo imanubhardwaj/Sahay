@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import CodingProblem from "@/models/CodingProblem";
 import UserCodingProgress from "@/models/UserCodingProgress";
-import User from "@/models/User";
 import { authenticateRequest } from "@/lib/auth";
+import { awardPracticeQuestionPoints } from "@/lib/wallet";
+import { getPracticeQuestionPoints, type QuestionDifficulty } from "@/lib/points-economy";
 
 // Safely execute JavaScript code with the given input
 function executeJavaScript(
@@ -210,11 +211,17 @@ export async function POST(request: NextRequest) {
       // Increment solved count
       problem.solvedCount += 1;
 
-      // Award points to user
-      pointsEarned = problem.points;
-      await User.findByIdAndUpdate(userId, {
-        $inc: { points: problem.points },
-      });
+      // Award points based on difficulty using the Sahay economy system
+      // Points: Easy=20, Medium=30, Hard=50
+      const difficulty = problem.difficulty as QuestionDifficulty;
+      pointsEarned = getPracticeQuestionPoints(difficulty);
+      
+      // Award points to user's wallet
+      await awardPracticeQuestionPoints(
+        userId,
+        problem._id.toString(),
+        difficulty
+      );
     }
 
     await progress.save();

@@ -51,17 +51,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) return;
-      
+
       try {
         const headers: HeadersInit = {};
         const authHeader = getAuthHeader();
         if (authHeader) {
-          headers['Authorization'] = authHeader;
+          headers["Authorization"] = authHeader;
         }
 
-        const response = await fetch('/api/admin/check', {
+        const response = await fetch("/api/admin/check", {
           headers,
-          credentials: 'include'
+          credentials: "include",
         });
 
         const data = await response.json();
@@ -89,12 +89,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setIsHovering(false);
   };
 
-  // Redirect to onboarding if not completed
-  useEffect(() => {
-    if (user && !user.isOnboardingComplete) {
-      router.push("/onboarding-simplified");
-    }
-  }, [user, router]);
+  // NON-INTRUSIVE: Users can browse without completing onboarding
+  // Action gating will handle restrictions for critical actions (booking, posting)
+  // No forced redirect to onboarding anymore
 
   const isSidebarExpanded = !sidebarCollapsed || isHovering;
 
@@ -258,7 +255,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       <span className="text-lg">{item.icon}</span>
                     </div>
                     {isSidebarExpanded && (
-                      <span className="ml-4 font-semibold group-hover:text-gray-900 transition-colors duration-300">{item.name}</span>
+                      <span className="ml-4 font-semibold group-hover:text-gray-900 transition-colors duration-300">
+                        {item.name}
+                      </span>
                     )}
                   </div>
                 </Link>
@@ -273,7 +272,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 {isSidebarExpanded && (
                   <div className=" flex items-center justify-center gap-2 px-3 py-2">
                     <Image
-                      className="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-blue-300 transition-all duration-300"
+                      className="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-blue-300  transition-all duration-300"
                       src={
                         user?.avatar ||
                         `https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`
@@ -283,10 +282,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       height={40}
                     />
                     <div className="flex flex-col">
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className="text-sm font-semibold text-white truncate group-hover:text-black">
                         {user?.name}
                       </p>
-                      <p className="text-xs text-white truncate">
+                      <p className="text-xs text-white truncate group-hover:text-black">
                         @
                         {user?.username ||
                           user?.name?.toLowerCase().replace(/\s+/g, "")}

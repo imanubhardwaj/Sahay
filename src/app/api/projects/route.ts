@@ -3,6 +3,8 @@ import connectDB from "@/lib/mongodb";
 import Project from "@/models/Project";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+import { awardProjectAddPoints } from "@/lib/wallet";
+import { PROJECT_ADD_POINTS } from "@/lib/points-economy";
 
 // GET /api/projects - Get all projects
 export async function GET(request: NextRequest) {
@@ -87,13 +89,34 @@ export async function POST(request: NextRequest) {
 
     await project.save();
 
+    // Award points for adding a project
+    let pointsInfo = null;
+    try {
+      const result = await awardProjectAddPoints(
+        createdBy,
+        project._id.toString(),
+        project.name
+      );
+      pointsInfo = {
+        pointsEarned: result.points,
+        newBalance: result.newBalance,
+        message: `+${PROJECT_ADD_POINTS} points for adding a project!`,
+      };
+    } catch (pointsError) {
+      console.error("Error awarding project points:", pointsError);
+      // Don't fail project creation if points awarding fails
+    }
+
     // Populate the creator data for the response
     await project.populate(
       "createdBy",
       "firstName lastName email avatar userType"
     );
 
-    return NextResponse.json(project, { status: 201 });
+    return NextResponse.json({
+      project,
+      pointsInfo,
+    }, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);
     return NextResponse.json(

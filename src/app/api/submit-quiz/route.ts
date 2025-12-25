@@ -7,6 +7,7 @@ import ModuleProgress from "@/models/ModuleProgress";
 import LessonProgress from "@/models/LessonProgress";
 import { getUserIdFromRequest } from "@/lib/auth";
 import { evaluateMCQ, evaluateSubjectiveOrCode } from "@/lib/quiz-evaluation";
+import { QUIZ_PASSING_PERCENTAGE } from "@/lib/points-economy";
 
 interface UserAnswer {
   questionId: string;
@@ -220,8 +221,10 @@ export async function POST(request: NextRequest) {
     );
     const scorePercentage =
       totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
-    const passingScore = 0; // REMOVED 70% requirement - any score passes
-    const isPassed = true; // Always pass - just completing the quiz is enough
+    
+    // REQUIREMENT: 80% passing score to unlock next lesson
+    const passingScore = QUIZ_PASSING_PERCENTAGE;
+    const isPassed = scorePercentage >= passingScore;
 
     // Create or update lesson progress (track attempts, but don't mark as completed yet)
     let lessonProgress = await LessonProgress.findOne({
@@ -251,6 +254,7 @@ export async function POST(request: NextRequest) {
     await lessonProgress.save();
 
     // Prepare response (NO progress advancement here)
+    // Progress to next lesson is ONLY allowed if isPassed is true (80%+)
     const response = {
       quizResults: {
         totalQuestions: quizQuestions.length,
@@ -260,12 +264,15 @@ export async function POST(request: NextRequest) {
         isPassed,
         passingScore,
         attempts: lessonProgress.attempts,
+        canProceed: isPassed, // Explicit flag for frontend
       },
       questionResults: validResults,
       feedback: isPassed
-        ? "🎉 Congratulations! You passed the quiz!"
-        : `You scored ${scorePercentage}%. You need ${passingScore}% to pass. Try again!`,
-      message: 'Quiz completed! Click "Next Lesson" to continue.',
+        ? "🎉 Congratulations! You passed the quiz with " + scorePercentage + "%!"
+        : `You scored ${scorePercentage}%. You need at least ${passingScore}% to unlock the next lesson. Review the material and try again!`,
+      message: isPassed 
+        ? 'Quiz passed! Click "Next Lesson" to continue.'
+        : `Quiz not passed. You need ${passingScore}% to proceed. Current score: ${scorePercentage}%`,
     };
 
     return NextResponse.json({

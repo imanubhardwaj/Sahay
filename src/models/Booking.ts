@@ -93,6 +93,14 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: ['student', 'professional', 'system']
   },
+  // Sahay Economy Fields
+  mentorLevel: {
+    type: String,
+    enum: ['L1', 'L2', 'L3'],
+    default: 'L3'
+  },
+  mentorReceivesPoints: { type: Number }, // Points mentor receives (may differ from price if first call discount)
+  isFirstCallDiscount: { type: Boolean, default: false }, // Whether 50% first call discount was applied
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

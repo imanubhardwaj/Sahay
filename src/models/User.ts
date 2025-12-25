@@ -38,6 +38,13 @@ const userSchema = new mongoose.Schema({
   completionRate: { type: Number, default: 0 },
   avatar: String,
   isOnboardingComplete: { type: Boolean, default: false },
+  // Profile completion tracking
+  profileCompletionPercentage: { type: Number, default: 0 },
+  profileCompletionBonusAwarded: { type: Boolean, default: false },
+  // Economy tracking
+  hasStartedFirstCourse: { type: Boolean, default: false }, // For free first course
+  hasCompletedFirstMentorship: { type: Boolean, default: false }, // For 50% first call discount
+  signupBonusAwarded: { type: Boolean, default: false }, // Track if signup bonus was given
   selectedModules: [
     {
       moduleId: { type: mongoose.Schema.Types.ObjectId, ref: "Module" },
@@ -63,15 +70,42 @@ userSchema.pre("save", async function (next) {
     return next(error);
   }
 
-  // Create wallet if it doesn't exist
+  // Create wallet with signup bonus if it doesn't exist (new user)
   if (this.isNew && !this.walletId) {
     try {
       const { createUserWallet } = await import("../lib/wallet");
-      const wallet = await createUserWallet(this._id);
+      // Create wallet with signup bonus (100 points)
+      const wallet = await createUserWallet(this._id, true);
       this.walletId = wallet._id;
+      this.signupBonusAwarded = true;
     } catch (error) {
       console.error("Error creating wallet for user:", error);
       // Don't fail user creation if wallet creation fails
+    }
+  }
+
+  // Calculate profile completion percentage
+  const { calculateProfileCompletionPercentage } = await import("../lib/points-economy");
+  this.profileCompletionPercentage = calculateProfileCompletionPercentage({
+    firstName: this.firstName,
+    lastName: this.lastName,
+    email: this.email,
+    bio: this.bio,
+    title: this.title,
+    location: this.location,
+    profilePictureAttachmentId: this.profilePictureAttachmentId?.toString(),
+    skills: this.skills?.map((s: { toString: () => string }) => s.toString()),
+    userType: this.userType,
+  });
+
+  // Award profile completion bonus if profile is 100% complete and not yet awarded
+  if (this.profileCompletionPercentage >= 100 && !this.profileCompletionBonusAwarded) {
+    try {
+      const { awardProfileCompletionBonus } = await import("../lib/wallet");
+      await awardProfileCompletionBonus(this._id.toString());
+      this.profileCompletionBonusAwarded = true;
+    } catch (error) {
+      console.error("Error awarding profile completion bonus:", error);
     }
   }
 

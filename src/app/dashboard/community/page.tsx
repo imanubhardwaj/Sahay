@@ -7,6 +7,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { getAuthHeaders } from "@/lib/token-storage";
 import { usePolling } from "@/hooks/usePolling";
 import { Button, Input, IconButton, Arrow } from "../../../../packages/ui";
+import { CompleteProfileModal, useProfileGating } from "@/components/CompleteProfileModal";
 
 interface Question {
   _id: string;
@@ -18,6 +19,8 @@ interface Question {
     firstName?: string;
     lastName?: string;
     email: string;
+    isOnboardingComplete?: boolean;
+    profileCompletionPercentage?: number;
   } | null;
   answers: Answer[];
   upvotes: number;
@@ -35,6 +38,8 @@ interface Answer {
     firstName?: string;
     lastName?: string;
     email: string;
+    isOnboardingComplete?: boolean;
+    profileCompletionPercentage?: number;
   };
   upvotes: number;
   downvotes?: number;
@@ -56,6 +61,15 @@ export default function CommunityPage() {
   const [filterTag, setFilterTag] = useState("All");
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
+  
+  // Profile gating for posting/commenting
+  const { isProfileComplete, showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
+  
+  // Helper to check if a user profile is verified
+  const isUserVerified = (userData: { isOnboardingComplete?: boolean; profileCompletionPercentage?: number } | null | undefined): boolean => {
+    if (!userData) return false;
+    return userData.isOnboardingComplete === true || (userData.profileCompletionPercentage ?? 0) >= 100;
+  };
 
   const availableTags = [
     "React",
@@ -246,6 +260,11 @@ export default function CommunityPage() {
       console.log("Comment validation failed:", { content, user });
       return;
     }
+    
+    // Gate commenting action - require complete profile
+    if (!checkAndGate("post a comment")) {
+      return;
+    }
 
     // Optimistically add comment to UI immediately
     const optimisticComment: Answer = {
@@ -389,6 +408,13 @@ export default function CommunityPage() {
 
   return (
     <DashboardLayout>
+      {/* Profile Completion Modal */}
+      <CompleteProfileModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        blockedAction={blockedAction}
+      />
+      
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -431,10 +457,23 @@ export default function CommunityPage() {
         <div className="w-full mx-auto px-4 py-6">
           {/* Post Question Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+            {/* Profile completion notice */}
+            {!isProfileComplete && (
+              <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-700">
+                <span>⚠️</span>
+                <span>Complete your profile to post questions and comments</span>
+              </div>
+            )}
+            
             {!showPostForm ? (
               <Button
                 variant="text"
-                onClick={() => setShowPostForm(true)}
+                onClick={() => {
+                  // Gate posting action - require complete profile
+                  if (checkAndGate("post a question")) {
+                    setShowPostForm(true);
+                  }
+                }}
                 className="!w-full !text-left !px-4 !py-3 !bg-gray-50 !hover:bg-gray-100 !rounded-lg !text-black !transition-colors"
               >
                 What&apos;s your coding question?
@@ -567,6 +606,12 @@ export default function CommunityPage() {
                             <span className="font-semibold text-gray-900">
                               {getUserDisplay(question.askedBy)}
                             </span>
+                            {/* Unverified chip for incomplete profiles */}
+                            {!isUserVerified(question.askedBy) && (
+                              <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full border border-amber-200">
+                                unverified
+                              </span>
+                            )}
                             <span className="text-gray-500 text-sm">•</span>
                             <span className="text-gray-500 text-sm">
                               {getTimeAgo(question.createdAt)}
@@ -714,6 +759,12 @@ export default function CommunityPage() {
                                     <span className="font-semibold text-gray-900 text-sm">
                                       {getUserDisplay(answer.userId)}
                                     </span>
+                                    {/* Unverified chip for incomplete profiles */}
+                                    {!isUserVerified(answer.userId) && (
+                                      <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full border border-amber-200">
+                                        unverified
+                                      </span>
+                                    )}
                                     <span className="text-gray-500 text-xs">
                                       {getTimeAgo(answer.createdAt)}
                                     </span>

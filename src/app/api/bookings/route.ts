@@ -16,7 +16,19 @@ import {
 import crypto from "crypto";
 import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 import { notifyBookingEvent } from "@/lib/notifications";
-import { TRANSACTION_TYPE, TRANSACTION_SOURCE } from "@/lib/constants";
+import { TRANSACTION_TYPE, TRANSACTION_SOURCE, MENTOR_LEVEL } from "@/lib/constants";
+import {
+  deductMentorshipPoints,
+  creditMentorEarnings,
+  processRefund,
+  validateWalletBalance,
+} from "@/lib/wallet";
+import {
+  getMentorshipCallCost,
+  calculateFirstCallPrice,
+  isEligibleForFirstCallDiscount,
+  type MentorLevel,
+} from "@/lib/points-economy";
 
 // GET - Get bookings (requires auth)
 export async function GET(request: NextRequest) {
@@ -111,20 +123,18 @@ export async function POST(request: NextRequest) {
       sessionDate,
       sessionTime,
       duration,
-      price,
       studentNotes,
       sessionType,
     } = body;
 
-    // Validate required fields
+    // Validate required fields (price is now calculated based on mentor level)
     if (
       !studentId ||
       !professionalId ||
       !scheduleId ||
       !sessionDate ||
       !sessionTime ||
-      !duration ||
-      !price
+      !duration
     ) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
@@ -139,9 +149,9 @@ export async function POST(request: NextRequest) {
       Schedule.findById(scheduleId),
     ]);
 
-    // Get mentor profile (optional for booking creation, required for Zoom meeting creation later)
+    // Get mentor profile with level info (required for pricing)
     const mentorProfile = await MentorProfile.findOne({ userId: professionalId }).select(
-      "+zoomAccessToken +zoomRefreshToken"
+      "+zoomAccessToken +zoomRefreshToken +level +customPointRate"
     );
 
     if (!student) {
@@ -165,10 +175,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Mentor profile is optional for booking creation
-    // It will be required when the mentor approves the booking (for Zoom meeting creation)
+    // Mentor profile is required for pricing calculation
     if (!mentorProfile) {
-      console.warn(`Mentor profile not found for professional ${professionalId}. Booking will be created but Zoom meeting will need to be set up manually.`);
+      console.warn(`Mentor profile not found for professional ${professionalId}. Using default L3 pricing.`);
     }
 
     // Check if schedule is available
@@ -182,43 +191,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check student wallet balance
-    const studentWallet = await Wallet.findOne({ userId: studentId });
-    if (!studentWallet) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Student wallet not found. Please contact support." 
-        },
-        { status: 400 }
-      );
-    }
+    // Determine mentor level and calculate price
+    // Mentor levels: L1 = 3000 points, L2 = 2000 points, L3 = 1000 points
+    const mentorLevel = (mentorProfile?.level || MENTOR_LEVEL.L3) as MentorLevel;
+    const customRate = mentorProfile?.customPointRate;
     
-    if (studentWallet.balance < price) {
+    // Get base price based on mentor level
+    let basePrice = customRate || getMentorshipCallCost(mentorLevel);
+    
+    // Check if this is student's first mentorship call (50% discount)
+    const studentBookings = await Booking.find({
+      studentId,
+      status: { $in: ['confirmed', 'completed'] }
+    });
+    const isFirstCall = isEligibleForFirstCallDiscount(
+      studentBookings.map(b => ({ status: b.status }))
+    );
+    
+    // Calculate final price
+    let finalPrice: number;
+    let mentorReceives: number;
+    let isDiscounted = false;
+    
+    if (isFirstCall) {
+      const pricing = calculateFirstCallPrice(mentorLevel);
+      finalPrice = customRate ? Math.floor(customRate * 0.5) : pricing.userPays;
+      mentorReceives = customRate || pricing.mentorReceives;
+      isDiscounted = true;
+    } else {
+      finalPrice = basePrice;
+      mentorReceives = basePrice;
+    }
+
+    // CRITICAL VALIDATION: Validate wallet balance BEFORE any transaction
+    const walletValidation = await validateWalletBalance(studentId, finalPrice);
+    
+    if (!walletValidation.isValid) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `Insufficient balance. You have ${studentWallet.balance} points, but need ${price} points.` 
+          error: walletValidation.error,
+          requiredPoints: finalPrice,
+          currentBalance: walletValidation.currentBalance,
+          shortfall: walletValidation.shortfall,
+          isFirstCall,
+          mentorLevel,
+          pricingInfo: {
+            basePrice,
+            finalPrice,
+            isDiscounted,
+          },
         },
         { status: 400 }
       );
     }
 
-    // Debit points from student when booking is created
-    studentWallet.balance -= price;
-    studentWallet.totalSpent += price;
-    await studentWallet.save();
+    // Deduct points using the new economy system
+    const deductResult = await deductMentorshipPoints(
+      studentId,
+      "", // Will be updated with booking ID
+      `${professional.firstName} ${professional.lastName}`,
+      mentorLevel,
+      isFirstCall
+    );
 
-    // Create transaction for student (redeem points)
-    await Transaction.create({
-      userId: studentId,
-      walletId: studentWallet._id,
-      type: TRANSACTION_TYPE.Redeem,
-      points: price,
-      source: TRANSACTION_SOURCE.Mentor,
-      description: `Session booking with ${professional.firstName} ${professional.lastName}`,
-      referenceId: null, // Will be updated with booking ID after creation
-    });
+    if (!deductResult.success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: deductResult.error || "Failed to process payment"
+        },
+        { status: 400 }
+      );
+    }
+
+    // Mark student as having completed first mentorship (if applicable)
+    if (isFirstCall) {
+      await User.findByIdAndUpdate(studentId, { hasCompletedFirstMentorship: true });
+    }
 
     // Generate approval token
     const approvalToken = crypto.randomBytes(32).toString("hex");
@@ -231,18 +281,22 @@ export async function POST(request: NextRequest) {
       sessionDate: new Date(sessionDate),
       sessionTime,
       duration,
-      price,
+      price: finalPrice, // Store the discounted price (what student paid)
       studentNotes,
       sessionType: sessionType || "one-on-one",
       status: "pending",
       paymentStatus: "paid", // Points already debited, so payment is processed
       approvalStatus: "pending",
       approvalToken,
+      // Store additional pricing info for reference
+      mentorLevel,
+      mentorReceivesPoints: mentorReceives, // What mentor will receive on completion
+      isFirstCallDiscount: isDiscounted,
     });
 
     // Update transaction with booking ID
     await Transaction.findOneAndUpdate(
-      { userId: studentId, referenceId: null, points: price },
+      { userId: studentId, referenceId: "", source: TRANSACTION_SOURCE.Mentor },
       { referenceId: booking._id.toString() },
       { sort: { createdAt: -1 } }
     );
@@ -367,12 +421,25 @@ export async function POST(request: NextRequest) {
       { path: "scheduleId" },
     ]);
 
+    // Build response message
+    let bookingMessage = "Booking request sent! The mentor will review and approve your session.";
+    if (isDiscounted) {
+      bookingMessage = `🎉 First mentorship call! You saved ${basePrice - finalPrice} points (50% discount). ${bookingMessage}`;
+    }
+
     return NextResponse.json(
       {
         success: true,
         data: booking,
-        message:
-          "Booking request sent! The mentor will review and approve your session.",
+        message: bookingMessage,
+        pricingInfo: {
+          mentorLevel,
+          basePrice,
+          finalPrice,
+          mentorReceives,
+          isFirstCallDiscount: isDiscounted,
+          pointsSaved: isDiscounted ? basePrice - finalPrice : 0,
+        },
       },
       { status: 201 }
     );
@@ -458,27 +525,18 @@ export async function PATCH(request: NextRequest) {
 
       // Only refund if payment was already processed (points were debited)
       if (refundAmount > 0 && booking.paymentStatus === "paid") {
-        const studentWallet = await Wallet.findOne({
-          userId: booking.studentId._id,
-        });
-        if (studentWallet) {
-          studentWallet.balance += refundAmount;
-          await studentWallet.save();
+        const refundReason = isStudentCancellation 
+          ? `Cancelled mentorship session (student cancellation)`
+          : `Cancelled mentorship session by mentor`;
+        
+        await processRefund(
+          booking.studentId._id.toString(),
+          booking._id.toString(),
+          refundAmount,
+          refundReason
+        );
 
-          await Transaction.create({
-            userId: booking.studentId._id,
-            walletId: studentWallet._id,
-            type: TRANSACTION_TYPE.Earn,
-            points: refundAmount,
-            source: TRANSACTION_SOURCE.Mentor,
-            description: isStudentCancellation 
-              ? `Full refund for cancelled booking (student cancellation)`
-              : `Refund for cancelled booking`,
-            referenceId: booking._id.toString(),
-          });
-
-          booking.paymentStatus = "refunded";
-        }
+        booking.paymentStatus = "refunded";
       }
 
       // Delete Zoom meeting
@@ -542,28 +600,18 @@ export async function PATCH(request: NextRequest) {
       // Points were already debited when booking was created
       // Now credit points to mentor when session is marked as complete
       if (booking.paymentStatus === "paid") {
-        // Credit to mentor
-        let mentorWallet = await Wallet.findOne({
-          userId: booking.professionalId._id,
-        });
-        if (!mentorWallet) {
-          const { createUserWallet } = await import("@/lib/wallet");
-          mentorWallet = await createUserWallet(booking.professionalId._id);
-        }
-        mentorWallet.balance += booking.price;
-        mentorWallet.totalEarned += booking.price;
-        await mentorWallet.save();
-
-        // Create mentor transaction (earn points)
-        await Transaction.create({
-          userId: booking.professionalId._id,
-          walletId: mentorWallet._id,
-          type: TRANSACTION_TYPE.Earn,
-          points: booking.price,
-          source: TRANSACTION_SOURCE.Mentor,
-          description: `Payment from ${booking.studentId.firstName} ${booking.studentId.lastName} for completed session`,
-          referenceId: booking._id.toString(),
-        });
+        // Determine how much mentor receives
+        // If first call discount was applied, mentor still receives full value
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mentorReceivesPoints = (booking as any).mentorReceivesPoints || booking.price;
+        
+        // Credit to mentor using the economy system
+        await creditMentorEarnings(
+          booking.professionalId._id.toString(),
+          booking._id.toString(),
+          `${booking.studentId.firstName} ${booking.studentId.lastName}`,
+          mentorReceivesPoints
+        );
       }
 
       // Update mentor stats

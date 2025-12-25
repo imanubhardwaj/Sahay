@@ -4,10 +4,35 @@ import MentorProfile from "@/models/MentorProfile";
 import User from "@/models/User";
 import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
-// GET - Get mentor profile (requires auth)
+// GET - Get mentor profile (public access for mentorId, auth required for userId)
 export async function GET(request: NextRequest) {
   try {
-    // Require authentication
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const requestedUserId = searchParams.get("userId");
+    const mentorId = searchParams.get("mentorId");
+    const approved = searchParams.get("approved");
+
+    // Public access: Get specific mentor profile by mentorId (no auth required)
+    if (mentorId) {
+      const mentorProfile = await MentorProfile.findOne({ _id: mentorId, isMentor: true, isApproved: true })
+        .populate("userId", "firstName lastName email avatar bio title yoe");
+
+      if (!mentorProfile) {
+        return NextResponse.json(
+          { success: false, error: "Mentor profile not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: mentorProfile,
+      });
+    }
+
+    // Require authentication for other queries
     const userId = await getUserIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
@@ -16,15 +41,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await connectDB();
-
-    const { searchParams } = new URL(request.url);
-    const requestedUserId = searchParams.get("userId");
-    const mentorId = searchParams.get("mentorId");
-    const approved = searchParams.get("approved");
-
-    // Get all approved mentors (if no specific userId or mentorId requested)
-    if (!requestedUserId && !mentorId) {
+    // Get all approved mentors (if no specific userId requested)
+    if (!requestedUserId) {
       const query: Record<string, unknown> = { isMentor: true };
       if (approved === "true") {
         query.isApproved = true;
@@ -41,14 +59,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get specific mentor profile
-    const query = requestedUserId
-      ? { userId: requestedUserId }
-      : { _id: mentorId };
-    const mentorProfile = await MentorProfile.findOne(query).populate(
-      "userId",
-      "firstName lastName email avatar bio title yoe"
-    );
+    // Get specific mentor profile by userId (requires auth)
+    const mentorProfile = await MentorProfile.findOne({ userId: requestedUserId })
+      .populate("userId", "firstName lastName email avatar bio title yoe");
 
     if (!mentorProfile) {
       return NextResponse.json(

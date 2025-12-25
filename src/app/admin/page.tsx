@@ -17,6 +17,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
 import { getAuthHeader } from "@/lib/token-storage";
+import AddMentorModal from "./AddMentorModal";
 
 interface MentorUser {
   _id: string;
@@ -74,7 +75,21 @@ export default function AdminPage() {
   const [editLevel, setEditLevel] = useState<"L1" | "L2" | "L3">("L3");
   const [editCustomRate, setEditCustomRate] = useState<string>("");
   const [useCustomRate, setUseCustomRate] = useState(false);
+  const [editApproved, setEditApproved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Add mentor modal state
+  const [showAddMentorModal, setShowAddMentorModal] = useState(false);
+  const [newMentorEmail, setNewMentorEmail] = useState("");
+  const [newMentorFirstName, setNewMentorFirstName] = useState("");
+  const [newMentorLastName, setNewMentorLastName] = useState("");
+  const [newMentorLevel, setNewMentorLevel] = useState<"L1" | "L2" | "L3">(
+    "L3"
+  );
+  const [newMentorApproved, setNewMentorApproved] = useState(false);
+  const [newMentorHeadline, setNewMentorHeadline] = useState("");
+  const [newMentorExpertise, setNewMentorExpertise] = useState("");
+  const [addingMentor, setAddingMentor] = useState(false);
 
   // Fetch mentors
   const fetchMentors = useCallback(async () => {
@@ -194,12 +209,14 @@ export default function AdminPage() {
     setEditLevel(mentor.level);
     setUseCustomRate(mentor.customPointRate !== null);
     setEditCustomRate(mentor.customPointRate?.toString() || "");
+    setEditApproved(mentor.isApproved);
   };
 
   const closeEditModal = () => {
     setEditingMentor(null);
     setEditLevel("L3");
     setEditCustomRate("");
+    setEditApproved(false);
     setUseCustomRate(false);
   };
 
@@ -219,6 +236,7 @@ export default function AdminPage() {
 
       const body: Record<string, unknown> = {
         level: editLevel,
+        isApproved: editApproved,
       };
 
       if (useCustomRate && editCustomRate) {
@@ -320,6 +338,68 @@ export default function AdminPage() {
     }
   };
 
+  const handleAddMentor = async () => {
+    if (!newMentorEmail.trim()) {
+      setError("Please enter a user email address");
+      return;
+    }
+
+    setAddingMentor(true);
+    startLoading();
+    try {
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      const authHeader = getAuthHeader();
+      if (authHeader) {
+        headers["Authorization"] = authHeader;
+      }
+
+      const response = await fetch("/api/admin/mentors", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({
+          email: newMentorEmail.trim(),
+          firstName: newMentorFirstName.trim() || undefined,
+          lastName: newMentorLastName.trim() || undefined,
+          level: newMentorLevel,
+          isApproved: newMentorApproved,
+          headline: newMentorHeadline.trim() || undefined,
+          expertise: newMentorExpertise.trim()
+            ? newMentorExpertise
+                .split(",")
+                .map((e) => e.trim())
+                .filter((e) => e)
+            : [],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Reset form and close modal
+        setNewMentorEmail("");
+        setNewMentorFirstName("");
+        setNewMentorLastName("");
+        setNewMentorLevel("L3");
+        setNewMentorApproved(false);
+        setNewMentorHeadline("");
+        setNewMentorExpertise("");
+        setShowAddMentorModal(false);
+        // Refetch mentors to show the new one
+        await fetchMentors();
+      } else {
+        setError(data.error || "Failed to add mentor");
+      }
+    } catch {
+      setError("Failed to add mentor");
+    } finally {
+      setAddingMentor(false);
+      stopLoading();
+    }
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case "L1":
@@ -398,11 +478,21 @@ export default function AdminPage() {
               Manage mentor tiers and approval status
             </p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-emerald-400 text-sm font-medium">
-              Admin Access Active
-            </span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="contained"
+              onClick={() => setShowAddMentorModal(true)}
+              className="!px-4 !py-2 !bg-gradient-to-r !from-emerald-600 !to-teal-600 !text-white !rounded-lg !font-medium !transition-all !hover:from-emerald-700 !hover:to-teal-700"
+            >
+              <span className="mr-2">➕</span>
+              Add Mentor
+            </Button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+              <span className="text-emerald-400 text-sm font-medium">
+                Admin Access Active
+              </span>
+            </div>
           </div>
         </div>
 
@@ -884,6 +974,28 @@ export default function AdminPage() {
                   </p>
                 )}
               </div>
+
+              {/* Approval Status */}
+              <div className={`flex items-center justify-between p-4 rounded-lg ${
+                editApproved 
+                  ? "bg-emerald-500/10 border border-emerald-500/30" 
+                  : "bg-amber-500/10 border border-amber-500/30"
+              }`}>
+                <div>
+                  <label className="text-sm font-medium text-slate-300">
+                    Approve Mentor
+                  </label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {editApproved 
+                      ? "✓ Mentor is visible to students" 
+                      : "⏳ Mentor is not visible to students"}
+                  </p>
+                </div>
+                <Switch
+                  checked={editApproved}
+                  onChange={() => setEditApproved(!editApproved)}
+                />
+              </div>
             </div>
 
             <div className="p-6 border-t border-slate-700 flex justify-end gap-3">
@@ -908,6 +1020,31 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Add Mentor Modal */}
+      {showAddMentorModal && (
+        <AddMentorModal
+          showAddMentorModal={showAddMentorModal}
+          setShowAddMentorModal={setShowAddMentorModal}
+          newMentorEmail={newMentorEmail}
+          setNewMentorEmail={setNewMentorEmail}
+          newMentorFirstName={newMentorFirstName}
+          setNewMentorFirstName={setNewMentorFirstName}
+          newMentorLastName={newMentorLastName}
+          setNewMentorLastName={setNewMentorLastName}
+          newMentorLevel={newMentorLevel}
+          setNewMentorLevel={setNewMentorLevel}
+          newMentorHeadline={newMentorHeadline}
+          setNewMentorHeadline={setNewMentorHeadline}
+          newMentorExpertise={newMentorExpertise}
+          setNewMentorExpertise={setNewMentorExpertise}
+          newMentorApproved={newMentorApproved}
+          setNewMentorApproved={setNewMentorApproved}
+          addingMentor={addingMentor}
+          handleAddMentor={handleAddMentor}
+          getLevelColor={getLevelColor}
+        />
       )}
     </DashboardLayout>
   );

@@ -35,6 +35,11 @@ interface User {
   completionRate: number;
   avatar?: string;
   isOnboardingComplete: boolean;
+  profileCompletionPercentage?: number; // 0-100, used for gating features
+  profileCompletionBonusAwarded?: boolean;
+  hasStartedFirstCourse?: boolean;
+  hasCompletedFirstMentorship?: boolean;
+  signupBonusAwarded?: boolean;
   selectedModules: {
     moduleId: string;
     status: 'not_started' | 'in_progress' | 'completed';
