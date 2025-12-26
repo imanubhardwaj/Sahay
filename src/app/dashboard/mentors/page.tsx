@@ -52,6 +52,11 @@ export default function MentorsPage() {
   // Profile gating for booking mentors
   const { showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
 
+  // Check if user is a mentor
+  const isMentor = useMemo(() => {
+    return user?.userType?.includes("professional") || user?.role === "mentor";
+  }, [user]);
+
   // Get user's skills for relevance sorting
   const userSkills = useMemo(() => {
     if (!user?.skills) return [];
@@ -451,6 +456,23 @@ export default function MentorsPage() {
             <div className="text-sm text-slate-400">Sessions Completed</div>
           </div>
         </div>
+
+        {/* View indicator */}
+        {isMentor ? (
+          <div className="mb-6 px-4 py-3 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center gap-3">
+            <HiLightningBolt className="w-5 h-5 text-violet-400" />
+            <p className="text-sm text-violet-300">
+              <span className="font-medium">Mentor View:</span> Showing expert mentors for networking and growth opportunities.
+            </p>
+          </div>
+        ) : (
+          <div className="mb-6 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
+            <HiLightningBolt className="w-5 h-5 text-blue-400" />
+            <p className="text-sm text-blue-300">
+              <span className="font-medium">Student View:</span> Showing all available mentors for booking.
+            </p>
+          </div>
+        )}
 
         {/* Relevance indicator */}
         {userSkills.length > 0 && sortBy === "relevance" && (

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
+import { Button } from "@mui/material";
 
 interface CodingProblem {
   _id: string;
@@ -38,17 +39,30 @@ interface Stats {
   hard: number;
 }
 
+// Language/Tech to Categories mapping
+const LANGUAGE_TECH_CATEGORIES: Record<string, string[]> = {
+  DSA: ["Array", "Linked List", "Tree", "Graph"],
+  JavaScript: ["Array", "Functions", "Promises", "Closures"],
+  Python: ["Array", "Tuple", "Dictionary", "List", "Async/Await"],
+};
+
 export default function PracticePage() {
   const { user, isLoading: authLoading } = useAuth();
   const [problems, setProblems] = useState<CodingProblem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [selectedProblem, setSelectedProblem] = useState<CodingProblem | null>(null);
+  const [selectedProblem, setSelectedProblem] = useState<CodingProblem | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
+  const [selectedLanguageTech, setSelectedLanguageTech] =
+    useState<string>("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [code, setCode] = useState("");
-  const [language, setLanguage] = useState<"javascript" | "python" | "typescript">("javascript");
+  const [language, setLanguage] = useState<
+    "javascript" | "python" | "typescript"
+  >("javascript");
   const [output, setOutput] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -65,16 +79,65 @@ export default function PracticePage() {
     }>;
   } | null>(null);
 
+  // Filter categories based on selected language/tech
+  const availableCategories = useMemo(() => {
+    if (selectedLanguageTech === "all") {
+      return categories;
+    }
+    const techCategories = LANGUAGE_TECH_CATEGORIES[selectedLanguageTech] || [];
+    // Return intersection of tech categories and available categories from API
+    return techCategories.filter((cat) => categories.includes(cat));
+  }, [selectedLanguageTech, categories]);
+
+  // Filter problems based on selected language/tech and category
+  const filteredProblems = useMemo(() => {
+    let filtered = problems;
+
+    // If a specific language/tech is selected and category is "all", filter by language/tech
+    if (selectedLanguageTech !== "all" && selectedCategory === "all") {
+      const techCategories =
+        LANGUAGE_TECH_CATEGORIES[selectedLanguageTech] || [];
+      filtered = filtered.filter((problem) =>
+        techCategories.includes(problem.category)
+      );
+    }
+    // If both language/tech and category are selected, the API already filtered by category
+    // but we still need to ensure the category belongs to the selected language/tech
+    else if (selectedLanguageTech !== "all" && selectedCategory !== "all") {
+      const techCategories =
+        LANGUAGE_TECH_CATEGORIES[selectedLanguageTech] || [];
+      // Verify that the selected category belongs to the selected language/tech
+      if (techCategories.includes(selectedCategory)) {
+        // API already filtered by category, so we just verify
+        filtered = filtered.filter(
+          (problem) => problem.category === selectedCategory
+        );
+      } else {
+        // Category doesn't belong to selected language/tech, return empty
+        filtered = [];
+      }
+    }
+
+    return filtered;
+  }, [problems, selectedLanguageTech, selectedCategory]);
+
+  // Reset category when language/tech changes
+  useEffect(() => {
+    setSelectedCategory("all");
+  }, [selectedLanguageTech]);
+
   const fetchProblems = useCallback(async () => {
     try {
       setLoading(true);
       setFetchError(null);
       const { getAuthHeaders } = await import("@/lib/token-storage");
-      
+
       let url = "/api/coding-problems";
       const params = new URLSearchParams();
-      if (selectedDifficulty !== "all") params.append("difficulty", selectedDifficulty);
-      if (selectedCategory !== "all") params.append("category", selectedCategory);
+      if (selectedDifficulty !== "all")
+        params.append("difficulty", selectedDifficulty);
+      if (selectedCategory !== "all")
+        params.append("category", selectedCategory);
       if (params.toString()) url += `?${params.toString()}`;
 
       const response = await fetch(url, {
@@ -137,7 +200,9 @@ function solution(input: string): string {
     return "";
   };
 
-  const handleLanguageChange = (newLang: "javascript" | "python" | "typescript") => {
+  const handleLanguageChange = (
+    newLang: "javascript" | "python" | "typescript"
+  ) => {
     setLanguage(newLang);
     if (selectedProblem) {
       setCode(selectedProblem.starterCode[newLang] || getDefaultCode(newLang));
@@ -168,7 +233,7 @@ function solution(input: string): string {
 
       if (result.success) {
         setTestResults(result.data);
-        
+
         // Check for execution errors first
         if (result.data.executionError) {
           setOutput(`⚠️ Code Error:\n${result.data.executionError}`);
@@ -181,7 +246,9 @@ function solution(input: string): string {
           // Refresh problems to update status
           fetchProblems();
         } else {
-          setOutput(`❌ ${result.data.testsPassed}/${result.data.totalTests} tests passed`);
+          setOutput(
+            `❌ ${result.data.testsPassed}/${result.data.totalTests} tests passed`
+          );
         }
       } else {
         setOutput(`Error: ${result.error}`);
@@ -234,8 +301,12 @@ function solution(input: string): string {
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
             <div className="text-5xl mb-4">🔐</div>
-            <h3 className="text-xl font-semibold text-white mb-2">Login Required</h3>
-            <p className="text-gray-400 mb-6">Please login to access coding practice</p>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Login Required
+            </h3>
+            <p className="text-gray-400 mb-6">
+              Please login to access coding practice
+            </p>
             <a
               href="/login"
               className="inline-block px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
@@ -256,64 +327,117 @@ function solution(input: string): string {
           <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Practice Coding</h1>
-              <p className="text-gray-400">Solve problems and improve your skills</p>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Practice Coding
+              </h1>
+              <p className="text-gray-400">
+                Solve problems and improve your skills
+              </p>
             </div>
 
             {/* Stats */}
             {stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-3xl font-bold text-white">{stats.solved}</div>
+                  <div className="text-3xl font-bold text-white">
+                    {stats.solved}
+                  </div>
                   <div className="text-sm text-gray-400">Solved</div>
                 </div>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-3xl font-bold text-green-500">{stats.easy}</div>
+                  <div className="text-3xl font-bold text-green-500">
+                    {stats.easy}
+                  </div>
                   <div className="text-sm text-gray-400">Easy</div>
                 </div>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-3xl font-bold text-yellow-500">{stats.medium}</div>
+                  <div className="text-3xl font-bold text-yellow-500">
+                    {stats.medium}
+                  </div>
                   <div className="text-sm text-gray-400">Medium</div>
                 </div>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-3xl font-bold text-red-500">{stats.hard}</div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {stats.hard}
+                  </div>
                   <div className="text-sm text-gray-400">Hard</div>
                 </div>
               </div>
             )}
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="flex gap-2">
-                {["all", "easy", "medium", "hard"].map((diff) => (
-                  <button
-                    key={diff}
-                    onClick={() => setSelectedDifficulty(diff)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedDifficulty === diff
-                        ? "bg-white text-black"
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            <div className="space-y-4 mb-6">
+              {/* Language/Tech Filter - First Level */}
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-gray-400 self-center">
+                  Language/Tech:
+                </span>
+                {["all", "DSA", "JavaScript", "Python"].map((tech) => (
+                  <Button
+                    key={tech}
+                    onClick={() => setSelectedLanguageTech(tech)}
+                    className={`!px-4 !py-2 !rounded-md !text-sm !font-medium !transition-colors ${
+                      selectedLanguageTech === tech
+                        ? "!bg-gradient-to-r from-green-600 to-blue-600 !text-white !shadow-lg"
+                        : "!bg-gray-800 !text-gray-300 !hover:bg-gray-700"
                     }`}
                   >
-                    {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                  </button>
+                    {tech === "all" ? "All" : tech}
+                  </Button>
                 ))}
               </div>
 
-              {categories.length > 0 && (
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
+              {/* Category Filter - Second Level (Dynamic) */}
+              {/* {availableCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-gray-400 self-center">
+                    Category:
+                  </span>
+                  <Button
+                    onClick={() => setSelectedCategory("all")}
+                    className={`!px-4 !py-2 !rounded-md !text-sm !font-medium !transition-colors ${
+                      selectedCategory === "all"
+                        ? "!bg-white !text-black"
+                        : "!bg-gray-800 !text-gray-300 !hover:bg-gray-700"
+                    }`}
+                  >
+                    All Categories
+                  </Button>
+                  {availableCategories.map((cat) => (
+                    <Button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`!px-4 !py-2 !rounded-md !text-sm !font-medium !transition-colors ${
+                        selectedCategory === cat
+                          ? "!bg-white !text-black"
+                          : "!bg-gray-800 !text-gray-300 !hover:bg-gray-700"
+                      }`}
+                    >
                       {cat}
-                    </option>
+                    </Button>
                   ))}
-                </select>
-              )}
+                </div>
+              )} */}
+
+              {/* Difficulty Filter */}
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-gray-400 self-center">
+                  Difficulty:
+                </span>
+                {["all", "easy", "medium", "hard"].map((diff) => (
+                  <Button
+                    key={diff}
+                    onClick={() => setSelectedDifficulty(diff)}
+                    className={`!px-4 !py-2 !rounded-md !text-sm !font-medium !transition-colors ${
+                      selectedDifficulty === diff
+                        ? "!bg-white !text-black"
+                        : "!bg-gray-800 !text-gray-300 !hover:bg-gray-700"
+                    }`}
+                  >
+                    {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* Problems List */}
@@ -324,45 +448,68 @@ function solution(input: string): string {
             ) : fetchError ? (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
                 <div className="text-5xl mb-4">⚠️</div>
-                <h3 className="text-xl font-semibold text-white mb-2">Error Loading Problems</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Error Loading Problems
+                </h3>
                 <p className="text-gray-400 mb-4">{fetchError}</p>
-                <button
+                <Button
                   onClick={fetchProblems}
-                  className="px-6 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  className="!px-6 !py-2 !rounded-md !text-sm !font-medium !transition-colors !bg-white !text-black !hover:bg-gray-100"
                 >
                   Try Again
-                </button>
+                </Button>
               </div>
-            ) : problems.length === 0 ? (
+            ) : filteredProblems.length === 0 ? (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
                 <div className="text-5xl mb-4">🧩</div>
-                <h3 className="text-xl font-semibold text-white mb-2">No Problems Yet</h3>
-                <p className="text-gray-400">Check back soon for coding challenges!</p>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  No Problems Found
+                </h3>
+                <p className="text-gray-400">
+                  {selectedLanguageTech !== "all"
+                    ? `No problems available for ${selectedLanguageTech}. Try selecting a different language/tech or category.`
+                    : "Check back soon for coding challenges!"}
+                </p>
               </div>
             ) : (
               <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-gray-800/50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Title</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Difficulty</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Category</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">Points</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
+                        Title
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
+                        Difficulty
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
+                        Category
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">
+                        Points
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    {problems.map((problem) => (
+                    {filteredProblems.map((problem) => (
                       <tr
                         key={problem._id}
                         onClick={() => selectProblem(problem)}
                         className="hover:bg-gray-800/50 cursor-pointer transition-colors"
                       >
-                        <td className="px-4 py-4 text-lg">{getStatusIcon(problem.userStatus)}</td>
+                        <td className="px-4 py-4 text-lg">
+                          {getStatusIcon(problem.userStatus)}
+                        </td>
                         <td className="px-4 py-4">
-                          <div className="text-white font-medium">{problem.title}</div>
+                          <div className="text-white font-medium">
+                            {problem.title}
+                          </div>
                           <div className="text-sm text-gray-500">
-                            {problem.solvedCount} solved · {problem.attemptCount} attempts
+                            {problem.solvedCount} solved ·{" "}
+                            {problem.attemptCount} attempts
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -374,8 +521,12 @@ function solution(input: string): string {
                             {problem.difficulty}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-gray-400">{problem.category}</td>
-                        <td className="px-4 py-4 text-right text-white font-medium">{problem.points}</td>
+                        <td className="px-4 py-4 text-gray-400">
+                          {problem.category}
+                        </td>
+                        <td className="px-4 py-4 text-right text-white font-medium">
+                          {problem.points}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -389,17 +540,33 @@ function solution(input: string): string {
             {/* Header */}
             <div className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button
+                <Button
                   onClick={() => setSelectedProblem(null)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer "
+                  className="!p-2 !rounded-md !transition-colors !cursor-pointer !hover:bg-gray-800"
                 >
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
-                </button>
+                </Button>
                 <div>
-                  <h2 className="text-white font-semibold">{selectedProblem.title}</h2>
-                  <span className={`text-xs px-2 py-0.5 rounded ${getDifficultyColor(selectedProblem.difficulty)}`}>
+                  <h2 className="text-white font-semibold">
+                    {selectedProblem.title}
+                  </h2>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded ${getDifficultyColor(
+                      selectedProblem.difficulty
+                    )}`}
+                  >
                     {selectedProblem.difficulty}
                   </span>
                 </div>
@@ -407,17 +574,21 @@ function solution(input: string): string {
               <div className="flex items-center gap-3">
                 <select
                   value={language}
-                  onChange={(e) => handleLanguageChange(e.target.value as "javascript" | "python" | "typescript")}
+                  onChange={(e) =>
+                    handleLanguageChange(
+                      e.target.value as "javascript" | "python" | "typescript"
+                    )
+                  }
                   className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none"
                 >
                   <option value="javascript">JavaScript</option>
                   <option value="python">Python</option>
                   <option value="typescript">TypeScript</option>
                 </select>
-                <button
+                <Button
                   onClick={runCode}
                   disabled={isRunning}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                  className="!px-4 !py-2 !rounded-md !text-sm !font-medium !transition-colors !bg-green-600 !hover:bg-green-700 !disabled:bg-gray-600 !text-white !flex !items-center !gap-2"
                 >
                   {isRunning ? (
                     <>
@@ -426,14 +597,29 @@ function solution(input: string): string {
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       Run
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -442,21 +628,35 @@ function solution(input: string): string {
               {/* Problem Description */}
               <div className="w-2/5 bg-gray-900 border-r border-gray-800 overflow-y-auto p-6">
                 <div className="prose prose-invert max-w-none">
-                  <h3 className="text-lg font-semibold text-white mb-4">Description</h3>
-                  <div className="text-gray-300 whitespace-pre-wrap mb-6">{selectedProblem.description}</div>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Description
+                  </h3>
+                  <div className="text-gray-300 whitespace-pre-wrap mb-6">
+                    {selectedProblem.description}
+                  </div>
 
                   {/* Test Cases */}
-                  <h3 className="text-lg font-semibold text-white mb-4">Examples</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Examples
+                  </h3>
                   <div className="space-y-4">
                     {selectedProblem.testCases
                       .filter((tc) => !tc.isHidden)
                       .slice(0, 2)
                       .map((tc, index) => (
                         <div key={index} className="bg-gray-800 rounded-lg p-4">
-                          <div className="text-sm text-gray-400 mb-1">Input:</div>
-                          <pre className="text-white text-sm mb-3 font-mono">{tc.input}</pre>
-                          <div className="text-sm text-gray-400 mb-1">Expected Output:</div>
-                          <pre className="text-white text-sm font-mono">{tc.expectedOutput}</pre>
+                          <div className="text-sm text-gray-400 mb-1">
+                            Input:
+                          </div>
+                          <pre className="text-white text-sm mb-3 font-mono">
+                            {tc.input}
+                          </pre>
+                          <div className="text-sm text-gray-400 mb-1">
+                            Expected Output:
+                          </div>
+                          <pre className="text-white text-sm font-mono">
+                            {tc.expectedOutput}
+                          </pre>
                         </div>
                       ))}
                   </div>
@@ -464,7 +664,9 @@ function solution(input: string): string {
                   {/* Hints */}
                   {selectedProblem.hints.length > 0 && (
                     <div className="mt-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Hints</h3>
+                      <h3 className="text-lg font-semibold text-white mb-4">
+                        Hints
+                      </h3>
                       <ul className="list-disc list-inside text-gray-400 space-y-2">
                         {selectedProblem.hints.map((hint, index) => (
                           <li key={index}>{hint}</li>
@@ -476,7 +678,9 @@ function solution(input: string): string {
                   {/* Tags */}
                   {selectedProblem.tags.length > 0 && (
                     <div className="mt-6">
-                      <h3 className="text-lg font-semibold text-white mb-3">Tags</h3>
+                      <h3 className="text-lg font-semibold text-white mb-3">
+                        Tags
+                      </h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedProblem.tags.map((tag, index) => (
                           <span
@@ -506,22 +710,29 @@ function solution(input: string): string {
                 {/* Output Panel */}
                 <div className="h-48 bg-gray-950 border-t border-gray-800">
                   <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
-                    <span className="text-sm font-medium text-gray-400">Output</span>
+                    <span className="text-sm font-medium text-gray-400">
+                      Output
+                    </span>
                     {testResults && (
                       <span
                         className={`text-sm font-medium ${
                           testResults.passed ? "text-green-500" : "text-red-500"
                         }`}
                       >
-                        {testResults.testsPassed}/{testResults.totalTests} tests passed
+                        {testResults.testsPassed}/{testResults.totalTests} tests
+                        passed
                       </span>
                     )}
                   </div>
                   <div className="p-4 overflow-y-auto h-36">
                     {output ? (
-                      <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{output}</pre>
+                      <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">
+                        {output}
+                      </pre>
                     ) : (
-                      <p className="text-gray-500 text-sm">Click &quot;Run&quot; to see output</p>
+                      <p className="text-gray-500 text-sm">
+                        Click &quot;Run&quot; to see output
+                      </p>
                     )}
 
                     {testResults && testResults.testResults.length > 0 && (
@@ -530,17 +741,29 @@ function solution(input: string): string {
                           <div
                             key={index}
                             className={`p-3 rounded-lg ${
-                              result.passed ? "bg-green-500/10" : "bg-red-500/10"
+                              result.passed
+                                ? "bg-green-500/10"
+                                : "bg-red-500/10"
                             }`}
                           >
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={result.passed ? "text-green-500" : "text-red-500"}>
+                              <span
+                                className={
+                                  result.passed
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                }
+                              >
                                 {result.passed ? "✓" : "✗"}
                               </span>
-                              <span className="text-sm text-gray-400">Test Case {index + 1}</span>
+                              <span className="text-sm text-gray-400">
+                                Test Case {index + 1}
+                              </span>
                             </div>
                             {!result.passed && result.error && (
-                              <pre className="text-xs text-red-400 mt-1">{result.error}</pre>
+                              <pre className="text-xs text-red-400 mt-1">
+                                {result.error}
+                              </pre>
                             )}
                           </div>
                         ))}
@@ -556,4 +779,3 @@ function solution(input: string): string {
     </DashboardLayout>
   );
 }
-

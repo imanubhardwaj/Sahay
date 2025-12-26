@@ -33,41 +33,82 @@ export async function POST(req: Request) {
 
     if (!dbUser) {
       console.log('Creating new user...');
-      // Create new user with all required fields
-      const firstName = authResponse.user.firstName || authResponse.user.email.split('@')[0];
-      const lastName = authResponse.user.lastName || 'User'; // Provide default last name
-      const username = authResponse.user.email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 5);
-      
-      const userData = {
-        firstName: firstName,
-        lastName: lastName,
-        email: authResponse.user.email,
-        username: username,
-        workosId: authResponse.user.id,
-        role: 'student',
-        userType: 'student_fresher',
-        isOnboardingComplete: false,
-        status: 'active',
-        bio: '',
-        yoe: 0,
-        title: '',
-        location: '',
-        visibility: 'public',
-        skills: [],
-        portfolio: [],
-        mentors: [],
-        progress: {
-          currentGoal: '',
-          completionRate: 0
-        },
-        completionRate: 0,
-        selectedModules: []
-      };
-      console.log('User data to create:', userData);
-      
-      dbUser = await User.create(userData);
-      isNewUser = true;
-      console.log('New user created successfully:', dbUser._id);
+      try {
+        // Create new user with all required fields
+        const firstName = authResponse.user.firstName || authResponse.user.email.split('@')[0];
+        const lastName = authResponse.user.lastName || 'User'; // Provide default last name
+        const username = authResponse.user.email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 5);
+        
+        const userData = {
+          firstName: firstName,
+          lastName: lastName,
+          email: authResponse.user.email,
+          username: username,
+          workosId: authResponse.user.id,
+          role: 'student',
+          userType: 'student_fresher',
+          isOnboardingComplete: true, // Skip onboarding flow
+          status: 'active',
+          bio: '',
+          yoe: 0,
+          title: '',
+          location: '',
+          visibility: 'public',
+          skills: [],
+          portfolio: [],
+          mentors: [],
+          progress: {
+            currentGoal: '',
+            completionRate: 0
+          },
+          completionRate: 0,
+          selectedModules: []
+        };
+        console.log('User data to create:', userData);
+        
+        dbUser = await User.create(userData);
+        isNewUser = true;
+        console.log('New user created successfully:', dbUser._id);
+      } catch (createError: any) {
+        console.error('Error creating user:', createError);
+        // If username conflict, try with different random suffix
+        if (createError.code === 11000 && createError.keyPattern?.username) {
+          console.log('Username conflict, retrying with different username...');
+          const firstName = authResponse.user.firstName || authResponse.user.email.split('@')[0];
+          const lastName = authResponse.user.lastName || 'User';
+          const username = authResponse.user.email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 8);
+          
+          dbUser = await User.create({
+            firstName,
+            lastName,
+            email: authResponse.user.email,
+            username,
+            workosId: authResponse.user.id,
+            role: 'student',
+            userType: 'student_fresher',
+            isOnboardingComplete: true,
+            status: 'active',
+            bio: '',
+            yoe: 0,
+            title: '',
+            location: '',
+            visibility: 'public',
+            skills: [],
+            portfolio: [],
+            mentors: [],
+            progress: {
+              currentGoal: '',
+              completionRate: 0
+            },
+            completionRate: 0,
+            selectedModules: []
+          });
+          isNewUser = true;
+          console.log('New user created with retry:', dbUser._id);
+        } else {
+          throw createError;
+        }
+      }
     } else {
       console.log('Existing user found:', dbUser._id);
     }

@@ -678,7 +678,7 @@ export default function CommunityPage() {
                           </span>
                         </IconButton>
 
-                        <button className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group">
+                        <IconButton className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group">
                           <svg
                             className="w-5 h-5 group-hover:scale-110 transition-transform"
                             fill="none"
@@ -693,7 +693,7 @@ export default function CommunityPage() {
                             />
                           </svg>
                           <span className="text-sm">Share</span>
-                        </button>
+                        </IconButton>
                       </div>
                     </div>
 
@@ -731,13 +731,13 @@ export default function CommunityPage() {
                                 <span className="text-xs text-gray-500">
                                   Press Ctrl+Enter to submit
                                 </span>
-                                <button
+                                <Button
                                   onClick={() => handleComment(question._id)}
                                   disabled={!commentText[question._id]?.trim()}
-                                  className="px-4 py-1.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                  className="!px-4 !py-1.5 !bg-gradient-to-r !from-green-600 !to-teal-600 !text-white !rounded-lg !text-sm !font-medium !hover:!from-green-700 !hover:!to-teal-700 !disabled:!opacity-50 !disabled:!cursor-not-allowed !transition-all"
                                 >
                                   Post Answer
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           </div>
@@ -775,14 +775,14 @@ export default function CommunityPage() {
                                       "No content"}
                                   </p>
                                   <div className="flex items-center gap-4">
-                                    <button
+                                    <IconButton
                                       onClick={() =>
                                         handleCommentUpvote(
                                           question._id,
                                           answer._id || ""
                                         )
                                       }
-                                      className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors text-xs font-medium group"
+                                      className="!flex !items-center !gap-1 !text-gray-500 !hover:!text-blue-600 !transition-colors !text-xs !font-medium !group"
                                     >
                                       <svg
                                         className="w-4 h-4 group-hover:scale-110 transition-transform"
@@ -799,8 +799,8 @@ export default function CommunityPage() {
                                       </svg>
                                       <span>{answer.upvotes || 0}</span>
                                       <span>Upvote</span>
-                                    </button>
-                                    <button className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-xs">
+                                    </IconButton>
+                                    <IconButton className="!flex !items-center !gap-1 !text-gray-500 !hover:!text-gray-700 !text-xs">
                                       <svg
                                         className="w-4 h-4"
                                         fill="none"
@@ -815,7 +815,7 @@ export default function CommunityPage() {
                                         />
                                       </svg>
                                       <span>Reply</span>
-                                    </button>
+                                    </IconButton>
                                   </div>
                                 </div>
                               </div>

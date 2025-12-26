@@ -85,6 +85,7 @@ export enum TRANSACTION_SOURCE {
   ProjectAdd = "project_add", // Adding a project
   Referral = "referral",
   Bonus = "bonus",
+  Purchase = "purchase", // Purchased points
 
   // Spending sources
   CourseStart = "course_start", // Starting a course

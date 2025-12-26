@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Loader from "@/components/Loader";
+import { Button } from "../../../../packages/ui";
 // Removed mock API - using real API calls
 
 interface User {
@@ -139,17 +140,18 @@ export default function LeaderboardPage() {
               { key: "month", label: "This Month" },
               { key: "week", label: "This Week" },
             ].map(({ key, label }) => (
-              <button
+              <Button
+                variant="text"
                 key={key}
                 onClick={() => setTimeframe(key as "all" | "month" | "week")}
-                className={`px-6 py-2 rounded-2xl font-medium transition-all duration-200 ${
+                className={`!px-6 !py-2 !rounded-2xl !font-medium !transition-all !duration-200 ${
                   timeframe === key
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "!bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white !shadow-lg"
+                    : "!bg-gray-100 !text-gray-700 !hover:!bg-gray-200"
                 }`}
               >
                 {label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

@@ -48,7 +48,19 @@ export async function GET(request: NextRequest) {
         query.isApproved = true;
       }
 
+      // Check if user is a mentor - if so, only show L1 and L2 mentors for networking
+      const user = await User.findById(userId);
+      const userMentorProfile = await MentorProfile.findOne({ userId: userId, isMentor: true });
+      const isMentor = userMentorProfile?.isMentor || user?.userType?.includes("professional") || user?.role === "mentor";
+      
+      if (isMentor) {
+        // Mentors see only L1 and L2 experts for networking/growth
+        query.level = { $in: ["L1", "L2"] };
+      }
+      // Students see all tiers (L1, L2, L3) - no level filter needed
+
       const mentors = await MentorProfile.find(query)
+        .select('+level') // Include level field for filtering
         .populate("userId", "firstName lastName email avatar bio")
         .sort({ averageRating: -1, totalSessions: -1 })
         .limit(50);

@@ -8,7 +8,10 @@
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint",
     "seed": "tsx scripts/seed/index.ts",
-    "seed:clear": "tsx scripts/seed/index.ts --clear"
+    "seed:clear": "tsx scripts/seed/index.ts --clear",
+    "seed:coding": "tsx scripts/seed-coding-problems-only.ts",
+    "seed:modules": "tsx scripts/seed/update-modules-only.ts",
+    "seed:javascript": "tsx scripts/seed/javascript-full-course.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

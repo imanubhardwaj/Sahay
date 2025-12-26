@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallet from "@/models/Wallet";
 import Transaction from "@/models/Transaction";
+import { TRANSACTION_SOURCE, TRANSACTION_TYPE } from "@/lib/constants";
 
 // POST /api/user/[id]/points - Add points to a user
 export async function POST(
@@ -32,7 +33,9 @@ export async function POST(
     if (!wallet) {
       wallet = new Wallet({
         userId: user._id,
-        points: 0
+        balance: 0,
+        totalEarned: 0,
+        totalSpent: 0,
       });
       await wallet.save();
       
@@ -41,17 +44,23 @@ export async function POST(
       await user.save();
     }
 
-    // Update wallet points
-    wallet.points += points;
+    // Update wallet balance (handle both old and new schema)
+    wallet.balance = (wallet.balance || wallet.points || 0) + points;
+    if (source === TRANSACTION_SOURCE.Purchase || source === 'purchase') {
+      // For purchases, we still add to balance but track differently
+      wallet.totalEarned = (wallet.totalEarned || 0) + points;
+    } else {
+      wallet.totalEarned = (wallet.totalEarned || 0) + points;
+    }
     await wallet.save();
 
     // Create transaction record
     const transaction = new Transaction({
       userId: user._id,
       walletId: wallet._id,
-      type: 'earn',
+      type: TRANSACTION_TYPE.Earn,
       points: points,
-      source: source,
+      source: source === 'purchase' ? TRANSACTION_SOURCE.Purchase : (source as TRANSACTION_SOURCE),
       description: description || `Earned ${points} points`,
       referenceId: referenceId
     });
@@ -59,7 +68,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      newPoints: wallet.points,
+      newPoints: wallet.balance || wallet.points || 0,
       transactionId: transaction._id
     });
   } catch (error) {
@@ -88,7 +97,7 @@ export async function GET(
 
     // Get wallet points
     const wallet = await Wallet.findOne({ userId: user._id });
-    const points = wallet ? wallet.points : 0;
+    const points = wallet ? (wallet.balance || wallet.points || 0) : 0;
 
     return NextResponse.json({
       userId: user._id,

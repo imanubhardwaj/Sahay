@@ -60,7 +60,7 @@ const userSchema = new mongoose.Schema({
   ],
 });
 
-// Custom validation to require userType only after onboarding is complete
+// Pre-save hook: validation and calculations
 userSchema.pre("save", async function (next) {
   this.updatedAt = new Date();
 
@@ -68,20 +68,6 @@ userSchema.pre("save", async function (next) {
   if (this.isOnboardingComplete && !this.userType) {
     const error = new Error("userType is required when onboarding is complete");
     return next(error);
-  }
-
-  // Create wallet with signup bonus if it doesn't exist (new user)
-  if (this.isNew && !this.walletId) {
-    try {
-      const { createUserWallet } = await import("../lib/wallet");
-      // Create wallet with signup bonus (100 points)
-      const wallet = await createUserWallet(this._id, true);
-      this.walletId = wallet._id;
-      this.signupBonusAwarded = true;
-    } catch (error) {
-      console.error("Error creating wallet for user:", error);
-      // Don't fail user creation if wallet creation fails
-    }
   }
 
   // Calculate profile completion percentage
@@ -98,18 +84,45 @@ userSchema.pre("save", async function (next) {
     userType: this.userType,
   });
 
-  // Award profile completion bonus if profile is 100% complete and not yet awarded
-  if (this.profileCompletionPercentage >= 100 && !this.profileCompletionBonusAwarded) {
-    try {
-      const { awardProfileCompletionBonus } = await import("../lib/wallet");
-      await awardProfileCompletionBonus(this._id.toString());
-      this.profileCompletionBonusAwarded = true;
-    } catch (error) {
-      console.error("Error awarding profile completion bonus:", error);
-    }
-  }
-
   next();
+});
+
+// Post-save hook: create wallet and award bonuses (after user has _id)
+userSchema.post("save", async function (doc) {
+  try {
+    // Create wallet with signup bonus if it doesn't exist (new user)
+    if (!doc.walletId) {
+      try {
+        const { createUserWallet } = await import("../lib/wallet");
+        // Create wallet with signup bonus (100 points)
+        const wallet = await createUserWallet(doc._id.toString(), true);
+        // Update user with wallet reference
+        await User.findByIdAndUpdate(doc._id, {
+          walletId: wallet._id,
+          signupBonusAwarded: true,
+        });
+      } catch (error) {
+        console.error("Error creating wallet for user:", error);
+        // Don't fail user creation if wallet creation fails
+      }
+    }
+
+    // Award profile completion bonus if profile is 100% complete and not yet awarded
+    if (doc.profileCompletionPercentage >= 100 && !doc.profileCompletionBonusAwarded) {
+      try {
+        const { awardProfileCompletionBonus } = await import("../lib/wallet");
+        await awardProfileCompletionBonus(doc._id.toString());
+        await User.findByIdAndUpdate(doc._id, {
+          profileCompletionBonusAwarded: true,
+        });
+      } catch (error) {
+        console.error("Error awarding profile completion bonus:", error);
+      }
+    }
+  } catch (error) {
+    console.error("Error in post-save hook:", error);
+    // Don't throw - user is already saved
+  }
 });
 
 // Clear the model cache to ensure the updated schema is used

@@ -16,11 +16,13 @@ import {
   MdLogout,
   MdSchedule,
   MdAdminPanelSettings,
+  MdShoppingCart,
 } from "react-icons/md";
 import { SiSession } from "react-icons/si";
 import { GiTeacher } from "react-icons/gi";
 import { SidebarNotifications } from "@/components/SidebarNotifications";
 import { getAuthHeader } from "@/lib/token-storage";
+import { Button } from "../../../packages/ui";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -103,6 +105,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       // Navigation for working professionals (who can be mentors)
       return [
         { name: "Home", href: "/dashboard", icon: <FaHome /> },
+        { name: "Explore", href: "/dashboard/explore", icon: <FaSearch /> },
+        {
+          name: "Practice",
+          href: "/dashboard/practice",
+          icon: <FaCode />,
+        },
         {
           name: "Community",
           href: "/dashboard/community",
@@ -112,6 +120,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           name: "Mentors",
           href: "/dashboard/mentors",
           icon: <FaPeopleArrows />,
+        },
+        {
+          name: "Portfolio",
+          href: "/dashboard/portfolio",
+          icon: <BsFillPassportFill />,
         },
         {
           name: "Become a Mentor",
@@ -137,6 +150,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           name: "Earnings",
           href: "/dashboard/earnings",
           icon: <MdAttachMoney />,
+        },
+        {
+          name: "Buy Points",
+          href: "/dashboard/buy-points",
+          icon: <MdShoppingCart />,
         },
       ];
     } else {
@@ -174,6 +192,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           href: "/dashboard/leaderboard",
           icon: <MdLeaderboard />,
         },
+        {
+          name: "Buy Points",
+          href: "/dashboard/buy-points",
+          icon: <MdShoppingCart />,
+        },
       ];
     }
   }, [user?.userType]);
@@ -202,7 +225,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100">
             {isSidebarExpanded && (
               <div className="flex items-center space-x-3">
                 <div>
@@ -361,20 +384,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             <div className="px-3">
               {isSidebarExpanded && (
-                <button
+                  <Button
                   onClick={handleLogout}
-                  className="w-full mt-3 p-2 text-xs border border-gray-200 text-white rounded-xl hover:bg-gray-50 transition-all duration-300 flex items-center justify-center"
+                  variant="text"
+                  className="!w-full !mt-3 !p-2 !text-xs !border !border-gray-200 !text-white !rounded-xl !hover:bg-gray-50 !transition-all !duration-300 !flex !items-center !justify-center"
                 >
                   <span className="mr-2">
                     <MdLogout size={20} />
                   </span>
                   Sign Out
-                </button>
+                </Button>
               )}
               {!isSidebarExpanded && (
-                <button
+                <Button
                   onClick={handleLogout}
-                  className="w-full mt-3 p-2 text-xs border border-gray-200 text-white rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-300 group relative"
+                  className="!w-full !mt-3 !p-2 !text-xs !border !border-gray-200 !text-white !rounded-xl !hover:bg-red-50 !hover:text-red-600 !hover:border-red-200 !transition-all !duration-300 !group !relative"
                   title="Sign Out"
                 >
                   <span className="text-lg">
@@ -384,7 +408,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     Sign Out
                     <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
                   </div>
-                </button>
+                </Button>
               )}
             </div>
           </div>

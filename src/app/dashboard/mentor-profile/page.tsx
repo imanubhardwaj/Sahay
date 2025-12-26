@@ -19,6 +19,7 @@ import {
   Trash2,
   Briefcase,
 } from "lucide-react";
+import { Button, IconButton } from "../../../../packages/ui";
 
 interface MentorProfile {
   _id: string;
@@ -139,7 +140,10 @@ export default function MentorProfilePage() {
       setSaving(true);
       const { getAuthHeaders } = await import("@/lib/token-storage");
       const currentPastCompanies = profile?.pastCompanies || [];
-      const updatedPastCompanies = [...currentPastCompanies, { ...newExperience }];
+      const updatedPastCompanies = [
+        ...currentPastCompanies,
+        { ...newExperience },
+      ];
 
       const response = await fetch("/api/mentor-profile", {
         method: "PATCH",
@@ -157,7 +161,9 @@ export default function MentorProfilePage() {
       const result = await response.json();
 
       if (result.success) {
-        setProfile((prev) => prev ? { ...prev, pastCompanies: updatedPastCompanies } : null);
+        setProfile((prev) =>
+          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null
+        );
         setNewExperience({
           company: "",
           role: "",
@@ -188,7 +194,9 @@ export default function MentorProfilePage() {
       setSaving(true);
       const { getAuthHeaders } = await import("@/lib/token-storage");
       const currentPastCompanies = profile?.pastCompanies || [];
-      const updatedPastCompanies = currentPastCompanies.filter((_, i) => i !== index);
+      const updatedPastCompanies = currentPastCompanies.filter(
+        (_, i) => i !== index
+      );
 
       const response = await fetch("/api/mentor-profile", {
         method: "PATCH",
@@ -206,7 +214,9 @@ export default function MentorProfilePage() {
       const result = await response.json();
 
       if (result.success) {
-        setProfile((prev) => prev ? { ...prev, pastCompanies: updatedPastCompanies } : null);
+        setProfile((prev) =>
+          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null
+        );
         alert("Experience removed successfully!");
       } else {
         alert(result.error || "Failed to remove experience");
@@ -223,7 +233,10 @@ export default function MentorProfilePage() {
     if (!dateStr) return "Present";
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString("en-US", { year: "numeric", month: "short" });
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+      });
     } catch {
       return dateStr;
     }
@@ -253,13 +266,17 @@ export default function MentorProfilePage() {
       const result = await response.json();
 
       if (result.success) {
-        setProfile((prev) => prev ? {
-          ...prev,
-          linkedIn: socialLinks.linkedIn || undefined,
-          twitter: socialLinks.twitter || undefined,
-          github: socialLinks.github || undefined,
-          website: socialLinks.website || undefined,
-        } : null);
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                linkedIn: socialLinks.linkedIn || undefined,
+                twitter: socialLinks.twitter || undefined,
+                github: socialLinks.github || undefined,
+                website: socialLinks.website || undefined,
+              }
+            : null
+        );
         setEditingSocialLinks(false);
         alert("Social links updated successfully!");
       } else {
@@ -297,18 +314,17 @@ export default function MentorProfilePage() {
                 No Mentor Profile Found
               </h2>
               <p className="text-gray-400 mb-6">
-                You haven&apos;t created a mentor profile yet. Start by
-                setting up your profile to begin mentoring students.
+                You haven&apos;t created a mentor profile yet. Start by setting
+                up your profile to begin mentoring students.
               </p>
             </div>
-            <button
-              onClick={() =>
-                (window.location.href = "/dashboard/mentor-setup")
-              }
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg text-white font-medium transition-all duration-200"
+            <Button
+              variant="contained"
+              onClick={() => (window.location.href = "/dashboard/mentor-setup")}
+              className="!bg-gradient-to-r !from-purple-600 !to-pink-600 !hover:!from-purple-700 !hover:!to-pink-700 !px-6 !py-3 !rounded-lg !text-white !font-medium !transition-all !duration-200"
             >
               Create Mentor Profile
-            </button>
+            </Button>
           </div>
         </div>
       </DashboardLayout>
@@ -328,13 +344,13 @@ export default function MentorProfilePage() {
               Manage your mentor profile and showcase your expertise
             </p>
           </div>
-          <button
+          <Button
             onClick={handleEdit}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 text-white transition-colors"
+            className="flex items-center !gap-2 !px-4 !py-2 !bg-gray-800 !border !border-gray-700 !rounded-lg !hover:!bg-gray-700 !text-white !transition-colors"
           >
             <Edit className="h-4 w-4" />
             Edit Profile
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -365,14 +381,12 @@ export default function MentorProfilePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-6 space-y-6">
                 {/* Bio */}
                 {profile.bio && (
                   <div>
-                    <h3 className="font-semibold text-white mb-3">
-                      About Me
-                    </h3>
+                    <h3 className="font-semibold text-white mb-3">About Me</h3>
                     <p className="text-gray-300 leading-relaxed">
                       {profile.bio}
                     </p>
@@ -381,9 +395,7 @@ export default function MentorProfilePage() {
 
                 {/* Expertise */}
                 <div>
-                  <h3 className="font-semibold text-white mb-3">
-                    Expertise
-                  </h3>
+                  <h3 className="font-semibold text-white mb-3">Expertise</h3>
                   <div className="flex flex-wrap gap-2">
                     {profile.expertise.map((skill, index) => (
                       <span
@@ -399,9 +411,7 @@ export default function MentorProfilePage() {
                 {/* Languages */}
                 {profile.languages.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-white mb-3">
-                      Languages
-                    </h3>
+                    <h3 className="font-semibold text-white mb-3">Languages</h3>
                     <div className="flex flex-wrap gap-2">
                       {profile.languages.map((language, index) => (
                         <span
@@ -422,13 +432,14 @@ export default function MentorProfilePage() {
                       <Briefcase className="h-5 w-5" />
                       Work Experience
                     </h3>
-                    <button
+                    <Button
+                      variant="text"
                       onClick={() => setShowAddExperience(!showAddExperience)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors"
+                      className="flex items-center !gap-2 !px-3 !py-1.5 !bg-purple-600 !hover:!bg-purple-700 !text-white !rounded-lg !text-sm !transition-colors"
                     >
                       <Plus className="h-4 w-4" />
                       Add Experience
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Add Experience Form */}
@@ -440,7 +451,10 @@ export default function MentorProfilePage() {
                           placeholder="Company Name"
                           value={newExperience.company}
                           onChange={(e) =>
-                            setNewExperience({ ...newExperience, company: e.target.value })
+                            setNewExperience({
+                              ...newExperience,
+                              company: e.target.value,
+                            })
                           }
                           className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
@@ -449,7 +463,10 @@ export default function MentorProfilePage() {
                           placeholder="Role/Position"
                           value={newExperience.role}
                           onChange={(e) =>
-                            setNewExperience({ ...newExperience, role: e.target.value })
+                            setNewExperience({
+                              ...newExperience,
+                              role: e.target.value,
+                            })
                           }
                           className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
@@ -460,7 +477,10 @@ export default function MentorProfilePage() {
                           placeholder="Start Date (YYYY-MM)"
                           value={newExperience.startDate}
                           onChange={(e) =>
-                            setNewExperience({ ...newExperience, startDate: e.target.value })
+                            setNewExperience({
+                              ...newExperience,
+                              startDate: e.target.value,
+                            })
                           }
                           className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
@@ -469,7 +489,10 @@ export default function MentorProfilePage() {
                           placeholder="End Date (YYYY-MM)"
                           value={newExperience.endDate}
                           onChange={(e) =>
-                            setNewExperience({ ...newExperience, endDate: e.target.value })
+                            setNewExperience({
+                              ...newExperience,
+                              endDate: e.target.value,
+                            })
                           }
                           disabled={newExperience.isCurrent}
                           className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -484,12 +507,17 @@ export default function MentorProfilePage() {
                             setNewExperience({
                               ...newExperience,
                               isCurrent: e.target.checked,
-                              endDate: e.target.checked ? "" : newExperience.endDate,
+                              endDate: e.target.checked
+                                ? ""
+                                : newExperience.endDate,
                             })
                           }
                           className="w-4 h-4"
                         />
-                        <label htmlFor="isCurrent" className="text-sm text-gray-300">
+                        <label
+                          htmlFor="isCurrent"
+                          className="text-sm text-gray-300"
+                        >
                           Current Position
                         </label>
                       </div>
@@ -497,20 +525,23 @@ export default function MentorProfilePage() {
                         placeholder="Description (optional)"
                         value={newExperience.description}
                         onChange={(e) =>
-                          setNewExperience({ ...newExperience, description: e.target.value })
+                          setNewExperience({
+                            ...newExperience,
+                            description: e.target.value,
+                          })
                         }
                         className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                         rows={2}
                       />
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           onClick={handleAddExperience}
                           disabled={saving}
-                          className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-1 !px-4 !py-2 !bg-purple-600 !hover:!bg-purple-700 !text-white !rounded-lg !transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {saving ? "Saving..." : "Add Experience"}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => {
                             setShowAddExperience(false);
                             setNewExperience({
@@ -522,10 +553,10 @@ export default function MentorProfilePage() {
                               description: "",
                             });
                           }}
-                          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                          className="!px-4 !py-2 !bg-gray-700 !hover:!bg-gray-600 !text-white !rounded-lg !transition-colors"
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -535,10 +566,17 @@ export default function MentorProfilePage() {
                     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-white">{profile.currentRole}</h4>
-                          <p className="text-gray-400 text-sm mt-1">{profile.currentCompany}</p>
+                          <h4 className="font-semibold text-white">
+                            {profile.currentRole}
+                          </h4>
+                          <p className="text-gray-400 text-sm mt-1">
+                            {profile.currentCompany}
+                          </p>
                           <p className="text-gray-500 text-xs mt-1">
-                            {profile.yearsOfExperience ? `${profile.yearsOfExperience} years` : "Present"} · Full-time
+                            {profile.yearsOfExperience
+                              ? `${profile.yearsOfExperience} years`
+                              : "Present"}{" "}
+                            · Full-time
                           </p>
                         </div>
                         <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
@@ -557,31 +595,43 @@ export default function MentorProfilePage() {
                           className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start justify-between"
                         >
                           <div className="flex-1">
-                            <h4 className="font-semibold text-white">{exp.role}</h4>
-                            <p className="text-gray-400 text-sm mt-1">{exp.company}</p>
+                            <h4 className="font-semibold text-white">
+                              {exp.role}
+                            </h4>
+                            <p className="text-gray-400 text-sm mt-1">
+                              {exp.company}
+                            </p>
                             <p className="text-gray-500 text-xs mt-1">
-                              {exp.startDate ? formatDate(exp.startDate) : "Unknown"} -{" "}
-                              {exp.isCurrent || !exp.endDate ? "Present" : formatDate(exp.endDate)}
+                              {exp.startDate
+                                ? formatDate(exp.startDate)
+                                : "Unknown"}{" "}
+                              -{" "}
+                              {exp.isCurrent || !exp.endDate
+                                ? "Present"
+                                : formatDate(exp.endDate)}
                             </p>
                             {exp.description && (
-                              <p className="text-gray-300 text-sm mt-2">{exp.description}</p>
+                              <p className="text-gray-300 text-sm mt-2">
+                                {exp.description}
+                              </p>
                             )}
                           </div>
-                          <button
+                          <IconButton
                             onClick={() => handleRemoveExperience(index)}
                             disabled={saving}
-                            className="ml-4 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                            className="!ml-4 !p-2 !text-red-400 !hover:!text-red-300 !hover:!bg-red-500/10 !rounded-lg !transition-colors disabled:opacity-50"
                             title="Remove experience"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </IconButton>
                         </div>
                       ))}
                     </div>
                   ) : (
                     !profile.currentCompany && (
                       <div className="text-center py-8 text-gray-500 text-sm">
-                        No work experience added yet. Click &quot;Add Experience&quot; to get started.
+                        No work experience added yet. Click &quot;Add
+                        Experience&quot; to get started.
                       </div>
                     )
                   )}
@@ -594,7 +644,10 @@ export default function MentorProfilePage() {
                   </h3>
                   <div className="space-y-3">
                     {profile.sessionTypes.map((session, index) => (
-                      <div key={index} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                      <div
+                        key={index}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-4"
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium text-white">
                             {session.name}
@@ -621,16 +674,20 @@ export default function MentorProfilePage() {
                 {/* Social Links */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-white">
-                      Social Links
-                    </h3>
+                    <h3 className="font-semibold text-white">Social Links</h3>
                     {!editingSocialLinks && (
                       <button
                         onClick={() => setEditingSocialLinks(true)}
                         className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors"
                       >
                         <Edit className="h-4 w-4" />
-                        {profile.linkedIn || profile.twitter || profile.github || profile.website ? "Edit" : "Add"} Links
+                        {profile.linkedIn ||
+                        profile.twitter ||
+                        profile.github ||
+                        profile.website
+                          ? "Edit"
+                          : "Add"}{" "}
+                        Links
                       </button>
                     )}
                   </div>
@@ -638,42 +695,70 @@ export default function MentorProfilePage() {
                   {editingSocialLinks ? (
                     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1.5">LinkedIn URL</label>
+                        <label className="block text-sm text-gray-300 mb-1.5">
+                          LinkedIn URL
+                        </label>
                         <input
                           type="url"
                           placeholder="https://linkedin.com/in/yourprofile"
                           value={socialLinks.linkedIn}
-                          onChange={(e) => setSocialLinks({ ...socialLinks, linkedIn: e.target.value })}
+                          onChange={(e) =>
+                            setSocialLinks({
+                              ...socialLinks,
+                              linkedIn: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1.5">Twitter URL</label>
+                        <label className="block text-sm text-gray-300 mb-1.5">
+                          Twitter URL
+                        </label>
                         <input
                           type="url"
                           placeholder="https://twitter.com/yourhandle"
                           value={socialLinks.twitter}
-                          onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                          onChange={(e) =>
+                            setSocialLinks({
+                              ...socialLinks,
+                              twitter: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1.5">GitHub URL</label>
+                        <label className="block text-sm text-gray-300 mb-1.5">
+                          GitHub URL
+                        </label>
                         <input
                           type="url"
                           placeholder="https://github.com/yourusername"
                           value={socialLinks.github}
-                          onChange={(e) => setSocialLinks({ ...socialLinks, github: e.target.value })}
+                          onChange={(e) =>
+                            setSocialLinks({
+                              ...socialLinks,
+                              github: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1.5">Website URL</label>
+                        <label className="block text-sm text-gray-300 mb-1.5">
+                          Website URL
+                        </label>
                         <input
                           type="url"
                           placeholder="https://yourwebsite.com"
                           value={socialLinks.website}
-                          onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                          onChange={(e) =>
+                            setSocialLinks({
+                              ...socialLinks,
+                              website: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       </div>
@@ -748,11 +833,15 @@ export default function MentorProfilePage() {
                           Website
                         </a>
                       ) : null}
-                      {!profile.linkedIn && !profile.twitter && !profile.github && !profile.website && (
-                        <div className="text-gray-500 text-sm">
-                          No social links added yet. Click &quot;Add Links&quot; to add your social profiles.
-                        </div>
-                      )}
+                      {!profile.linkedIn &&
+                        !profile.twitter &&
+                        !profile.github &&
+                        !profile.website && (
+                          <div className="text-gray-500 text-sm">
+                            No social links added yet. Click &quot;Add
+                            Links&quot; to add your social profiles.
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
@@ -774,11 +863,13 @@ export default function MentorProfilePage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Mentor Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      profile.isMentor 
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                        : "bg-gray-500/10 text-gray-400 border border-gray-500/20"
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        profile.isMentor
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+                      }`}
+                    >
                       {profile.isMentor ? "Active" : "Inactive"}
                     </span>
                   </div>
@@ -786,11 +877,13 @@ export default function MentorProfilePage() {
                     <span className="text-sm text-gray-400">
                       Approval Status
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      profile.isApproved 
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        profile.isApproved
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                      }`}
+                    >
                       {profile.isApproved ? "Approved" : "Pending"}
                     </span>
                   </div>

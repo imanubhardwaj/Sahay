@@ -67,37 +67,77 @@ export async function GET(req: Request) {
 
     if (!dbUser) {
       console.log("Creating new user...");
-      // Create new user with proper schema
-      dbUser = await User.create({
-        firstName: user.firstName || user.email.split("@")[0],
-        lastName: user.lastName || "",
-        email: user.email,
-        username:
-          user.email.split("@")[0] +
-          "_" +
-          Math.random().toString(36).substr(2, 5),
-        workosId: user.id,
-        role: "student", // Default role
-        userType: "student_fresher", // Default user type
-        isOnboardingComplete: false,
-        status: "active",
-        bio: "",
-        yoe: 0,
-        title: "",
-        location: "",
-        visibility: "public",
-        skills: [],
-        portfolio: [],
-        mentors: [],
-        progress: {
-          currentGoal: "",
+      try {
+        // Create new user with proper schema
+        dbUser = await User.create({
+          firstName: user.firstName || user.email.split("@")[0],
+          lastName: user.lastName || "",
+          email: user.email,
+          username:
+            user.email.split("@")[0] +
+            "_" +
+            Math.random().toString(36).substr(2, 5),
+          workosId: user.id,
+          role: "student", // Default role
+          userType: "student_fresher", // Default user type
+          isOnboardingComplete: true, // Skip onboarding flow
+          status: "active",
+          bio: "",
+          yoe: 0,
+          title: "",
+          location: "",
+          visibility: "public",
+          skills: [],
+          portfolio: [],
+          mentors: [],
+          progress: {
+            currentGoal: "",
+            completionRate: 0,
+          },
           completionRate: 0,
-        },
-        completionRate: 0,
-        selectedModules: [],
-      });
-      isNewUser = true;
-      console.log("New user created:", dbUser._id);
+          selectedModules: [],
+        });
+        isNewUser = true;
+        console.log("New user created:", dbUser._id);
+      } catch (createError: any) {
+        console.error("Error creating user:", createError);
+        // If username conflict, try with different random suffix
+        if (createError.code === 11000 && createError.keyPattern?.username) {
+          console.log("Username conflict, retrying with different username...");
+          dbUser = await User.create({
+            firstName: user.firstName || user.email.split("@")[0],
+            lastName: user.lastName || "",
+            email: user.email,
+            username:
+              user.email.split("@")[0] +
+              "_" +
+              Math.random().toString(36).substr(2, 8),
+            workosId: user.id,
+            role: "student",
+            userType: "student_fresher",
+            isOnboardingComplete: true,
+            status: "active",
+            bio: "",
+            yoe: 0,
+            title: "",
+            location: "",
+            visibility: "public",
+            skills: [],
+            portfolio: [],
+            mentors: [],
+            progress: {
+              currentGoal: "",
+              completionRate: 0,
+            },
+            completionRate: 0,
+            selectedModules: [],
+          });
+          isNewUser = true;
+          console.log("New user created with retry:", dbUser._id);
+        } else {
+          throw createError;
+        }
+      }
     } else {
       console.log("Existing user found:", dbUser._id);
     }
@@ -110,8 +150,8 @@ export async function GET(req: Request) {
     });
 
     // Create response and set session cookie
-    // New users go to onboarding, existing users go to their intended destination
-    const finalRedirectUrl = isNewUser ? "/onboarding" : redirectTo;
+    // All users go to dashboard or their intended destination
+    const finalRedirectUrl = redirectTo || "/dashboard";
     console.log("Redirecting to:", finalRedirectUrl);
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}${finalRedirectUrl}`

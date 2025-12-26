@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import WorkingProfessional from "@/models/WorkingProfessional";
+// Import models to ensure they're registered
+import "@/models/Skill";
+import "@/models/Wallet";
 import { getUserIdFromRequest } from "@/lib/auth";
 
 // GET /api/user - Get current user or all users (with optional filters)
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
+    
+    // Ensure models are registered before populate
+    if (!mongoose.models.Skill) {
+      await import("@/models/Skill");
+    }
+    if (!mongoose.models.Wallet) {
+      await import("@/models/Wallet");
+    }
 
     const { searchParams } = new URL(req.url);
     const getCurrentUser = searchParams.get("current") === "true";
@@ -23,7 +35,10 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const user = await User.findById(userId);
+      const user = await User.findById(userId)
+        .populate('skills', 'name')
+        .populate('walletId')
+        .lean();
 
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -136,24 +151,64 @@ export async function PUT(req: NextRequest) {
     const updates = await req.json();
 
     await connectDB();
+    
+    // Ensure models are registered before populate
+    if (!mongoose.models.Skill) {
+      await import("@/models/Skill");
+    }
+    if (!mongoose.models.Wallet) {
+      await import("@/models/Wallet");
+    }
 
     // Try to find in both User and WorkingProfessional collections
-    let user = await User.findByIdAndUpdate(userId, updates, { new: true });
+    let user = await User.findById(userId);
     if (!user) {
-      user = await WorkingProfessional.findByIdAndUpdate(userId, updates, {
-        new: true,
-      });
+      user = await WorkingProfessional.findById(userId);
     }
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    // Update fields manually to trigger pre-save hooks
+    // Use set method for proper Mongoose handling
+    for (const [key, value] of Object.entries(updates)) {
+      if (key !== '_id' && key !== '__v' && value !== undefined) {
+        user.set(key, value);
+      }
+    }
+
+    // Save to trigger pre-save hook which recalculates profileCompletionPercentage
+    await user.save();
+
+    // Fetch fresh user data with populated fields
+    const updatedUser = await User.findById(userId)
+      .populate('skills', 'name')
+      .populate('walletId')
+      .lean();
+
+    if (!updatedUser) {
+      const userObj = user.toObject();
+      console.log("User updated (no fresh fetch):", {
+        _id: userObj._id,
+        profileCompletionPercentage: userObj.profileCompletionPercentage,
+        isOnboardingComplete: userObj.isOnboardingComplete
+      });
+      return NextResponse.json({ user: userObj });
+    }
+
+    console.log("User updated successfully:", {
+      _id: updatedUser._id,
+      profileCompletionPercentage: updatedUser.profileCompletionPercentage,
+      isOnboardingComplete: updatedUser.isOnboardingComplete,
+      skillsCount: updatedUser.skills?.length || 0
+    });
+
+    return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("Update user error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

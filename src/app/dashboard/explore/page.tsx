@@ -7,7 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Image from "next/image";
 import Loader from "@/components/Loader";
-import { CompleteProfileModal, useProfileGating } from "@/components/CompleteProfileModal";
+import {
+  CompleteProfileModal,
+  useProfileGating,
+} from "@/components/CompleteProfileModal";
+import { Button } from "../../../../packages/ui";
 
 interface Module {
   _id: string;
@@ -50,10 +54,12 @@ const SORT_OPTIONS = [
 const MODULES_PER_PAGE = 12;
 
 export default function ExplorePage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
   const [allModules, setAllModules] = useState<Module[]>([]);
-  const [userProgress, setUserProgress] = useState<Record<string, ModuleProgress>>({});
+  const [userProgress, setUserProgress] = useState<
+    Record<string, ModuleProgress>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
@@ -61,25 +67,45 @@ export default function ExplorePage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [selectedSkill, setSelectedSkill] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Profile gating for starting courses
-  const { isProfileComplete, showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
+  const {
+    isProfileComplete,
+    showModal,
+    setShowModal,
+    blockedAction,
+    checkAndGate,
+  } = useProfileGating();
+  const [profileJustCompleted, setProfileJustCompleted] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent("/dashboard/explore")}`);
+      router.push(
+        `/login?redirect=${encodeURIComponent("/dashboard/explore")}`
+      );
       return;
     }
     loadModules();
     loadUserProgress();
   }, [user, router, authLoading]);
 
+  // Refresh user data only once when profile is completed
+  useEffect(() => {
+    if (profileJustCompleted && refreshUser) {
+      setProfileJustCompleted(false);
+      // Single refresh after profile completion
+      refreshUser().catch(console.error);
+    }
+  }, [profileJustCompleted, refreshUser]);
+
   const loadModules = async () => {
     try {
       setIsLoading(true);
       const { authenticatedFetch } = await import("@/lib/api-client");
-      const response = await authenticatedFetch(`/api/modules?limit=100&page=1`);
+      const response = await authenticatedFetch(
+        `/api/modules?limit=100&page=1`
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -111,16 +137,18 @@ export default function ExplorePage() {
       if (response.ok) {
         const data = await response.json();
         const progressMap: Record<string, ModuleProgress> = {};
-        (data.progress || []).forEach((p: ModuleProgress & { moduleId?: { _id: string } }) => {
-          if (p.moduleId?._id) {
-            progressMap[p.moduleId._id] = {
-              moduleId: p.moduleId,
-              status: p.status,
-              completionPercentage: p.completionPercentage || 0,
-              completedLessonCount: p.completedLessonCount || 0,
-            };
+        (data.progress || []).forEach(
+          (p: ModuleProgress & { moduleId?: { _id: string } }) => {
+            if (p.moduleId?._id) {
+              progressMap[p.moduleId._id] = {
+                moduleId: p.moduleId,
+                status: p.status,
+                completionPercentage: p.completionPercentage || 0,
+                completedLessonCount: p.completedLessonCount || 0,
+              };
+            }
           }
-        });
+        );
         setUserProgress(progressMap);
       }
     } catch (error) {
@@ -201,7 +229,15 @@ export default function ExplorePage() {
     };
 
     return [...sortModules(inProgressModules), ...sortModules(otherModules)];
-  }, [allModules, searchQuery, selectedLevel, selectedSort, selectedSkill, userProgress, user?.domain]);
+  }, [
+    allModules,
+    searchQuery,
+    selectedLevel,
+    selectedSort,
+    selectedSkill,
+    userProgress,
+    user?.domain,
+  ]);
 
   // Paginated modules
   const displayedModules = useMemo(() => {
@@ -235,129 +271,172 @@ export default function ExplorePage() {
   };
 
   // Module Card Component - Clean, minimal design
-  const ModuleCard = useCallback(({ module }: { module: Module }) => {
-    const progress = module.progress;
-    const isInProgress = progress?.status === "in_progress";
-    const isCompleted = progress?.status === "completed";
+  const ModuleCard = useCallback(
+    ({ module }: { module: Module }) => {
+      const progress = module.progress;
+      const isInProgress = progress?.status === "in_progress";
+      const isCompleted = progress?.status === "completed";
 
-    const handleCardClick = (e: React.MouseEvent) => {
-      // If profile is incomplete, show modal instead of navigating
-      if (!isProfileComplete) {
-        e.preventDefault();
-        checkAndGate("start this course");
-      }
-    };
+      const handleCardClick = (e: React.MouseEvent) => {
+        // If profile is incomplete, show modal instead of navigating
+        if (!isProfileComplete) {
+          e.preventDefault();
+          checkAndGate("start this course");
+        }
+      };
 
-    return (
-      <Link href={`/dashboard/modules/${module._id}`} onClick={handleCardClick}>
-        <div
-          className={`group relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02] h-full flex flex-col ${
-            isInProgress
-              ? "border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
-              : isCompleted
-              ? "border-emerald-500/20"
-              : "border-gray-800 hover:border-gray-700"
-          }`}
+      return (
+        <Link
+          href={`/dashboard/modules/${module._id}`}
+          onClick={handleCardClick}
         >
-          {/* Top accent line */}
-          <div className={`h-0.5 ${isInProgress ? "bg-white" : isCompleted ? "bg-emerald-500" : "bg-gray-800 group-hover:bg-gray-700"} transition-colors`} />
+          <div
+            className={`group relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02] h-full flex flex-col ${
+              isInProgress
+                ? "border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
+                : isCompleted
+                ? "border-emerald-500/20"
+                : "border-gray-800 hover:border-gray-700"
+            }`}
+          >
+            {/* Top accent line */}
+            <div
+              className={`h-0.5 ${
+                isInProgress
+                  ? "bg-white"
+                  : isCompleted
+                  ? "bg-emerald-500"
+                  : "bg-gray-800 group-hover:bg-gray-700"
+              } transition-colors`}
+            />
 
-          <div className="p-5 flex-1 flex flex-col">
-            {/* Header */}
-            <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden border border-gray-700/50">
-                <Image
-                  src={
-                    module.icon ||
-                    "https://imgs.search.brave.com/0amGyAiF3uFKKjlFLdALYRLoeTeTOygh1JCd-4MlrA8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZy/ZWVwaWsuY29tLzI1/Ni83ODM3Lzc4Mzcx/NTcucG5nP3NlbXQ9/YWlzX3doaXRlX2xh/YmVs"
-                  }
-                  className="w-7 h-7 object-contain"
-                  alt={module.name}
-                  width={28}
-                  height={28}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-white line-clamp-2 group-hover:text-gray-100 transition-colors leading-tight">
-                  {module.name}
-                </h3>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wider ${getLevelStyles(
-                  module.level
-                )}`}
-              >
-                {module.level}
-              </span>
-              {module.skillId && (
-                <span className="text-[10px] px-2 py-0.5 bg-gray-800 text-white rounded-full border border-gray-700/50 font-medium">
-                  {module.skillId.name}
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            <p className="text-xs text-white mb-4 line-clamp-2 flex-1 leading-relaxed">
-              {module.description}
-            </p>
-
-            {/* Progress Bar */}
-            {isInProgress && progress && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-[10px] text-white mb-1.5">
-                  <span>{progress.completedLessonCount}/{module.lessonsCount} lessons</span>
-                  <span className="font-semibold text-white">{progress.completionPercentage}%</span>
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-1">
-                  <div
-                    className="bg-white h-1 rounded-full transition-all duration-500"
-                    style={{ width: `${progress.completionPercentage}%` }}
+            <div className="p-5 flex-1 flex flex-col">
+              {/* Header */}
+              <div className="flex items-start gap-4 mb-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden border border-gray-700/50">
+                  <Image
+                    src={
+                      module.icon ||
+                      "https://imgs.search.brave.com/0amGyAiF3uFKKjlFLdALYRLoeTeTOygh1JCd-4MlrA8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZy/ZWVwaWsuY29tLzI1/Ni83ODM3Lzc4Mzcx/NTcucG5nP3NlbXQ9/YWlzX3doaXRlX2xh/YmVs"
+                    }
+                    className="w-7 h-7 object-contain"
+                    alt={module.name}
+                    width={28}
+                    height={28}
                   />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-white line-clamp-2 group-hover:text-gray-100 transition-colors leading-tight">
+                    {module.name}
+                  </h3>
+                </div>
               </div>
-            )}
 
-            {/* Stats Footer */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-800/50">
-              <div className="flex items-center gap-3 text-[10px] text-white">
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  {module.lessonsCount || 0}
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wider ${getLevelStyles(
+                    module.level
+                  )}`}
+                >
+                  {module.level}
                 </span>
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {Math.ceil(module.duration / 60)}h
-                </span>
+                {module.skillId && (
+                  <span className="text-[10px] px-2 py-0.5 bg-gray-800 text-white rounded-full border border-gray-700/50 font-medium">
+                    {module.skillId.name}
+                  </span>
+                )}
               </div>
-              <div className="flex items-center gap-1 text-xs font-medium text-amber-400">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                {module.points}
+
+              {/* Description */}
+              <p className="text-xs text-white mb-4 line-clamp-2 flex-1 leading-relaxed">
+                {module.description}
+              </p>
+
+              {/* Progress Bar */}
+              {isInProgress && progress && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-[10px] text-white mb-1.5">
+                    <span>
+                      {progress.completedLessonCount}/{module.lessonsCount}{" "}
+                      lessons
+                    </span>
+                    <span className="font-semibold text-white">
+                      {progress.completionPercentage}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded-full h-1">
+                    <div
+                      className="bg-white h-1 rounded-full transition-all duration-500"
+                      style={{ width: `${progress.completionPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Stats Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-800/50">
+                <div className="flex items-center gap-3 text-[10px] text-white">
+                  <span className="flex items-center gap-1">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    {module.lessonsCount || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {Math.ceil(module.duration / 60)}h
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-medium text-amber-400">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  {module.points}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Status indicator */}
-          {(isInProgress || isCompleted) && (
-            <div
-              className={`absolute top-4 right-4 w-2 h-2 rounded-full ${
-                isInProgress ? "bg-white animate-pulse" : "bg-emerald-500"
-              }`}
-            />
-          )}
-        </div>
-      </Link>
-    );
-  }, [isProfileComplete, checkAndGate]);
+            {/* Status indicator */}
+            {(isInProgress || isCompleted) && (
+              <div
+                className={`absolute top-4 right-4 w-2 h-2 rounded-full ${
+                  isInProgress ? "bg-white animate-pulse" : "bg-emerald-500"
+                }`}
+              />
+            )}
+          </div>
+        </Link>
+      );
+    },
+    [isProfileComplete, checkAndGate]
+  );
 
   if (authLoading) {
     return (
@@ -381,10 +460,16 @@ export default function ExplorePage() {
       {/* Profile Completion Modal */}
       <CompleteProfileModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+        }}
+        onComplete={() => {
+          // Mark that profile was just completed - useEffect will handle refresh
+          setProfileJustCompleted(true);
+        }}
         blockedAction={blockedAction}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="mb-6">
@@ -399,8 +484,18 @@ export default function ExplorePage() {
           {/* Search Bar */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
@@ -417,17 +512,18 @@ export default function ExplorePage() {
             {/* Level Filter Pills */}
             <div className="flex gap-1 bg-gray-900 p-1 rounded-lg border border-gray-800">
               {LEVELS.map((level) => (
-                <button
+                <Button
+                  variant="text"
                   key={level}
                   onClick={() => setSelectedLevel(level)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  className={`!px-3 !py-1.5 !rounded-md !text-xs !font-medium !transition-all ${
                     selectedLevel === level
-                      ? "bg-white text-black"
-                      : "text-gray-400 hover:text-white"
+                      ? "!bg-white !text-black"
+                      : "!text-gray-400 !hover:!text-white"
                   }`}
                 >
                   {level}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -459,13 +555,16 @@ export default function ExplorePage() {
             </select>
 
             {/* Clear Filters */}
-            {(searchQuery || selectedLevel !== "All" || selectedSkill !== "All") && (
-              <button
+            {(searchQuery ||
+              selectedLevel !== "All" ||
+              selectedSkill !== "All") && (
+              <Button
+                variant="text"
                 onClick={clearFilters}
-                className="px-3 py-2 text-xs text-white hover:text-white transition-colors"
+                className="!px-3 !py-2 !text-xs !text-white !hover:!text-white !transition-colors"
               >
                 Clear
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -502,8 +601,18 @@ export default function ExplorePage() {
         ) : displayedModules.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-800">
-              <svg className="w-7 h-7 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-7 h-7 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-medium text-white mb-2">
@@ -512,21 +621,26 @@ export default function ExplorePage() {
             <p className="text-sm text-gray-500 mb-6">
               Try adjusting your filters
             </p>
-            <button
+            <Button
+              variant="text"
               onClick={clearFilters}
-              className="px-5 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="!px-5 !py-2 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:!bg-gray-100 !transition-colors"
             >
               Clear Filters
-            </button>
+            </Button>
           </div>
         ) : (
           <>
             {/* In Progress Section */}
-            {displayedModules.some((m) => m.progress?.status === "in_progress") && (
+            {displayedModules.some(
+              (m) => m.progress?.status === "in_progress"
+            ) && (
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                  <h2 className="text-sm font-medium text-white">Continue Learning</h2>
+                  <h2 className="text-sm font-medium text-white">
+                    Continue Learning
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {displayedModules
@@ -540,8 +654,12 @@ export default function ExplorePage() {
 
             {/* All Courses Section */}
             <div>
-              {displayedModules.some((m) => m.progress?.status === "in_progress") && (
-                <h2 className="text-sm font-medium text-gray-400 mb-4">All Courses</h2>
+              {displayedModules.some(
+                (m) => m.progress?.status === "in_progress"
+              ) && (
+                <h2 className="text-sm font-medium text-gray-400 mb-4">
+                  All Courses
+                </h2>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {displayedModules
@@ -555,12 +673,14 @@ export default function ExplorePage() {
             {/* Load More */}
             {hasMore && (
               <div className="flex justify-center mt-8">
-                <button
+                <Button
+                  variant="text"
                   onClick={loadMore}
-                  className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium border border-gray-800 hover:border-gray-700 transition-colors"
+                  className="!px-6 !py-2.5 !bg-gray-900 !text-white !rounded-lg !text-sm !font-medium !border !border-gray-800 !hover:!border-gray-700 !transition-colors"
                 >
-                  Load More ({filteredModules.length - displayedModules.length} more)
-                </button>
+                  Load More ({filteredModules.length - displayedModules.length}{" "}
+                  more)
+                </Button>
               </div>
             )}
           </>

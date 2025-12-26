@@ -28,13 +28,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.isOnboardingComplete) {
-        // Redirect to the original page if specified, otherwise dashboard
-        const destination = redirectTo || "/dashboard";
-        router.push(destination);
-      } else {
-        router.push("/onboarding");
-      }
+      // Redirect to the original page if specified, otherwise dashboard
+      const destination = redirectTo || "/dashboard";
+      router.push(destination);
     }
   }, [user, authLoading, router, redirectTo]);
 
@@ -143,14 +139,9 @@ export default function LoginPage() {
           setToken(data.token);
         }
         
-        // Redirect based on onboarding status
-        if (data.user.isOnboardingComplete) {
-          // Use redirect URL if available, otherwise dashboard
-          const destination = redirectTo || "/dashboard";
-          window.location.href = destination;
-        } else {
-          window.location.href = "/onboarding";
-        }
+        // Redirect to dashboard or intended destination
+        const destination = redirectTo || "/dashboard";
+        window.location.href = destination;
       } else {
         setError(data.error || "Invalid verification code");
         setIsVerifying(false);

@@ -59,6 +59,11 @@ export function CompleteProfileModal({
   // Load user data and skills on mount
   useEffect(() => {
     if (user) {
+      // Normalize skills to array of IDs (handle both ObjectIds and populated objects)
+      const normalizedSkills = (user.skills || []).map((skill: string | { _id?: string; toString?: () => string }) => {
+        return typeof skill === 'string' ? skill : (skill._id || skill.toString?.() || String(skill));
+      });
+
       setFormData({
         firstName: user.firstName || user.name?.split(" ")[0] || "",
         lastName: user.lastName || user.name?.split(" ").slice(1).join(" ") || "",
@@ -69,7 +74,7 @@ export function CompleteProfileModal({
         college: user.college || "",
         company: user.company || "",
         yoe: user.yoe || 0,
-        skills: user.skills || [],
+        skills: normalizedSkills,
       });
     }
 
@@ -93,9 +98,11 @@ export function CompleteProfileModal({
   const completionPercentage = calculateProfileCompletionPercentage({
     firstName: formData.firstName,
     lastName: formData.lastName,
+    email: user?.email,
     bio: formData.bio,
     title: formData.title,
     location: formData.location,
+    profilePictureAttachmentId: undefined, // Profile picture is optional, not required for 100%
     skills: formData.skills,
     userType: formData.userType,
   });
@@ -157,14 +164,29 @@ export function CompleteProfileModal({
       case 2:
         return formData.title.trim() !== "" && formData.bio.trim() !== "";
       case 3:
-        return formData.skills.length >= 1;
+        const canProceedSkills = formData.skills.length >= 1;
+        console.log("Skills step validation:", {
+          skillsCount: formData.skills.length,
+          skills: formData.skills,
+          canProceed: canProceedSkills
+        });
+        return canProceedSkills;
       default:
         return true;
     }
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error("No user found, cannot submit");
+      return;
+    }
+
+    if (!canProceed()) {
+      console.error("Cannot proceed - validation failed");
+      alert("Please complete all required fields before submitting.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -180,14 +202,24 @@ export function CompleteProfileModal({
         isOnboardingComplete: true,
       };
 
+      console.log("Submitting profile update:", updateData);
       const result = await updateUser(updateData);
 
       if (result) {
+        console.log("Profile updated successfully");
+        // Call onComplete callback - parent component will handle refresh
         onComplete?.();
-        onClose();
+        // Close modal after a short delay
+        setTimeout(() => {
+          onClose();
+        }, 300);
+      } else {
+        console.error("Profile update returned false");
+        alert("Failed to update profile. Please try again.");
       }
     } catch (error) {
       console.error("Failed to update profile:", error);
+      alert("An error occurred while updating your profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +262,7 @@ export function CompleteProfileModal({
         </div>
 
         {/* Step indicator */}
-        <div className="flex justify-center gap-2 py-4 bg-gray-50 border-b">
+        <div className="flex justify-center gap-2 py-4 bg-gray-50 border-b px-2">
           {steps.map((step, index) => (
             <div
               key={step.id}
@@ -431,25 +463,10 @@ export function CompleteProfileModal({
                     </button>
                   ))
                 ) : (
-                  // Fallback skills if API fails
-                  [
-                    "JavaScript", "Python", "React", "Node.js", "TypeScript",
-                    "Java", "SQL", "MongoDB", "AWS", "Docker", "Git",
-                    "HTML/CSS", "Vue.js", "Angular", "Machine Learning",
-                    "Data Science", "DevOps", "System Design"
-                  ].map((skill) => (
-                    <button
-                      key={skill}
-                      onClick={() => toggleSkill(skill)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                        formData.skills.includes(skill)
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {skill}
-                    </button>
-                  ))
+                  <div className="w-full text-center py-4 text-gray-500">
+                    <p>Loading skills...</p>
+                    <p className="text-xs mt-2">If skills don&apos;t load, please refresh the page.</p>
+                  </div>
                 )}
               </div>
               <p className="text-sm text-gray-500">
@@ -483,7 +500,7 @@ export function CompleteProfileModal({
             <Button
               variant="contained"
               onClick={handleSubmit}
-              disabled={!canProceed() || isLoading || completionPercentage < 100}
+              disabled={!canProceed() || isLoading}
               className="!px-6 !py-2 !rounded-lg !bg-gradient-to-r !from-green-600 !to-emerald-600 !text-white disabled:!opacity-50 flex items-center gap-2"
             >
               {isLoading ? (
@@ -511,7 +528,7 @@ export function useProfileGating() {
   const [blockedAction, setBlockedAction] = useState("");
 
   const isProfileComplete = user?.isOnboardingComplete && 
-    user?.profileCompletionPercentage >= 100;
+    (user?.profileCompletionPercentage ?? 0) >= 100;
 
   const checkAndGate = (action: string): boolean => {
     if (!isProfileComplete) {
