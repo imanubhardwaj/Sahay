@@ -21,6 +21,11 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
 - Quick (15 min) and Detailed (60 min) sessions
 - Point-based booking system
 - Mentor availability tracking
+- Mentor profile management
+- Work experience and social links
+- Email-based approval workflow
+- Zoom meeting integration
+- Performance stats and earnings tracking
 
 ### 🎨 Portfolio Management
 - Add and showcase projects
@@ -42,19 +47,27 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS with custom components
-- **Data**: Mock API for frontend development
-- **UI Components**: Custom component library
-- **Icons**: Lucide React
+- **Frontend**: Next.js 15.5.4, React 19.1.0, TypeScript 5.x
+- **Styling**: Tailwind CSS 4.x with custom components
+- **Backend**: Next.js API Routes, MongoDB, Mongoose 8.19.0
+- **Authentication**: WorkOS Magic Links, JWT 9.0.2
+- **Real-time**: Socket.io 4.8.1
+- **Code Editor**: Monaco Editor 4.7.0
+- **Email**: Nodemailer 7.0.10
+- **Integrations**: Zoom API, OpenAI API
+- **UI Components**: Custom component library, Material-UI 7.3.6
+- **Icons**: Lucide React 0.544.0, React Icons 5.5.0
 - **Deployment**: Vercel (recommended)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
-- npm or yarn
-- Supabase account
+- pnpm (recommended) or npm/yarn
+- MongoDB database (MongoDB Atlas recommended)
+- WorkOS account (for authentication)
+- Gmail account (for email notifications)
+- Zoom account (for mentor sessions)
 
 ### Installation
 
@@ -66,17 +79,25 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
-3. **Set up Supabase**
-   - Create a new Supabase project
-   - No backend setup required - uses mock data
-   - Copy your credentials to `.env.local`
+3. **Set up environment variables**
+   - Copy `.env.example` to `.env.local`
+   - Configure MongoDB connection string
+   - Add WorkOS API keys
+   - Set up Gmail SMTP credentials
+   - Configure Zoom API credentials (optional)
+   - See `DOCUMENTATION.md` for detailed setup
 
-4. **Start development server**
+4. **Seed the database** (optional)
    ```bash
-   npm run dev
+   pnpm seed
+   ```
+
+5. **Start development server**
+   ```bash
+   pnpm dev
    ```
 
 5. **Open your browser**
@@ -129,14 +150,40 @@ src/
 ## 🔧 Configuration
 
 ### Environment Variables
-Create a `.env.local` file:
+Create a `.env.local` file with the following variables:
 
 ```env
-# No environment variables needed for mock data
+# Database
+MONGODB_URI=mongodb+srv://...
+
+# Authentication (WorkOS)
+WORKOS_API_KEY=sk_live_...
+WORKOS_CLIENT_ID=client_...
+
+# JWT
+JWT_SECRET=your-super-secret-key
+
+# Email (Gmail SMTP)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-16-digit-app-password
+
+# Zoom Integration (optional)
+ZOOM_ACCOUNT_ID=your_account_id
+ZOOM_CLIENT_ID=your_client_id
+ZOOM_CLIENT_SECRET=your_client_secret
+
+# OpenAI (for quiz evaluation)
+OPENAI_API_KEY=sk-...
+
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
 ```
 
-### Mock Data Setup
-The application uses mock data for frontend development. No backend setup is required.
+See `DOCUMENTATION.md` for detailed setup instructions.
 
 ## 📱 Responsive Design
 
@@ -173,16 +220,20 @@ Use the built-in demo account for testing:
 
 ## 🔒 Security
 
-- **Authentication**: Supabase Auth with email/password
-- **Authorization**: Row Level Security (RLS) policies
-- **Data Protection**: Encrypted data transmission
+- **Authentication**: WorkOS Magic Links with JWT tokens
+- **Authorization**: Role-based access control
+- **Data Protection**: Encrypted data transmission (HTTPS)
 - **Input Validation**: Client and server-side validation
+- **Secure Learning Flow**: Backend-controlled lesson progression
+- **Quiz Security**: Answers validated server-side only
+- **Booking Security**: Secure approval tokens for mentor sessions
 
 ## 📈 Performance
 
 - **Code Splitting**: Automatic route-based splitting
 - **Image Optimization**: Next.js Image component
-- **Caching**: Supabase query caching
+- **Database**: MongoDB with Mongoose ODM
+- **Real-time**: Socket.io for live updates
 - **Bundle Size**: Optimized imports and tree shaking
 
 ## 🤝 Contributing

@@ -10,16 +10,17 @@
 2. [Tech Stack](#2-tech-stack)
 3. [Architecture Overview](#3-architecture-overview)
 4. [User Flow](#4-user-flow)
-5. [Core Features](#5-core-features)
-6. [Point System (Gamification)](#6-point-system-gamification)
-7. [Database Models](#7-database-models)
-8. [API Documentation](#8-api-documentation)
-9. [Security Implementation](#9-security-implementation)
-10. [Current Hacks & Technical Debt](#10-current-hacks--technical-debt)
-11. [What's Done vs What's Left](#11-whats-done-vs-whats-left)
-12. [Future Roadmap](#12-future-roadmap)
-13. [Environment Variables](#13-environment-variables)
-14. [Development Guide](#14-development-guide)
+5. [Dashboard Pages](#5-dashboard-pages)
+6. [Core Features](#6-core-features)
+7. [Point System (Gamification)](#7-point-system-gamification)
+8. [Database Models](#8-database-models)
+9. [API Documentation](#9-api-documentation)
+10. [Security Implementation](#10-security-implementation)
+11. [Current Hacks & Technical Debt](#11-current-hacks--technical-debt)
+12. [What's Done vs What's Left](#12-whats-done-vs-whats-left)
+13. [Future Roadmap](#13-future-roadmap)
+14. [Environment Variables](#14-environment-variables)
+15. [Development Guide](#15-development-guide)
 
 ---
 
@@ -147,6 +148,11 @@ sahay/
 │   │   ├── dashboard/          # Protected dashboard pages
 │   │   │   ├── modules/        # Learning modules
 │   │   │   ├── mentors/        # Mentor discovery & booking
+│   │   │   ├── mentor-profile/ # Mentor profile management
+│   │   │   ├── mentor-setup/   # Initial mentor setup
+│   │   │   ├── mentor-schedule/# Schedule management
+│   │   │   ├── sessions/       # Session management
+│   │   │   ├── earnings/       # Mentor earnings
 │   │   │   ├── community/      # Community Q&A
 │   │   │   ├── practice/       # Coding problems
 │   │   │   ├── leaderboard/    # Rankings
@@ -329,9 +335,75 @@ Step 4: Skills & Interests
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### 4.5 Mentor Profile Management Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              MENTOR PROFILE MANAGEMENT FLOW                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Create Profile                                              │
+│     └── Go to /dashboard/mentor-setup                           │
+│     └── Fill in bio, expertise, languages                        │
+│     └── Set hourly rate and session types                       │
+│     └── Connect Zoom account                                    │
+│                                                                  │
+│  2. View Profile                                                │
+│     └── Go to /dashboard/mentor-profile                         │
+│     └── View all profile information                             │
+│     └── Check approval status                                   │
+│     └── View performance stats                                  │
+│                                                                  │
+│  3. Manage Work Experience                                      │
+│     └── Add past companies and roles                            │
+│     └── Set start/end dates                                     │
+│     └── Mark current position                                   │
+│     └── Add descriptions                                        │
+│     └── Remove experiences                                      │
+│                                                                  │
+│  4. Manage Social Links                                         │
+│     └── Add LinkedIn, Twitter, GitHub, Website                 │
+│     └── Edit or remove links                                    │
+│                                                                  │
+│  5. Edit Profile                                                │
+│     └── Click "Edit Profile" button                            │
+│     └── Redirects to /dashboard/mentor-setup                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
-## 5. Core Features
+## 5. Dashboard Pages
+
+### Student Dashboard Pages
+- **Home** (`/dashboard`) - Overview, stats, recent activity, quick actions
+- **Modules** (`/dashboard/modules`) - Browse and access learning modules
+- **Practice** (`/dashboard/practice`) - Coding problems with Monaco editor
+- **Community** (`/dashboard/community`) - Q&A forum, posts, discussions
+- **Mentors** (`/dashboard/mentors`) - Browse and book mentor sessions
+- **My Sessions** (`/dashboard/my-sessions`) - View booked sessions
+- **Portfolio** (`/dashboard/portfolio`) - Manage projects and showcase
+- **Leaderboard** (`/dashboard/leaderboard`) - Rankings and achievements
+- **Profile** (`/dashboard/profile`) - User profile settings
+- **Buy Points** (`/dashboard/buy-points`) - Purchase points
+
+### Mentor Dashboard Pages
+- **Mentor Profile** (`/dashboard/mentor-profile`) - View and manage mentor profile
+  - Bio, expertise, languages
+  - Work experience management (add/remove past companies)
+  - Social links (LinkedIn, Twitter, GitHub, Website)
+  - Performance stats (ratings, reviews, sessions, earnings)
+  - Quick actions (schedule, sessions, earnings)
+- **Mentor Setup** (`/dashboard/mentor-setup`) - Initial profile creation
+- **Mentor Schedule** (`/dashboard/mentor-schedule`) - Manage availability slots
+- **Sessions** (`/dashboard/sessions`) - View and manage mentor sessions
+- **Earnings** (`/dashboard/earnings`) - Track earnings and transactions
+- **Bookings** (`/dashboard/bookings`) - View booking requests
+
+---
+
+## 6. Core Features
 
 ### 5.1 Learning Modules
 
@@ -352,11 +424,15 @@ Step 4: Skills & Interests
 |---------|--------|-------------|
 | Mentor Discovery | ✅ Done | Browse approved mentors |
 | Mentor Profiles | ✅ Done | Bio, expertise, ratings |
+| Profile Management | ✅ Done | Edit bio, expertise, languages |
+| Work Experience | ✅ Done | Add/remove past companies and roles |
+| Social Links | ✅ Done | LinkedIn, Twitter, GitHub, Website |
 | Schedule Management | ✅ Done | Mentors create available slots |
 | Session Booking | ✅ Done | Students book slots |
 | Email Approval | ✅ Done | Mentor approves via email |
 | Zoom Integration | ✅ Done | Auto-create Zoom meetings |
 | Points Payment | ✅ Done | Points deducted for sessions |
+| Performance Stats | ✅ Done | Ratings, reviews, sessions, earnings |
 | Session Feedback | 🔄 Partial | Rating/review system basic |
 
 ### 5.3 Coding Practice
@@ -404,7 +480,7 @@ Step 4: Skills & Interests
 
 ---
 
-## 6. Point System (Gamification)
+## 7. Point System (Gamification)
 
 ### 6.1 Earning Points
 
@@ -462,7 +538,7 @@ Step 4: Skills & Interests
 
 ---
 
-## 7. Database Models
+## 8. Database Models
 
 ### 7.1 Core Models
 
@@ -476,13 +552,24 @@ Step 4: Skills & Interests
 │  ├── lastName            ├── balance            ├── isMentor    │
 │  ├── email              ├── totalEarned        ├── isApproved  │
 │  ├── username           └── totalSpent         ├── bio         │
-│  ├── workosId                                   ├── expertise   │
-│  ├── userType           Transaction            ├── hourlyRate  │
-│  ├── role               ├── userId             ├── sessionTypes│
-│  ├── walletId           ├── type               ├── zoomConnected│
-│  ├── isOnboardingComplete├── points             ├── averageRating│
-│  └── selectedModules    ├── source             └── totalSessions│
-│                         └── description                          │
+│  ├── workosId                                   ├── headline    │
+│  ├── userType           Transaction            ├── expertise   │
+│  ├── role               ├── userId             ├── languages   │
+│  ├── walletId           ├── type               ├── yearsOfExperience│
+│  ├── isOnboardingComplete├── points             ├── currentRole│
+│  └── selectedModules    ├── source             ├── currentCompany│
+│                         └── description        ├── pastCompanies│
+│                                                ├── hourlyRate   │
+│                                                ├── sessionTypes │
+│                                                ├── linkedIn     │
+│                                                ├── twitter      │
+│                                                ├── github       │
+│                                                ├── website      │
+│                                                ├── zoomConnected│
+│                                                ├── averageRating│
+│                                                ├── totalReviews │
+│                                                ├── completedSessions│
+│                                                └── totalEarnings│
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -575,7 +662,7 @@ Step 4: Skills & Interests
 
 ---
 
-## 8. API Documentation
+## 9. API Documentation
 
 ### 8.1 Authentication APIs
 
@@ -620,12 +707,13 @@ GET  /api/module-state      - Get current module state
 ```
 GET  /api/mentor-profile    - Get mentor profiles
 POST /api/mentor-profile    - Create mentor profile
-PUT  /api/mentor-profile    - Update mentor profile
-GET  /api/schedules         - Get mentor schedules
-POST /api/schedules         - Create schedule slot
-GET  /api/bookings          - Get bookings
-POST /api/bookings          - Create booking
-GET  /api/bookings/approve  - Approve/reject booking (email link)
+PUT  /api/mentor-profile     - Update mentor profile
+PATCH /api/mentor-profile    - Partial update (work experience, social links)
+GET  /api/schedules          - Get mentor schedules
+POST /api/schedules          - Create schedule slot
+GET  /api/bookings           - Get bookings
+POST /api/bookings           - Create booking
+GET  /api/bookings/approve   - Approve/reject booking (email link)
 ```
 
 ### 8.5 Community APIs
@@ -647,7 +735,7 @@ POST /api/coding-problems/submit - Submit solution
 
 ---
 
-## 9. Security Implementation
+## 10. Security Implementation
 
 ### 9.1 Authentication Security
 
@@ -729,7 +817,7 @@ if (booking.approvalStatus !== 'pending') {
 
 ---
 
-## 10. Current Hacks & Technical Debt
+## 11. Current Hacks & Technical Debt
 
 ### 🔴 Critical - Should Fix Immediately
 
@@ -777,7 +865,7 @@ const isPassed = true; // Always pass - just completing the quiz is enough
 
 ---
 
-## 11. What's Done vs What's Left
+## 12. What's Done vs What's Left
 
 ### ✅ Completed Features
 
@@ -806,11 +894,15 @@ const isPassed = true; // Always pass - just completing the quiz is enough
 
 #### Mentor System
 - [x] Mentor profile creation
+- [x] Profile management (bio, expertise, languages)
+- [x] Work experience management (add/remove past companies)
+- [x] Social links management (LinkedIn, Twitter, GitHub, Website)
 - [x] Schedule management
 - [x] Booking system
 - [x] Email notifications
 - [x] Zoom meeting creation
 - [x] Approval workflow
+- [x] Performance stats dashboard (ratings, reviews, earnings)
 
 #### Community
 - [x] Q&A questions/answers
@@ -858,7 +950,7 @@ const isPassed = true; // Always pass - just completing the quiz is enough
 
 ---
 
-## 12. Future Roadmap
+## 13. Future Roadmap
 
 ### Phase 1: Bug Fixes & Polish (1-2 weeks)
 1. Remove quiz bypass hack
@@ -899,7 +991,7 @@ const isPassed = true; // Always pass - just completing the quiz is enough
 
 ---
 
-## 13. Environment Variables
+## 14. Environment Variables
 
 ```env
 # Database
@@ -936,7 +1028,7 @@ NODE_ENV=development
 
 ---
 
-## 14. Development Guide
+## 15. Development Guide
 
 ### Getting Started
 
@@ -1027,7 +1119,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/modules
 
 ---
 
-*Documentation last updated: December 2024*
+*Documentation last updated: January 2025*
 *Project Version: 0.1.0*
 
 
