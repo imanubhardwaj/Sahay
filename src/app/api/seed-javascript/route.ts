@@ -42,41 +42,40 @@ export async function POST() {
         "Learn JavaScript from scratch. Master the fundamentals including variables, data types, operators, conditionals, loops, functions, arrays, objects, DOM manipulation, and more.",
       level: "Beginner",
       skillId: jsSkill._id,
-      duration: 1020, // ~17 hours (17 lessons * 60 min avg)
-      points: 1700, // 100 points per lesson average
-      lessonsCount: 17,
+      duration: 1200, // ~20 hours (20 lessons * 60 min avg)
+      points: 2000, // 100 points per lesson average
+      lessonsCount: 20,
       icon: "https://imgs.search.brave.com/riN3Y5QZ4qdUm2ztlyixU0dgB1duwqJWMACBu76LANE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hLnRo/dW1icy5yZWRkaXRt/ZWRpYS5jb20vekRP/RkpUWGQ2Zm1sRDU4/VkRHeXBpVjk0TGVm/bHoxMXdveG1nYkdZ/NnBfNC5wbmc",
       image: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=400&fit=crop",
     });
     console.log("✅ Created JavaScript Beginner module");
 
-    // Define all 17 lessons with complete content
+    // Define all 20 lessons with complete content
     const lessonsData = [
       {
-        name: "Lesson 1: Introduction to JavaScript",
-        content: `# Introduction to JavaScript
+        name: "Lesson 1: The JavaScript Environment (Intro & Fundamentals)",
+        content: `# The JavaScript Environment (Intro & Fundamentals)
 
-## What is JavaScript?
+## Topics Covered
+Hello World, Code Structure, Use Strict, Code Editors, Developer Console.
 
-JavaScript is a high-level, interpreted programming language used to create dynamic and interactive web pages.
+## Lesson Content
 
-It is one of the core technologies of the web:
+JavaScript is the programming language of the web. To start, we need to understand how scripts are loaded. Scripts can be placed directly in HTML using <script> tags or linked via external files (best practice).
 
-- **HTML** → Structure
-- **CSS** → Presentation  
-- **JavaScript** → Behavior
+**Statements**: Syntax commands are separated by semicolons ;.
 
-JavaScript runs in every modern browser and on servers using Node.js.
+**"use strict"**: This directive, placed at the top of a script, enables the modern mode of JavaScript, preventing old, "sloppy" syntax errors.
 
-## Where JavaScript Runs
+**Console**: The developer console is your best friend for debugging. console.log() prints data to it.
 
-### Browser (Client-Side JS)
-- Chrome (V8 Engine)
-- Firefox (SpiderMonkey)
-- Safari (JavaScriptCore)
+## Mini Practice Questions
 
-### Server (Node.js)
-JavaScript can handle backend logic, API routes, files, databases.
+1. Open your browser (Chrome/Firefox), right-click > Inspect > Console. Type 2 + 2 and hit enter. What happens?
+
+2. Create an index.html file and attach a script.js file to it.
+
+3. Write "use strict" at the very top of your JS file.
 
 ## Adding JavaScript to HTML
 
@@ -111,21 +110,17 @@ Multi-line comment
 
 JavaScript statements are usually separated by semicolons but optional due to Automatic Semicolon Insertion (ASI).
 
-## Mini Exercise
+## Coding Challenge
 
-Open browser console → type:
+**Task 1**: Create a script that displays an alert saying "I am JavaScript!" when the page loads.
 
-\`\`\`javascript
-console.log("JS is working!");
-\`\`\`
-
-This will display "JS is working!" in the console.`,
+**Task 2**: Write code that logs "Part 1" and "Part 2" to the console on two separate lines using two specific commands.`,
         contentArray: [
-          "JavaScript is a high-level, interpreted programming language",
-          "Core technology of the web alongside HTML and CSS",
-          "Runs in browsers and on servers (Node.js)",
-          "Can be added via internal, external, or inline scripts",
-          "Uses // for single-line and /* */ for multi-line comments",
+          "JavaScript is the programming language of the web",
+          "Scripts can be placed directly in HTML using <script> tags or linked via external files",
+          "Statements are separated by semicolons",
+          '"use strict" enables modern JavaScript mode',
+          "console.log() prints data to the developer console",
         ],
         type: "Text",
         duration: 60,
@@ -133,88 +128,32 @@ This will display "JS is working!" in the console.`,
         order: 1,
       },
       {
-        name: "Lesson 2: Variables",
-        content: `# Variables
+        name: "Lesson 2: Variables & Data Types",
+        content: `# Variables & Data Types
 
-## What Are Variables?
+## Topics Covered
+Variables (let, const, var), Data Types (8 types), Typeof.
 
-Variables store data values that can be used throughout your program.
+## Lesson Content
 
-## Keywords
+Data is stored in "variables."
 
-| Keyword | Scope | Reassign | Hoisted | Notes |
-|---------|-------|----------|---------|-------|
-| \`var\` | Function | Yes | Yes | Avoid in modern JS |
-| \`let\` | Block | Yes | No | Best for changing data |
-| \`const\` | Block | No | No | Best for constants |
+**let**: A modern variable declaration. Can be changed later.
 
-## Examples
+**const**: A constant. Once assigned, it cannot be changed.
 
-\`\`\`javascript
-var x = 10;
-let name = "John";
-const PI = 3.14;
-\`\`\`
+**var**: Old-school declaration. Avoid using this in modern code (has scoping issues).
 
-## Rules for Naming Variables
+## Data Types: JS has 8 types:
 
-- Must start with letter, \`_\`, or \`$\`
-- Cannot start with number
-- Cannot use reserved keywords (if, else, function, etc.)
-- Case-sensitive (myVar ≠ myvar)
-
-## Dynamic Typing
-
-JavaScript variables can change type at runtime:
-
-\`\`\`javascript
-let x = 10;      // number
-x = "Hello";     // now string - Valid!
-x = true;        // now boolean - Valid!
-\`\`\`
-
-## Best Practices
-
-- Use \`const\` by default
-- Use \`let\` when you need to reassign
-- Avoid \`var\` in modern JavaScript
-- Use descriptive names: \`userName\` not \`u\`
-
-## Mini Exercise
-
-Declare:
-- Your name (use const)
-- Your age (use let)
-- A constant for country`,
-        contentArray: [
-          "Variables store data values",
-          "var: function scoped, avoid in modern JS",
-          "let: block scoped, can be reassigned",
-          "const: block scoped, cannot be reassigned",
-          "JavaScript is dynamically typed",
-        ],
-        type: "Text",
-        duration: 60,
-        points: 100,
-        order: 2,
-      },
-      {
-        name: "Lesson 3: Data Types",
-        content: `# Data Types
-
-JavaScript supports two categories of data types:
-
-## 1. Primitive Data Types
-
-Primitive values are immutable and stored directly in memory.
-
-- **String** – \`"Hello"\`, \`'World'\`
-- **Number** – integers or floats: \`10\`, \`20.5\`
-- **Boolean** – \`true\`, \`false\`
-- **Undefined** – variable declared but not assigned
-- **Null** – intentional empty value
-- **BigInt** – very large integers: \`10n\`
-- **Symbol** – unique identifiers
+1. **Number** (Integers and floats)
+2. **BigInt** (Very large integers)
+3. **String** (Text)
+4. **Boolean** (True/False)
+5. **null** (Empty/Unknown value)
+6. **undefined** (Value not assigned yet)
+7. **Symbol** (Unique identifier)
+8. **Object** (Complex data structure)
 
 ## Examples
 
@@ -228,20 +167,6 @@ let bigNum = 9007199254740991n; // BigInt
 let sym = Symbol("id"); // Symbol
 \`\`\`
 
-## 2. Reference Types
-
-Stored as memory references:
-
-- **Objects** – \`{ name: "John", age: 20 }\`
-- **Arrays** – \`[1, 2, 3]\`
-- **Functions** – \`function greet() { ... }\`
-
-\`\`\`javascript
-let person = { name: "John", age: 20 };
-let arr = [1, 2, 3];
-function greet() { console.log("Hi"); }
-\`\`\`
-
 ## typeof Operator
 
 \`\`\`javascript
@@ -253,32 +178,105 @@ typeof function(){} // "function"
 typeof undefined   // "undefined"
 \`\`\`
 
-## Type Conversion
+## Mini Practice Questions
 
-### Implicit Conversion
-\`\`\`javascript
-"5" + 2  // "52" (string concatenation)
-"5" * 2  // 10 (number multiplication)
-\`\`\`
+1. Declare a variable named admin and assign it the value "John".
 
-### Explicit Conversion
-\`\`\`javascript
-Number("10")     // 10
-String(20)       // "20"
-Boolean(1)       // true
-Boolean(0)       // false
-Boolean("")      // false
-\`\`\`
+2. Try to create a const variable inside the console and then try to change its value. Observe the error.
 
-## Mini Exercise
+3. Use typeof to check the type of true and "true".
 
-Write and log all primitive data types.`,
+## Coding Challenge
+
+**Task 1**: Declare two variables: planet (set to "Earth") and currentUser (set to "Visitor"). Log a sentence combining them using backticks (e.g., "Visitor is on Earth").
+
+**Task 2**: Create a variable using let. Assign it a number. Then reassign it a string value. Log the final type using typeof.`,
         contentArray: [
-          "Primitive types: string, number, boolean, undefined, null, BigInt, Symbol",
-          "Reference types: objects, arrays, functions",
+          "let: modern variable declaration, can be changed",
+          "const: constant, cannot be changed",
+          "var: old-school, avoid in modern code",
+          "8 data types: Number, BigInt, String, Boolean, null, undefined, Symbol, Object",
           "typeof operator checks data type",
-          "Type conversion can be implicit or explicit",
-          "null has typeof 'object' (JavaScript bug)",
+        ],
+        type: "Text",
+        duration: 60,
+        points: 100,
+        order: 2,
+      },
+      {
+        name: "Lesson 3: Interaction & Basic Operators",
+        content: `# Interaction & Basic Operators
+
+## Topics Covered
+Alert/Prompt/Confirm, Type Conversions, Math Operators, Increment/Decrement.
+
+## Lesson Content
+
+We interact with users via browser-specific functions:
+
+**alert(message)**: Shows a message.
+
+**prompt(message, default)**: Asks the user for text input. Returns the text or null.
+
+**confirm(message)**: Asks a question with OK/Cancel. Returns true/false.
+
+## Math Operators
+
+Standard operators: +, -, *, /, % (remainder), ** (power).
+
+**Concatenation**: The + operator joins strings (e.g., "1" + 2 = "12").
+
+## Examples
+
+\`\`\`javascript
+alert("Hello!");                    // Shows alert
+let name = prompt("What's your name?", "Guest"); // Gets input
+let confirmed = confirm("Are you sure?");         // Gets true/false
+
+// Math operators
+let sum = 10 + 5;      // 15
+let diff = 10 - 5;     // 5
+let prod = 10 * 5;    // 50
+let quot = 10 / 5;    // 2
+let rem = 10 % 3;     // 1
+let pow = 2 ** 3;     // 8
+
+// Increment/Decrement
+let x = 5;
+x++;  // x becomes 6
+x--;  // x becomes 5
+\`\`\`
+
+## Type Conversions
+
+\`\`\`javascript
+Number("123")     // 123
+Number(" 123 ")  // 123 (trims spaces)
+String(20)       // "20"
+Boolean(0)       // false
+Boolean(1)       // true
++("123")         // 123 (unary plus converts to number)
+\`\`\`
+
+## Mini Practice Questions
+
+1. Use prompt to ask a user for their age.
+
+2. The result of prompt is always a string. Convert that age into a Number.
+
+3. Calculate the remainder of 10 % 3 in the console.
+
+## Coding Challenge
+
+**Task 1**: Create a simple calculator script. Ask the user for two numbers using prompt, add them together (ensuring they are treated as numbers, not strings), and alert the result.
+
+**Task 2**: Write a script that asks "Are you the boss?" using confirm. If they click OK, alert "Welcome". If Cancel, alert "Access Denied" (Hint: you might need if logic, or just inspect the output for now).`,
+        contentArray: [
+          "alert(): shows a message",
+          "prompt(): asks for text input, returns text or null",
+          "confirm(): asks OK/Cancel, returns true/false",
+          "Math operators: +, -, *, /, %, **",
+          "Type conversions: Number(), String(), Boolean()",
         ],
         type: "Text",
         duration: 60,
@@ -286,86 +284,83 @@ Write and log all primitive data types.`,
         order: 3,
       },
       {
-        name: "Lesson 4: Operators",
-        content: `# Operators
+        name: "Lesson 4: Logic and Branching",
+        content: `# Logic and Branching
 
-Operators perform operations on values and variables.
+## Topics Covered
+Comparisons, Conditional branching (if, ?), Logical operators, Nullish coalescing (??).
 
-## Types of Operators
+## Lesson Content
 
-### 1. Arithmetic Operators
+Logic allows your code to make decisions.
 
-\`\`\`javascript
-let result = 10 + 5;   // Addition: 15
-result = 10 - 5;       // Subtraction: 5
-result = 10 * 5;       // Multiplication: 50
-result = 10 / 5;       // Division: 2
-result = 10 % 3;       // Modulus: 1
-result = 2 ** 3;       // Exponentiation: 8
-\`\`\`
+**Comparisons**: > < >= <= work as expected.
 
-### 2. Assignment Operators
+**== (Loose equality)**: Converts types (e.g., 5 == "5" is true). Avoid this.
 
-\`\`\`javascript
-let x = 10;
-x += 5;  // x = x + 5 → 15
-x -= 3;  // x = x - 3 → 12
-x *= 2;  // x = x * 2 → 24
-x /= 4;  // x = x / 4 → 6
-\`\`\`
+**=== (Strict equality)**: Checks value AND type (e.g., 5 === "5" is false). Use this.
 
-### 3. Comparison Operators
+**Branching (if)**: Executes code only if the condition is true.
 
-\`\`\`javascript
-5 == "5"   // true (loose equality)
-5 === "5"  // false (strict equality)
-5 != "5"   // false
-5 !== "5"  // true
-5 > 3      // true
-5 < 3      // false
-5 >= 5     // true
-5 <= 4     // false
-\`\`\`
+**Ternary Operator (?)**: A shortcut for if-else. condition ? val1 : val2.
 
-**Always use \`===\` and \`!==\` for strict comparison!**
+## Logical Operators
 
-### 4. Logical Operators
+**|| (OR)**: Returns the first truthy value.
+
+**&& (AND)**: Returns the first falsy value.
+
+**! (NOT)**: Inverses the boolean.
+
+**Nullish Coalescing (??)**: Similar to ||, but only checks for null or undefined (ignoring 0 or false).
+
+## Examples
 
 \`\`\`javascript
-true && true   // true (AND)
-true && false  // false
-true || false  // true (OR)
-false || false // false
-!true          // false (NOT)
-!false         // true
+// Comparisons
+5 > 4        // true
+5 === "5"    // false (strict)
+5 == "5"     // true (loose - avoid!)
+
+// if statement
+if (age > 18) {
+  console.log("Adult");
+} else {
+  console.log("Minor");
+}
+
+// Ternary
+let access = age > 18 ? "Allowed" : "Denied";
+
+// Logical operators
+let result = value1 || value2 || "default";
+let check = value1 && value2;
+
+// Nullish coalescing
+let height = userHeight ?? 100; // Only uses default if null/undefined
 \`\`\`
 
-### 5. Ternary Operator
+## Mini Practice Questions
 
-\`\`\`javascript
-let msg = age > 18 ? "Adult" : "Minor";
-\`\`\`
+1. Check if 0 is equal to false using == and then ===. Log results.
 
-## Operator Precedence
+2. Write a ternary operator that sets a variable access to "Allowed" if age > 18, otherwise "Denied".
 
-1. Parentheses: \`()\`
-2. Exponentiation: \`**\`
-3. Multiplication/Division: \`*\`, \`/\`, \`%\`
-4. Addition/Subtraction: \`+\`, \`-\`
-5. Comparison: \`>\`, \`<\`, \`>=\`, \`<=\`
-6. Equality: \`==\`, \`===\`, \`!=\`, \`!==\`
-7. Logical AND: \`&&\`
-8. Logical OR: \`||\`
+3. Test null ?? "default" vs 0 || "default".
 
-## Mini Exercise
+## Coding Challenge
 
-Write expressions using \`&&\` and \`||\` operators.`,
+**Task 1**: Write an if..else if..else chain. Ask user for a number. If < 10, log "Small". If < 100, log "Medium". Otherwise log "Large".
+
+**Task 2**: Create a login system using prompt. If user enters "Admin", ask for password. If password is "TheMaster", alert "Welcome!". If user cancels, alert "Canceled". Otherwise, alert "Wrong password".`,
         contentArray: [
-          "Arithmetic: +, -, *, /, %, **",
-          "Assignment: =, +=, -=, *=, /=",
-          "Comparison: ==, ===, !=, !==, >, <, >=, <=",
-          "Logical: &&, ||, !",
-          "Ternary: condition ? value1 : value2",
+          "Comparisons: > < >= <= work as expected",
+          "== (loose equality): converts types, avoid",
+          "=== (strict equality): checks value AND type, use this",
+          "if: executes code only if condition is true",
+          "Ternary: condition ? val1 : val2",
+          "Logical operators: || (OR), && (AND), ! (NOT)",
+          "Nullish coalescing (??): checks only null/undefined",
         ],
         type: "Text",
         duration: 60,
@@ -373,38 +368,47 @@ Write expressions using \`&&\` and \`||\` operators.`,
         order: 4,
       },
       {
-        name: "Lesson 5: Conditionals",
-        content: `# Conditionals
+        name: "Lesson 5: Loops & The Switch Statement",
+        content: `# Loops & The Switch Statement
 
-Used for decision making in your code.
+## Topics Covered
+While, Do-While, For loops, Switch statement.
 
-## if / else
+## Lesson Content
+
+Automate repetitive tasks.
+
+**While**: while (condition) { ... } runs while condition is true.
+
+**For**: for (begin; condition; step) { ... }. The most common loop.
+
+**Break/Continue**: break stops the loop entirely. continue skips the current iteration and goes to the next.
+
+**Switch**: A cleaner way to compare a variable against multiple specific values (cases).
+
+## Examples
 
 \`\`\`javascript
-if (age >= 18) {
-  console.log("Adult");
-} else {
-  console.log("Minor");
+// while loop
+let i = 0;
+while (i < 5) {
+  console.log(i);
+  i++;
 }
-\`\`\`
 
-## else if
-
-\`\`\`javascript
-if (score > 90) {
-  console.log("Grade A");
-} else if (score > 80) {
-  console.log("Grade B");
-} else if (score > 70) {
-  console.log("Grade C");
-} else {
-  console.log("Grade D");
+// for loop
+for (let i = 0; i < 5; i++) {
+  console.log(i);
 }
-\`\`\`
 
-## switch Statement
+// do...while (executes at least once)
+let j = 0;
+do {
+  console.log(j);
+  j++;
+} while (j < 5);
 
-\`\`\`javascript
+// switch statement
 switch (day) {
   case 1:
     console.log("Monday");
@@ -417,51 +421,26 @@ switch (day) {
 }
 \`\`\`
 
-**Don't forget \`break\` statements!**
+## Mini Practice Questions
 
-## Truthy & Falsy Values
+1. Write a while loop that prints numbers 1 to 5.
 
-### Falsy Values
-- \`0\`
-- \`""\` (empty string)
-- \`null\`
-- \`undefined\`
-- \`NaN\`
-- \`false\`
+2. Write a for loop that prints even numbers from 0 to 10.
 
-### Truthy Values
-Everything else is truthy, including:
-- \`"0"\` (string)
-- \`[]\` (empty array)
-- \`{}\` (empty object)
-- \`"false"\` (string)
+3. Rewrite a simple if (x === "a")... else if (x === "b") structure using switch.
 
-## Examples
+## Coding Challenge
 
-\`\`\`javascript
-if (0) {
-  // Won't execute (falsy)
-}
+**Task 1**: Write a loop which asks the user to enter a number greater than 100 using prompt. If the visitor enters another number – ask them to input again. The loop must stop if the visitor enters a valid number or cancels.
 
-if ("hello") {
-  // Will execute (truthy)
-}
-
-if (user && user.name) {
-  // Safe property access
-  console.log(user.name);
-}
-\`\`\`
-
-## Mini Exercise
-
-Build a grade calculator using if/else statements.`,
+**Task 2**: Write a code using switch that takes a browser name (e.g., "Edge", "Chrome", "Firefox") and alerts "Supported!" for them, and "Unknown" for others.`,
         contentArray: [
-          "if/else for decision making",
-          "else if for multiple conditions",
-          "switch for multiple cases",
-          "Truthy values execute, falsy values don't",
-          "Common falsy: 0, '', null, undefined, NaN, false",
+          "while: runs while condition is true",
+          "for: most common loop, for (begin; condition; step)",
+          "do...while: executes at least once",
+          "break: stops loop entirely",
+          "continue: skips current iteration",
+          "switch: cleaner way to compare against multiple values",
         ],
         type: "Text",
         duration: 60,
@@ -469,96 +448,73 @@ Build a grade calculator using if/else statements.`,
         order: 5,
       },
       {
-        name: "Lesson 6: Loops",
-        content: `# Loops
+        name: "Lesson 6: Functions",
+        content: `# Functions
 
-Used for repetition and iteration.
+## Topics Covered
+Function Declarations, Expressions, Arrow Functions (=>), Scope.
 
-## for Loop
+## Lesson Content
+
+Functions are the building blocks of applications.
+
+**Declaration**: function sayHi() { ... }. Can be called before they are defined (hoisting).
+
+**Expression**: let sayHi = function() { ... }. Created when execution reaches them.
+
+**Arrow Functions**: Concise syntax. let sum = (a, b) => a + b;.
+
+**Parameters**: Inputs to functions.
+
+**Return**: The result sent back to the caller.
+
+## Examples
 
 \`\`\`javascript
-for (let i = 0; i < 5; i++) {
-  console.log(i); // 0, 1, 2, 3, 4
+// Function Declaration
+function greet(name) {
+  return "Hello, " + name;
 }
+
+// Function Expression
+let sum = function(a, b) {
+  return a + b;
+};
+
+// Arrow Function
+let multiply = (a, b) => a * b;
+
+// Arrow Function (multiline)
+let greet = (name) => {
+  let message = "Hello, " + name;
+  return message;
+};
 \`\`\`
 
-## while Loop
+## Scope
 
-\`\`\`javascript
-let i = 0;
-while (i < 5) {
-  console.log(i);
-  i++;
-}
-\`\`\`
+Variables declared inside a function are local to that function. Functions can access variables from outer scope.
 
-## do...while Loop
+## Mini Practice Questions
 
-\`\`\`javascript
-let i = 0;
-do {
-  console.log(i);
-  i++;
-} while (i < 5);
-\`\`\`
+1. Write a function add(a, b) that returns the sum.
 
-**Executes at least once!**
+2. Rewrite that function as an Arrow Function.
 
-## for...of Loop (Arrays)
+3. Create a function without a return statement and log its result. What is it?
 
-\`\`\`javascript
-let fruits = ["apple", "banana", "orange"];
-for (let fruit of fruits) {
-  console.log(fruit);
-}
-\`\`\`
+## Coding Challenge
 
-## for...in Loop (Objects)
+**Task 1**: Write a function min(a, b) which returns the least of two numbers a and b.
 
-\`\`\`javascript
-let person = { name: "John", age: 30 };
-for (let key in person) {
-  console.log(key + ": " + person[key]);
-}
-\`\`\`
-
-## Loop Control
-
-### break
-\`\`\`javascript
-for (let i = 0; i < 10; i++) {
-  if (i === 5) break; // Exit loop
-  console.log(i);
-}
-\`\`\`
-
-### continue
-\`\`\`javascript
-for (let i = 0; i < 10; i++) {
-  if (i % 2 === 0) continue; // Skip even numbers
-  console.log(i); // Only odd numbers
-}
-\`\`\`
-
-## Nested Loops
-
-\`\`\`javascript
-for (let i = 0; i < 3; i++) {
-  for (let j = 0; j < 3; j++) {
-    console.log(\`\${i}, \${j}\`);
-  }
-}
-\`\`\`
-
-## Mini Exercise
-
-Print numbers 1–10 using different loop types.`,
+**Task 2**: Write a function pow(x, n) that returns x in power n. Ask the user for x and n and then alert the result of the function.`,
         contentArray: [
-          "for: fixed iterations",
-          "while: condition-based",
-          "do...while: executes at least once",
-          "for...of: iterate arrays",
-          "for...in: iterate object properties",
+          "Function Declaration: function keyword, hoisted",
+          "Function Expression: assigned to variable",
+          "Arrow Functions: concise syntax (a, b) => a + b",
+          "Parameters: inputs to functions",
+          "Return: result sent back to caller",
+          "Scope: variables local to function",
         ],
         type: "Text",
         duration: 60,
@@ -566,98 +522,76 @@ Print numbers 1–10 using different loop types.`,
         order: 6,
       },
       {
-        name: "Lesson 7: Functions",
-        content: `# Functions
+        name: "Lesson 7: Objects (The Basics)",
+        content: `# Objects (The Basics)
 
-Functions are reusable blocks of code that perform specific tasks.
+## Topics Covered
+Objects, Properties, References, this, Constructors.
 
-## Function Declaration
+## Lesson Content
+
+Objects store keyed collections of data.
+
+**Syntax**: let user = { name: "John", age: 30 };.
+
+**Access**: user.name (Dot notation) or user["name"] (Bracket notation).
+
+**References**: Objects are stored by reference. Copying the variable admin = user copies the reference, not the data. Changing one changes the other.
+
+**"this"**: Refers to the object the method is called on.
+
+**New**: new User() creates a new object using a constructor function.
+
+## Examples
 
 \`\`\`javascript
-function greet() {
-  console.log("Hello");
-}
-greet(); // Call the function
-\`\`\`
-
-## Function Expression
-
-\`\`\`javascript
-let sum = function(a, b) {
-  return a + b;
+// Creating objects
+let user = {
+  name: "John",
+  age: 30
 };
-console.log(sum(5, 3)); // 8
-\`\`\`
 
-## Arrow Function
+// Accessing properties
+console.log(user.name);        // "John" (dot notation)
+console.log(user["age"]);      // 30 (bracket notation)
 
-\`\`\`javascript
-let multiply = (a, b) => a * b;
-console.log(multiply(4, 5)); // 20
+// Adding properties
+user.city = "New York";
+user["country"] = "USA";
 
-// With multiple statements
-let greet = (name) => {
-  let message = "Hello, " + name;
-  return message;
+// Object methods
+let person = {
+  name: "John",
+  sayHi: function() {
+    return "Hello, I'm " + this.name;
+  }
 };
+
+// References
+let admin = user;  // Both point to same object
+admin.name = "Jane";
+console.log(user.name);  // "Jane" (changed!)
 \`\`\`
 
-## Parameters & Defaults
+## Mini Practice Questions
 
-\`\`\`javascript
-function hello(name = "User") {
-  console.log("Hello, " + name);
-}
-hello();        // "Hello, User"
-hello("John");  // "Hello, John"
-\`\`\`
+1. Create an object person with name and age.
 
-## Return Statement
+2. Add a new property isAdmin = true to it.
 
-\`\`\`javascript
-function add(a, b) {
-  return a + b;
-}
-let result = add(10, 20); // 30
-\`\`\`
+3. Delete the age property.
 
-## Scope
+## Coding Challenge
 
-### Global Scope
-\`\`\`javascript
-let globalVar = "I'm global";
+**Task 1**: Create an empty object user. Add the property name with the value John. Add the property surname with the value Smith. Change the name to Pete. Remove the property name from the object.
 
-function test() {
-  console.log(globalVar); // Accessible
-}
-\`\`\`
-
-### Function Scope
-\`\`\`javascript
-function test() {
-  let localVar = "I'm local";
-  console.log(localVar); // Accessible
-}
-console.log(localVar); // Error!
-\`\`\`
-
-### Block Scope
-\`\`\`javascript
-if (true) {
-  let blockVar = "I'm in block";
-}
-console.log(blockVar); // Error!
-\`\`\`
-
-## Mini Exercise
-
-Create functions using all three methods.`,
+**Task 2**: Create a constructor function Accumulator(startingValue). It should create an object with a method read() that prompts the user for a number and adds it to startingValue.`,
         contentArray: [
-          "Function declaration: function keyword",
-          "Function expression: assigned to variable",
-          "Arrow function: => syntax",
-          "Parameters can have default values",
-          "Scope: global, function, block",
+          "Objects store keyed collections of data",
+          "Access: user.name (dot) or user['name'] (bracket)",
+          "Objects stored by reference",
+          "this: refers to object method is called on",
+          "new: creates object using constructor",
         ],
         type: "Text",
         duration: 60,
@@ -665,92 +599,68 @@ Create functions using all three methods.`,
         order: 7,
       },
       {
-        name: "Lesson 8: Strings",
-        content: `# Strings
+        name: "Lesson 8: Logic I (Comparisons)",
+        content: `# Logic I (Comparisons)
 
-Strings are sequences of characters used to represent text.
+## Focus
+How JavaScript compares values and the dangers of loose equality.
 
-## Creating Strings
+## Lesson Content
 
-\`\`\`javascript
-let str1 = "Double quotes";
-let str2 = 'Single quotes';
-let str3 = \`Template literal\`;
-\`\`\`
+**Booleans**: All comparisons return true or false.
 
-## Common Methods
+**String Comparison**: Strings are compared letter-by-letter in "dictionary" (lexicographical) order. "Z" > "A" is true. Lowercase is greater than uppercase ("a" > "Z").
 
-### Length
-\`\`\`javascript
-let name = "John";
-console.log(name.length); // 4
-\`\`\`
+**Strict vs. Loose**:
 
-### toUpperCase() / toLowerCase()
-\`\`\`javascript
-let text = "Hello";
-console.log(text.toUpperCase()); // "HELLO"
-console.log(text.toLowerCase()); // "hello"
-\`\`\`
+**== (Loose Equality)**: Converts types before comparing. 0 == false (True), 5 == "5" (True). Avoid using this.
 
-### includes()
-\`\`\`javascript
-let text = "Hello World";
-console.log(text.includes("World")); // true
-\`\`\`
+**=== (Strict Equality)**: Checks value AND type. 0 === false (False). Always use this.
 
-### slice()
-\`\`\`javascript
-let text = "Hello World";
-console.log(text.slice(0, 5)); // "Hello"
-console.log(text.slice(6));    // "World"
-\`\`\`
+**Null/Undefined Quirks**:
 
-### replace()
-\`\`\`javascript
-let text = "Hello World";
-console.log(text.replace("World", "JavaScript")); // "Hello JavaScript"
-\`\`\`
+- null == undefined is true.
+- null === undefined is false.
+- null > 0 is false, null == 0 is false, but null >= 0 is true (due to how checks work).
 
-### indexOf()
-\`\`\`javascript
-let text = "Hello World";
-console.log(text.indexOf("World")); // 6
-\`\`\`
-
-### split()
-\`\`\`javascript
-let text = "apple,banana,orange";
-let fruits = text.split(",");
-console.log(fruits); // ["apple", "banana", "orange"]
-\`\`\`
-
-## Template Literals
+## Examples
 
 \`\`\`javascript
-let name = "John";
-let age = 30;
-let message = \`Hello, my name is \${name} and I'm \${age} years old\`;
-console.log(message);
+// String comparison
+"apple" > "pineapple"  // false (a < p)
+"Z" > "A"              // true
+"a" > "Z"               // true (lowercase > uppercase)
+
+// Loose vs Strict
+5 == "5"    // true (loose - converts types)
+5 === "5"   // false (strict - checks type)
+
+// Null/Undefined quirks
+null == undefined   // true
+null === undefined  // false
+null > 0            // false
+null >= 0           // true (!)
 \`\`\`
 
-## String Concatenation
+## Mini Practice
 
-\`\`\`javascript
-let firstName = "John";
-let lastName = "Doe";
-let fullName = firstName + " " + lastName; // "John Doe"
-\`\`\`
+1. Compare "apple" and "pineapple" in the console. Which is greater?
 
-## Mini Exercise
+2. Check undefined == null vs undefined === null.
 
-Create a function that formats a name using template literals.`,
+3. Check "" == false. (Empty string vs false).
+
+## Coding Tasks
+
+**Task 1**: Write a script that logs "Strict check passed" if 10 === "10", and "Loose check passed" if 10 == "10". Observe which one prints.
+
+**Task 2**: Predict and then log the result of comparisons: undefined == null, undefined === null, null == "\\n0\\n".`,
         contentArray: [
-          "Strings can use '', \"\", or ``",
-          "Common methods: length, toUpperCase, includes, slice, replace",
-          "Template literals use ${} for interpolation",
-          "Strings are immutable (methods return new strings)",
-          "split() converts string to array",
+          "Booleans: all comparisons return true or false",
+          "String comparison: letter-by-letter lexicographical order",
+          "== (loose equality): converts types, avoid",
+          "=== (strict equality): checks value AND type, always use",
+          "Null/undefined quirks: null == undefined is true, null === undefined is false",
         ],
         type: "Text",
         duration: 60,
@@ -758,113 +668,73 @@ Create a function that formats a name using template literals.`,
         order: 8,
       },
       {
-        name: "Lesson 9: Arrays",
-        content: `# Arrays
+        name: "Lesson 9: Logic II (Conditional Branching)",
+        content: `# Logic II (Conditional Branching)
 
-Arrays are ordered collections of values.
+## Focus
+Making decisions with code.
 
-## Creating Arrays
+## Lesson Content
 
-\`\`\`javascript
-let arr = [10, 20, 30];
-let fruits = ["apple", "banana", "orange"];
-let mixed = [1, "hello", true, null];
-\`\`\`
+**if Statement**: Evaluates a condition. If truthy, executes the block.
 
-## Accessing Elements
+**else**: Executes if the if condition is falsy.
 
-\`\`\`javascript
-let arr = [10, 20, 30];
-console.log(arr[0]); // 10 (first element)
-console.log(arr[1]); // 20
-console.log(arr.length); // 3
-\`\`\`
+**else if**: Tests multiple variants.
 
-## Common Methods
+**Condition Conversion**: The if (...) statement evaluates the expression in parentheses and converts the result to a boolean.
 
-### push() - Add to end
-\`\`\`javascript
-let arr = [1, 2];
-arr.push(3);
-console.log(arr); // [1, 2, 3]
-\`\`\`
+**Ternary Operator ?**: The only operator with 3 arguments. let result = condition ? value1 : value2;. Use this for short, simple assignments, not complex logic.
 
-### pop() - Remove from end
-\`\`\`javascript
-let arr = [1, 2, 3];
-arr.pop();
-console.log(arr); // [1, 2]
-\`\`\`
-
-### shift() - Remove from beginning
-\`\`\`javascript
-let arr = [1, 2, 3];
-arr.shift();
-console.log(arr); // [2, 3]
-\`\`\`
-
-### unshift() - Add to beginning
-\`\`\`javascript
-let arr = [2, 3];
-arr.unshift(1);
-console.log(arr); // [1, 2, 3]
-\`\`\`
-
-### indexOf() - Find index
-\`\`\`javascript
-let arr = ["apple", "banana", "orange"];
-console.log(arr.indexOf("banana")); // 1
-\`\`\`
-
-### includes() - Check existence
-\`\`\`javascript
-let arr = [1, 2, 3];
-console.log(arr.includes(2)); // true
-\`\`\`
-
-### slice() - Extract portion
-\`\`\`javascript
-let arr = [1, 2, 3, 4, 5];
-console.log(arr.slice(1, 3)); // [2, 3]
-\`\`\`
-
-### splice() - Add/Remove elements
-\`\`\`javascript
-let arr = [1, 2, 3, 4, 5];
-arr.splice(2, 1, 99); // Remove 1 element at index 2, add 99
-console.log(arr); // [1, 2, 99, 4, 5]
-\`\`\`
-
-## Iterating Arrays
+## Examples
 
 \`\`\`javascript
-let arr = [1, 2, 3];
-
-// for loop
-for (let i = 0; i < arr.length; i++) {
-  console.log(arr[i]);
+// if statement
+if (age >= 18) {
+  console.log("Adult");
+} else {
+  console.log("Minor");
 }
 
-// for...of
-for (let item of arr) {
-  console.log(item);
+// else if
+if (score > 90) {
+  console.log("Grade A");
+} else if (score > 80) {
+  console.log("Grade B");
+} else {
+  console.log("Grade C");
 }
 
-// forEach
-arr.forEach((item) => {
-  console.log(item);
-});
+// Ternary operator
+let access = age > 18 ? "Allowed" : "Denied";
+
+// Condition conversion
+if ("0") {  // "0" is truthy (non-empty string)
+  console.log("This executes");
+}
+
+if (0) {  // 0 is falsy
+  console.log("This doesn't execute");
+}
 \`\`\`
 
-## Mini Exercise
+## Mini Practice
 
-Create an array and practice all methods.`,
+1. Write an if statement that alerts "Hello" if 1 === 1.
+
+2. Rewrite if (age > 18) { access = true } else { access = false } using the ternary operator.
+
+## Coding Tasks
+
+**Task 1**: Using prompt, ask the user "What is the official name of JavaScript?". If they type "ECMAScript", alert "Right!", otherwise alert "You don't know? ECMAScript!".
+
+**Task 2**: Using prompt, ask for a number. If greater than 0, alert 1. If less than 0, alert -1. If 0, alert 0.`,
         contentArray: [
-          "Arrays store ordered collections",
-          "Access with index: arr[0]",
-          "push/pop: end of array",
-          "shift/unshift: beginning of array",
-          "slice: extract, splice: modify",
+          "if: evaluates condition, executes if truthy",
+          "else: executes if if condition is falsy",
+          "else if: tests multiple variants",
+          "Condition conversion: converts expression to boolean",
+          "Ternary operator: condition ? value1 : value2",
         ],
         type: "Text",
         duration: 60,
@@ -872,102 +742,60 @@ Create an array and practice all methods.`,
         order: 9,
       },
       {
-        name: "Lesson 10: Objects",
-        content: `# Objects
+        name: "Lesson 10: Logic III (Logical Operators)",
+        content: `# Logic III (Logical Operators)
 
-Objects store collections of key-value pairs.
+## Focus
+Combining multiple conditions.
 
-## Creating Objects
+## Lesson Content
 
-\`\`\`javascript
-let student = {
-  name: "John",
-  age: 20,
-  marks: 90
-};
-\`\`\`
+**|| (OR)**: Finds the first truthy value. result = value1 || value2 || value3. If all are false, returns the last value. Used for "default" values.
 
-## Accessing Properties
+**&& (AND)**: Finds the first falsy value. result = value1 && value2. If all are true, returns the last value.
 
-\`\`\`javascript
-// Dot notation
-console.log(student.name); // "John"
+**! (NOT)**: Converts to boolean and returns the inverse.
 
-// Bracket notation
-console.log(student["age"]); // 20
+**Precedence**: ! is highest, then &&, then ||.
 
-// Dynamic key
-let key = "marks";
-console.log(student[key]); // 90
-\`\`\`
-
-## Adding Properties
+## Examples
 
 \`\`\`javascript
-student.city = "Delhi";
-student["country"] = "India";
+// OR operator
+alert(1 || 0);        // 1 (first truthy)
+alert(null || 0 || 1); // 1 (first truthy)
+
+// AND operator
+alert(1 && 0);         // 0 (first falsy)
+alert(1 && 2 && 3);    // 3 (all truthy, returns last)
+
+// NOT operator
+alert(!true);          // false
+alert(!!1);            // true (double NOT converts to boolean)
+
+// Precedence
+let result = !false && true || false; // true
 \`\`\`
 
-## Removing Properties
+## Mini Practice
 
-\`\`\`javascript
-delete student.age;
-\`\`\`
+1. Evaluate alert(1 || 0).
 
-## Nested Objects
+2. Evaluate alert(1 && 0).
 
-\`\`\`javascript
-let person = {
-  name: "John",
-  address: {
-    city: "Delhi",
-    country: "India"
-  }
-};
-console.log(person.address.city); // "Delhi"
-\`\`\`
+3. Evaluate alert( !!"non-empty string" ).
 
-## Object Methods
+## Coding Tasks
 
-\`\`\`javascript
-let person = {
-  name: "John",
-  age: 30,
-  greet: function() {
-    return "Hello, I'm " + this.name;
-  }
-};
-console.log(person.greet()); // "Hello, I'm John"
-\`\`\`
+**Task 1**: Write a condition checks if age is between 14 and 90 inclusively.
 
-## Object.keys() / Object.values()
-
-\`\`\`javascript
-let obj = { a: 1, b: 2, c: 3 };
-console.log(Object.keys(obj));   // ["a", "b", "c"]
-console.log(Object.values(obj)); // [1, 2, 3]
-\`\`\`
-
-## Iterating Objects
-
-\`\`\`javascript
-let obj = { name: "John", age: 30 };
-
-// for...in loop
-for (let key in obj) {
-  console.log(key + ": " + obj[key]);
-}
-\`\`\`
-
-## Mini Exercise
-
-Create an object representing a book with properties and methods.`,
+**Task 2**: Write a login system. Ask "Who's there?". If "Admin", ask "Password?". If "TheMaster", welcome them. Handle "Cancel" (null) or other inputs with "I don't know you".`,
         contentArray: [
-          "Objects store key-value pairs",
-          "Access: obj.key or obj['key']",
-          "Add: obj.newKey = value",
-          "Remove: delete obj.key",
-          "Objects can contain nested objects and methods",
+          "|| (OR): finds first truthy value",
+          "&& (AND): finds first falsy value",
+          "! (NOT): converts to boolean and inverses",
+          "Precedence: ! > && > ||",
+          "Used for default values and condition checking",
         ],
         type: "Text",
         duration: 60,
@@ -975,85 +803,62 @@ Create an object representing a book with properties and methods.`,
         order: 10,
       },
       {
-        name: "Lesson 11: Math & Date",
-        content: `# Math & Date
+        name: "Lesson 11: Logic IV (Nullish Coalescing)",
+        content: `# Logic IV (Nullish Coalescing)
 
-Built-in objects for mathematical operations and date handling.
+## Focus
+Handling null and undefined specifically.
 
-## Math Methods
+## Lesson Content
 
-### Math.round()
+**The Problem**: || cannot distinguish between false, 0, and null. If you want 0 to be a valid value (e.g., height = 0), || will treat it as false and replace it.
+
+**The Solution (??)**: The Nullish Coalescing operator.
+
+**Logic**: a ?? b returns a if a is defined (not null/undefined), otherwise b.
+
+It treats 0 and false as valid values.
+
+## Examples
+
 \`\`\`javascript
-Math.round(4.7);  // 5
-Math.round(4.4);  // 4
+// Problem with ||
+let height = 0;
+alert(height || 100);  // 100 (wrong! 0 is valid)
+alert(height ?? 100);  // 0 (correct!)
+
+// With null/undefined
+let user = null;
+alert(user ?? "Anonymous"); // "Anonymous"
+
+let name;
+alert(name ?? "Guest"); // "Guest"
+
+// Comparison
+alert(0 || "default");  // "default"
+alert(0 ?? "default");  // 0
+
+alert(false || "test"); // "test"
+alert(false ?? "test"); // false
 \`\`\`
 
-### Math.ceil()
-\`\`\`javascript
-Math.ceil(4.2);   // 5 (rounds up)
-\`\`\`
+## Mini Practice
 
-### Math.floor()
-\`\`\`javascript
-Math.floor(4.9);  // 4 (rounds down)
-\`\`\`
+1. Let height = 0. Compare alert(height || 100) vs alert(height ?? 100).
 
-### Math.random()
-\`\`\`javascript
-Math.random();              // 0 to 1 (exclusive)
-Math.random() * 10;         // 0 to 10
-Math.floor(Math.random() * 10); // 0 to 9 (integer)
-\`\`\`
+2. Let user = null. alert(user ?? "Anonymous").
 
-### Math.max() / Math.min()
-\`\`\`javascript
-Math.max(10, 20, 30); // 30
-Math.min(10, 20, 30); // 10
-\`\`\`
+## Coding Tasks
 
-### Math.abs()
-\`\`\`javascript
-Math.abs(-5); // 5
-\`\`\`
+**Task 1**: Create variables firstName = null, lastName = null, nickName = "SuperCoder". Use ?? to display the first defined name.
 
-## Date Object
-
-### Creating Dates
-\`\`\`javascript
-let now = new Date();
-let specific = new Date(2024, 0, 15); // Jan 15, 2024
-let fromString = new Date("2024-01-15");
-\`\`\`
-
-### Date Methods
-\`\`\`javascript
-let d = new Date();
-d.getFullYear();  // 2024
-d.getMonth();     // 0-11 (0 = January)
-d.getDate();      // 1-31
-d.getDay();       // 0-6 (0 = Sunday)
-d.getHours();     // 0-23
-d.getMinutes();   // 0-59
-d.getSeconds();   // 0-59
-\`\`\`
-
-### Formatting Dates
-\`\`\`javascript
-let d = new Date();
-d.toDateString();     // "Mon Jan 15 2024"
-d.toISOString();      // "2024-01-15T10:30:00.000Z"
-d.toLocaleDateString(); // "1/15/2024"
-\`\`\`
-
-## Mini Exercise
-
-Create a function that generates a random number between 1 and 100.`,
+**Task 2**: Create a setting volume = 0. Use ?? to ensure that if volume is defined (even 0), it is kept. If it is null, default to 50. Log the result.`,
         contentArray: [
-          "Math: round, ceil, floor, random, max, min, abs",
-          "Date: new Date() creates date object",
-          "getFullYear, getMonth, getDate, getHours, etc.",
-          "toDateString, toISOString for formatting",
-          "Math.random() returns 0 to 1 (exclusive)",
+          "Problem: || cannot distinguish false, 0, and null",
+          "?? (Nullish Coalescing): checks only null/undefined",
+          "a ?? b: returns a if defined, otherwise b",
+          "Treats 0 and false as valid values",
+          "Use when 0 or false should be preserved",
         ],
         type: "Text",
         duration: 60,
@@ -1061,75 +866,62 @@ Create a function that generates a random number between 1 and 100.`,
         order: 11,
       },
       {
-        name: "Lesson 12: DOM Basics",
-        content: `# DOM Basics
+        name: "Lesson 12: Repetition I (While Loops)",
+        content: `# Repetition I (While Loops)
 
-DOM = Document Object Model. It represents the HTML document as a tree of nodes.
+## Focus
+Repeating code while a condition is true.
 
-## Selecting Elements
+## Lesson Content
 
-### getElementById()
-\`\`\`javascript
-let element = document.getElementById("myId");
-\`\`\`
+**while (condition) { body }**: Checks condition before running logic.
 
-### querySelector()
-\`\`\`javascript
-let element = document.querySelector("#myId");      // ID
-let element = document.querySelector(".myClass");   // Class
-let element = document.querySelector("p");          // Tag
-\`\`\`
+**do { body } while (condition)**: Runs logic at least once, then checks condition.
 
-### querySelectorAll()
-\`\`\`javascript
-let elements = document.querySelectorAll(".myClass"); // Returns NodeList
-\`\`\`
+**Infinite Loop**: If the condition never becomes false (e.g., while(true)), the browser will freeze/crash.
 
-## Modifying Content
+**i++**: Crucial for incrementing loop counters to eventually break the loop.
 
-### textContent
-\`\`\`javascript
-element.textContent = "New text";
-\`\`\`
-
-### innerHTML
-\`\`\`javascript
-element.innerHTML = "<strong>Bold text</strong>";
-\`\`\`
-
-**Warning: innerHTML can be unsafe!**
-
-### Modifying Styles
-\`\`\`javascript
-element.style.color = "red";
-element.style.backgroundColor = "blue";
-element.style.fontSize = "20px";
-\`\`\`
-
-### Adding/Removing Classes
-\`\`\`javascript
-element.classList.add("new-class");
-element.classList.remove("old-class");
-element.classList.toggle("active");
-\`\`\`
-
-## Creating Elements
+## Examples
 
 \`\`\`javascript
-let newDiv = document.createElement("div");
-newDiv.textContent = "Hello";
-document.body.appendChild(newDiv);
+// while loop
+let i = 0;
+while (i < 5) {
+  console.log(i);
+  i++;
+}
+
+// do...while loop
+let j = 0;
+do {
+  console.log(j);
+  j++;
+} while (j < 5);
+
+// Infinite loop (dangerous!)
+// while (true) {
+//   console.log("This runs forever!");
+// }
 \`\`\`
 
-## Mini Exercise
+## Mini Practice
 
-Select an element and change its text and color.`,
+1. Write a while loop that counts down from 3 to 1.
+
+2. Use do..while to log a message once even if the condition is false (while(0)).
+
+## Coding Tasks
+
+**Task 1**: Use a while loop to output only odd numbers from 1 to 15.
+
+**Task 2**: Use do..while to prompt the user for a number greater than 100. If they enter less, prompt again. (Stop if they enter >100 or cancel/empty).`,
         contentArray: [
-          "DOM represents HTML as tree structure",
-          "getElementById: select by ID",
-          "querySelector: select first matching element",
-          "querySelectorAll: select all matching elements",
-          "Modify: textContent, innerHTML, style, classList",
+          "while: checks condition before execution",
+          "do...while: executes at least once, then checks",
+          "Infinite loop: condition never becomes false",
+          "i++: increment loop counter to break loop",
+          "Use break to exit loop early",
         ],
         type: "Text",
         duration: 60,
@@ -1137,88 +929,76 @@ Select an element and change its text and color.`,
         order: 12,
       },
       {
-        name: "Lesson 13: Events",
-        content: `# Events
+        name: "Lesson 13: Repetition II (For Loops)",
+        content: `# Repetition II (For Loops)
 
-Events are actions that happen in the browser (clicks, keypresses, etc.).
+## Focus
+The most commonly used loop.
 
-## addEventListener()
+## Lesson Content
 
-\`\`\`javascript
-button.addEventListener("click", function() {
-  alert("Clicked!");
-});
-\`\`\`
+**Syntax**: for (begin; condition; step) { body }
 
-## Common Events
+**begin**: Run once (let i = 0).
 
-### click
-\`\`\`javascript
-button.addEventListener("click", function() {
-  console.log("Button clicked");
-});
-\`\`\`
+**condition**: Checked before every iteration (i < 3).
 
-### input
-\`\`\`javascript
-input.addEventListener("input", function(e) {
-  console.log("Input value:", e.target.value);
-});
-\`\`\`
+**step**: Run after every iteration (i++).
 
-### keydown / keyup
-\`\`\`javascript
-document.addEventListener("keydown", function(e) {
-  console.log("Key pressed:", e.key);
-});
-\`\`\`
+**Break**: Exits the loop immediately.
 
-### mouseover / mouseout
-\`\`\`javascript
-element.addEventListener("mouseover", function() {
-  element.style.backgroundColor = "yellow";
-});
-\`\`\`
+**Continue**: Skips the rest of the current iteration and starts the next one.
 
-### submit
-\`\`\`javascript
-form.addEventListener("submit", function(e) {
-  e.preventDefault(); // Prevent form submission
-  console.log("Form submitted");
-});
-\`\`\`
+**Labels**: labelName: for(...) allows breaking out of nested loops.
 
-## Event Object
+## Examples
 
 \`\`\`javascript
-button.addEventListener("click", function(event) {
-  console.log(event.type);      // "click"
-  console.log(event.target);   // Element that triggered event
-  console.log(event.clientX);  // Mouse X position
-  console.log(event.clientY);  // Mouse Y position
-});
+// Standard for loop
+for (let i = 0; i < 5; i++) {
+  console.log(i); // 0, 1, 2, 3, 4
+}
+
+// Break
+for (let i = 0; i < 10; i++) {
+  if (i === 5) break; // Exit at 5
+  console.log(i);
+}
+
+// Continue
+for (let i = 0; i < 10; i++) {
+  if (i % 2 === 0) continue; // Skip even numbers
+  console.log(i); // Only odd numbers
+}
+
+// Nested loops with labels
+outer: for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    if (i === 1 && j === 1) break outer; // Break out of both loops
+    console.log(i, j);
+  }
+}
 \`\`\`
 
-## Event Propagation
+## Mini Practice
 
-Events bubble up from child to parent elements.
+1. Write a loop for (let i = 0; i < 5; i++) and log i.
 
-\`\`\`javascript
-// Stop propagation
-button.addEventListener("click", function(e) {
-  e.stopPropagation();
-});
-\`\`\`
+2. Use continue to skip the number 3 in a loop from 1 to 5.
 
-## Mini Exercise
+## Coding Tasks
 
-Create a button that changes color when clicked.`,
+**Task 1**: Write a loop that calculates the sum of numbers from 1 to 100.
+
+**Task 2**: Output prime numbers from 2 to 10. (Hint: Use a nested loop to check for divisors).`,
         contentArray: [
-          "addEventListener: attach event handlers",
-          "Common events: click, input, keydown, submit",
-          "Event object contains event information",
-          "e.preventDefault() stops default behavior",
-          "Events bubble up the DOM tree",
+          "for (begin; condition; step): most common loop",
+          "begin: runs once",
+          "condition: checked before each iteration",
+          "step: runs after each iteration",
+          "break: exits loop immediately",
+          "continue: skips current iteration",
+          "Labels: break out of nested loops",
         ],
         type: "Text",
         duration: 60,
@@ -1226,82 +1006,76 @@ Create a button that changes color when clicked.`,
         order: 13,
       },
       {
-        name: "Lesson 14: Forms",
-        content: `# Forms
+        name: "Lesson 14: Control Flow (Switch)",
+        content: `# Control Flow (Switch)
 
-Working with HTML forms and form validation.
+## Focus
+A cleaner alternative to multiple if..else blocks.
 
-## Getting Input Value
+## Lesson Content
 
-\`\`\`javascript
-let nameInput = document.querySelector("#name");
-let name = nameInput.value;
-console.log(name);
-\`\`\`
+**Syntax**: switch(x) { case 'value': ... break; default: ... }
 
-## Form Elements
+**Strict Equality**: Switch checks types strictly (===). case '3' will not match the number 3.
 
-\`\`\`javascript
-let form = document.querySelector("form");
-let nameInput = form.querySelector("#name");
-let emailInput = form.querySelector("#email");
-let checkbox = form.querySelector("#agree");
-\`\`\`
+**Fallthrough**: If you omit break, execution continues into the next case. This can be used to group cases.
 
-## Basic Validation
+**Default**: Runs if no other case matches.
+
+## Examples
 
 \`\`\`javascript
-form.addEventListener("submit", function(e) {
-  e.preventDefault();
-  
-  let name = nameInput.value.trim();
-  
-  if (name === "") {
-    alert("Name is required");
-    return;
-  }
-  
-  if (name.length < 3) {
-    alert("Name must be at least 3 characters");
-    return;
-  }
-  
-  // Form is valid, submit it
-  console.log("Form submitted:", name);
-});
-\`\`\`
-
-## Checkbox & Radio Buttons
-
-\`\`\`javascript
-let checkbox = document.querySelector("#agree");
-if (checkbox.checked) {
-  console.log("Checkbox is checked");
+// Basic switch
+let a = 2;
+switch (a) {
+  case 1:
+    console.log("one");
+    break;
+  case 2:
+    console.log("two");
+    break;
+  default:
+    console.log("other");
 }
 
-let radio = document.querySelector('input[name="gender"]:checked');
-if (radio) {
-  console.log("Selected:", radio.value);
+// Grouped cases (fallthrough)
+let browser = "Edge";
+switch (browser) {
+  case "Edge":
+  case "Chrome":
+  case "Firefox":
+    alert("Supported!");
+    break;
+  default:
+    alert("Unknown");
+}
+
+// Switch with expressions
+let x = 2 + 2;
+switch (x) {
+  case 4:
+    alert("Correct!");
+    break;
 }
 \`\`\`
 
-## Select Dropdown
+## Mini Practice
 
-\`\`\`javascript
-let select = document.querySelector("#country");
-let selectedValue = select.value;
-let selectedText = select.options[select.selectedIndex].text;
-\`\`\`
+1. Write a switch for a variable a=2. Case 1: log "one", Case 2: log "two".
 
-## Mini Exercise
+2. Remove the break from Case 2 and see what happens if you add a Case 3.
 
-Create a form with validation.`,
+## Coding Tasks
+
+**Task 1**: Rewrite the following if as a switch: if (a === 0) alert(0); if (a === 1) alert(1); if (a === 2 || a === 3) alert('2 or 3');
+
+**Task 2**: Write a switch statement that takes a browser name (e.g., "Edge", "Chrome") and alerts "Supported". Add a default case that alerts "We hope this page looks ok!".`,
         contentArray: [
-          "Get input value: element.value",
-          "Form validation checks user input",
-          "trim() removes whitespace",
-          "Checkbox: element.checked",
-          "Select: element.value for selected option",
+          "switch: cleaner alternative to multiple if..else",
+          "Strict equality: checks types with ===",
+          "break: stops execution, prevents fallthrough",
+          "fallthrough: omitting break continues to next case",
+          "default: runs if no case matches",
         ],
         type: "Text",
         duration: 60,
@@ -1309,72 +1083,80 @@ Create a form with validation.`,
         order: 14,
       },
       {
-        name: "Lesson 15: JSON",
-        content: `# JSON
+        name: "Lesson 15: Functions I (Declarations)",
+        content: `# Functions I (Declarations)
 
-JSON (JavaScript Object Notation) is a lightweight data format.
+## Focus
+Building reusable blocks of code.
 
-## JSON.stringify()
+## Lesson Content
 
-Converts JavaScript object to JSON string.
+**The Purpose**: To avoid repeating code. Change it in one place, update it everywhere.
 
+**Syntax**:
 \`\`\`javascript
-let person = {
-  name: "John",
-  age: 30,
-  city: "Delhi"
-};
-
-let jsonString = JSON.stringify(person);
-console.log(jsonString);
-// '{"name":"John","age":30,"city":"Delhi"}'
+function name(parameter1, parameter2) {
+  // body
+  return result;
+}
 \`\`\`
 
-## JSON.parse()
+**Parameters**: Variables passed into the function (local to the function).
 
-Converts JSON string to JavaScript object.
+**Default Values**: function showMessage(from, text = "no text"). If text is not passed, it uses "no text".
+
+**Return**: The return directive stops the function and sends a value back. If no return is specified, it returns undefined.
+
+## Examples
 
 \`\`\`javascript
-let jsonString = '{"name":"John","age":30}';
-let person = JSON.parse(jsonString);
-console.log(person.name); // "John"
+// Function declaration
+function greet(name) {
+  return "Hello, " + name;
+}
+
+// With default parameters
+function showMessage(from, text = "no text") {
+  console.log(from + ": " + text);
+}
+
+showMessage("Ann"); // Ann: no text
+showMessage("Ann", "Hello"); // Ann: Hello
+
+// Return statement
+function add(a, b) {
+  return a + b;
+}
+
+let result = add(5, 3); // 8
+
+// No return (returns undefined)
+function sayHi() {
+  console.log("Hi");
+}
+let x = sayHi(); // x is undefined
 \`\`\`
 
-## Common Use Cases
+## Mini Practice
 
-### Storing in localStorage
-\`\`\`javascript
-let data = { name: "John", age: 30 };
-localStorage.setItem("user", JSON.stringify(data));
+1. Define a function showMessage that alerts "Hello!". Call it twice.
 
-// Retrieve
-let stored = JSON.parse(localStorage.getItem("user"));
-\`\`\`
+2. Define a function with a parameter name that alerts "Hello " + name.
 
-### API Data Exchange
-\`\`\`javascript
-// Sending data to server
-fetch("/api/users", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "John" })
-});
+3. Try calling a function without passing an argument (if it expects one). What is the value of the missing argument?
 
-// Receiving data from server
-fetch("/api/users")
-  .then(response => response.json())
-  .then(data => console.log(data));
-\`\`\`
+## Coding Tasks
 
-## Mini Exercise
+**Task 1**: Write a function checkAge(age) that returns true if age > 18. Otherwise, it asks for a confirmation and returns the result of the confirm.
 
-Create an object, convert to JSON, then parse it back.`,
+**Task 2**: Write a function min(a, b) which returns the least of two numbers a and b.`,
         contentArray: [
-          "JSON: JavaScript Object Notation",
-          "JSON.stringify(): object to string",
-          "JSON.parse(): string to object",
-          "Used for data storage (localStorage)",
-          "Used for API data exchange",
+          "Purpose: avoid repeating code",
+          "Syntax: function name(params) { body }",
+          "Parameters: variables passed into function",
+          "Default values: param = defaultValue",
+          "Return: stops function and sends value back",
+          "No return: returns undefined",
         ],
         type: "Text",
         duration: 60,
@@ -1382,93 +1164,86 @@ Create an object, convert to JSON, then parse it back.`,
         order: 15,
       },
       {
-        name: "Lesson 16: Error Handling",
-        content: `# Error Handling
+        name: "Lesson 16: Functions II (Expressions & Scope)",
+        content: `# Functions II (Expressions & Scope)
 
-Handling errors gracefully prevents your program from crashing.
+## Focus
+Different ways to create functions and how variables live.
 
-## try...catch
+## Lesson Content
 
-\`\`\`javascript
-try {
-  // Code that might throw an error
-  let result = 10 / 0;
-  console.log(result);
-} catch (error) {
-  // Handle the error
-  console.log("An error occurred:", error.message);
-}
-\`\`\`
+**Function Declaration**: function sum(a,b) {...}.
 
-## finally Block
+**Hoisting**: These can be called before they are defined in the code.
 
-\`\`\`javascript
-try {
-  // Code
-} catch (error) {
-  // Handle error
-} finally {
-  // Always runs
-  console.log("Cleanup code");
-}
-\`\`\`
+**Function Expression**: let sum = function(a,b) {...}.
 
-## Common Errors
+Created when the execution reaches the line. Cannot be called before definition.
 
-### TypeError
-\`\`\`javascript
-try {
-  let x = null;
-  x.property; // TypeError
-} catch (error) {
-  console.log("TypeError:", error.message);
-}
-\`\`\`
+**Callback Functions**: Passing a function as an argument to another function (e.g., ask(question, yesFunc, noFunc)).
 
-### ReferenceError
-\`\`\`javascript
-try {
-  console.log(undefinedVar); // ReferenceError
-} catch (error) {
-  console.log("ReferenceError:", error.message);
-}
-\`\`\`
+**Local vs. Outer Variables**: A function can access variables outside of it (Outer Scope), but if it creates a variable with the same name, it "shadows" (hides) the outer one.
 
-### SyntaxError
-\`\`\`javascript
-try {
-  eval("let x = ;"); // SyntaxError
-} catch (error) {
-  console.log("SyntaxError:", error.message);
-}
-\`\`\`
-
-## Throwing Errors
+## Examples
 
 \`\`\`javascript
-function divide(a, b) {
-  if (b === 0) {
-    throw new Error("Cannot divide by zero");
-  }
-  return a / b;
+// Function Declaration (hoisted)
+sayHi(); // Works! Can call before definition
+
+function sayHi() {
+  console.log("Hi");
 }
 
-try {
-  divide(10, 0);
-} catch (error) {
-  console.log(error.message); // "Cannot divide by zero"
+// Function Expression (not hoisted)
+// sayHello(); // Error! Cannot call before definition
+
+let sayHello = function() {
+  console.log("Hello");
+};
+
+// Callback function
+function ask(question, yes, no) {
+  if (confirm(question)) yes();
+  else no();
 }
+
+ask(
+  "Do you agree?",
+  function() { alert("You agreed."); },
+  function() { alert("You canceled."); }
+);
+
+// Scope
+let userName = "John";
+
+function showMessage() {
+  let userName = "Bob"; // Shadows outer variable
+  console.log(userName); // "Bob"
+}
+
+showMessage();
+console.log(userName); // "John" (unchanged)
 \`\`\`
 
-## Mini Exercise
+## Mini Practice
 
-Create a function with error handling.`,
+1. Create a Function Expression let sayHi = function() { ... } and call it.
+
+2. Try to call a Function Expression before you define it. Observe the error.
+
+3. Declare let userName = "John". Inside a function, change userName to "Bob". Check the value of userName after the function runs.
+
+## Coding Tasks
+
+**Task 1**: Create a function expression welcome that works differently based on age (use a variable outside). If age < 18, assign a function alerting "Hello". If age > 18, assign a function alerting "Greetings".
+
+**Task 2**: Write a function that accepts two numbers and a "callback" function to handle the result. Call it with an addition function.`,
         contentArray: [
-          "try...catch: handle errors gracefully",
-          "finally: always executes",
-          "Common errors: TypeError, ReferenceError, SyntaxError",
-          "throw: create custom errors",
-          "Error handling prevents crashes",
+          "Function Declaration: hoisted, can call before definition",
+          "Function Expression: not hoisted, created when execution reaches it",
+          "Callback: function passed as argument to another function",
+          "Local vs Outer: function can access outer variables",
+          "Shadowing: local variable hides outer variable with same name",
         ],
         type: "Text",
         duration: 60,
@@ -1476,91 +1251,308 @@ Create a function with error handling.`,
         order: 16,
       },
       {
-        name: "Lesson 17: Debugging",
-        content: `# Debugging
+        name: "Lesson 17: Functions III (Arrow Functions)",
+        content: `# Functions III (Arrow Functions)
 
-Debugging is finding and fixing errors in your code.
+## Focus
+The modern, concise syntax.
 
-## console.log()
+## Lesson Content
+
+**Syntax**: let func = (arg1, arg2) => expression;
+
+This is a shorter version of: let func = function(arg1, arg2) { return expression; }.
+
+**Single Argument**: Parentheses are optional. let double = n => n * 2;.
+
+**No Arguments**: Parentheses are required. let sayHi = () => alert("Hi");.
+
+**Multiline**: If you use curly braces { ... }, you must use return explicitly.
 
 \`\`\`javascript
-let x = 10;
-console.log("Value of x:", x);
+let sum = (a, b) => {  // curly brace = multiline
+  let result = a + b;
+  return result; // Explicit return needed
+};
 \`\`\`
 
-## Other Console Methods
+## Examples
 
-### console.error()
 \`\`\`javascript
-console.error("This is an error message");
+// Arrow function (single expression)
+let sum = (a, b) => a + b;
+
+// Single argument (parentheses optional)
+let double = n => n * 2;
+
+// No arguments (parentheses required)
+let sayHi = () => alert("Hi");
+
+// Multiline (curly braces + return)
+let multiply = (a, b) => {
+  let result = a * b;
+  return result;
+};
+
+// Rewriting function expression
+let func = function(a) { return a + 100; };
+let funcArrow = a => a + 100; // Same thing!
 \`\`\`
 
-### console.warn()
-\`\`\`javascript
-console.warn("This is a warning");
-\`\`\`
+## Mini Practice
 
-### console.table()
-\`\`\`javascript
-let data = [
-  { name: "John", age: 30 },
-  { name: "Jane", age: 25 }
-];
-console.table(data);
-\`\`\`
+1. Rewrite function(a) { return a + 100; } as an arrow function.
 
-## Chrome Developer Tools
+2. Write an arrow function ask(question, yes, no) that mimics the callback structure.
 
-### Opening DevTools
-- **Windows/Linux**: \`F12\` or \`Ctrl+Shift+I\`
-- **Mac**: \`Cmd+Option+I\`
+## Coding Tasks
 
-### Console Tab
-- View console.log output
-- Execute JavaScript code
-- See errors and warnings
+**Task 1**: Replace these Function Expressions with Arrow Functions: function(a, b) { return a / b; } function() { alert("Done"); }
 
-### Sources Tab
-- View your JavaScript files
-- Set breakpoints
-- Step through code line by line
-
-## Breakpoints
-
-Set breakpoints in DevTools to pause execution:
-
-1. Open Sources tab
-2. Click line number to set breakpoint
-3. Code pauses when it reaches that line
-4. Inspect variables and step through code
-
-## Call Stack
-
-Shows the sequence of function calls that led to the current point.
-
-## Debugging Tips
-
-1. **Use console.log()** to track variable values
-2. **Check the Console** for error messages
-3. **Use breakpoints** to pause execution
-4. **Read error messages** carefully
-5. **Check data types** with typeof
-6. **Use debugger statement**: \`debugger;\` pauses execution
-
-## Mini Exercise
-
-Add console.log statements to debug a function.`,
+**Task 2**: Write an arrow function isEven(n) that returns true if n is even. Test it.`,
         contentArray: [
-          "console.log: output values",
-          "console.error, console.warn: different log levels",
-          "Chrome DevTools: F12 or Cmd+Option+I",
-          "Breakpoints: pause execution",
-          "Call stack: shows function call sequence",
+          "Arrow function: (args) => expression",
+          "Single argument: parentheses optional",
+          "No arguments: parentheses required",
+          "Multiline: curly braces + explicit return",
+          "Shorter syntax than function expressions",
         ],
         type: "Text",
         duration: 60,
         points: 100,
         order: 17,
+      },
+      {
+        name: "Lesson 18: Code Quality (Debugging & Style)",
+        content: `# Code Quality (Debugging & Style)
+
+## Focus
+Finding errors and writing readable code.
+
+## Lesson Content
+
+**Debugging**: The art of fixing errors.
+
+**Sources**: Syntax errors (typos) vs. Logic errors (wrong math).
+
+**The debugger command**: Placing debugger; in your code pauses execution if the developer tools are open.
+
+**Chrome DevTools**: The "Sources" tab allows you to step through code line-by-line, watch variables, and see the "Call Stack".
+
+## Coding Style
+
+- Use camelCase.
+- Spaces around operators (x = y + 1, not x=y+1).
+- Proper indentation (usually 2 or 4 spaces).
+
+## Comments
+
+**Good comments** explain why, not what.
+
+**Bad**: // This adds a and b.
+
+**Good**: // Uses a recursive algorithm because X....
+
+## Examples
+
+\`\`\`javascript
+// Good style
+function calculateTotal(items) {
+  let total = 0;
+  for (let item of items) {
+    total += item.price;
+  }
+  return total;
+}
+
+// Using debugger
+function findBug() {
+  let x = 10;
+  debugger; // Execution pauses here
+  let y = x * 2;
+  return y;
+}
+\`\`\`
+
+## Mini Practice
+
+1. Write a script with a purposeful bug (e.g., infinite loop or wrong math).
+
+2. Add debugger; before the bug.
+
+3. Open Chrome DevTools (F12), run the code, and use the "Step Over" button.
+
+## Coding Tasks
+
+**Task 1**: Take a "messy" code snippet (no spaces, bad indentation) and rewrite it using "The Art of Programming" style guide.
+
+**Task 2**: Write a function pow(x, n) but introduce a logic error (e.g., use + instead of *). Use the debugger to find it.`,
+        contentArray: [
+          "Debugging: finding and fixing errors",
+          "Syntax errors vs logic errors",
+          "debugger; pauses execution",
+          "Chrome DevTools Sources tab for debugging",
+          "Coding style: camelCase, spaces, indentation",
+          "Good comments explain why, not what",
+        ],
+        type: "Text",
+        duration: 60,
+        points: 100,
+        order: 18,
+      },
+      {
+        name: "Lesson 19: Objects I (Basics)",
+        content: `# Objects I (Basics)
+
+## Focus
+Storing collections of data.
+
+## Lesson Content
+
+**Object Literal**: let user = { name: "John", age: 30 };.
+
+**Properties**: A key:value pair. Key is always a string (or Symbol). Value can be anything.
+
+**Access**:
+- Dot notation: user.name (Key must be a valid variable identifier).
+- Square brackets: user["name"] (Key can be any string, e.g., "likes birds").
+
+**Computed Properties**: let key = "age"; let user = { [key]: 30 };.
+
+**Property Shorthand**: function makeUser(name, age) { return { name, age }; } (instead of name: name).
+
+**delete**: Removes a property. delete user.age.
+
+**in operator**: Checks existence. "age" in user returns true.
+
+## Examples
+
+\`\`\`javascript
+// Object literal
+let user = {
+  name: "John",
+  age: 30,
+  "likes coding": true
+};
+
+// Access
+console.log(user.name);              // "John" (dot notation)
+console.log(user["likes coding"]);  // true (bracket notation)
+
+// Computed properties
+let key = "age";
+let person = { [key]: 30 };
+
+// Property shorthand
+function makeUser(name, age) {
+  return { name, age }; // Same as { name: name, age: age }
+}
+
+// Checking existence
+console.log("age" in user); // true
+console.log("address" in user); // false
+
+// Deleting
+delete user.age;
+\`\`\`
+
+## Mini Practice
+
+1. Create an object me with name, age, and "likes coding".
+
+2. Log me["likes coding"].
+
+3. Check if "address" exists in your object using in.
+
+## Coding Tasks
+
+**Task 1**: Write a function isEmpty(obj) which returns true if the object has no properties, false otherwise.
+
+**Task 2**: Create an object with salaries: let salaries = { John: 100, Ann: 160, Pete: 130 };. Write a loop to sum them all.`,
+        contentArray: [
+          "Object literal: { key: value }",
+          "Access: user.name (dot) or user['name'] (bracket)",
+          "Computed properties: { [key]: value }",
+          "Property shorthand: { name, age }",
+          "delete: removes property",
+          "in operator: checks property existence",
+        ],
+        type: "Text",
+        duration: 60,
+        points: 100,
+        order: 19,
+      },
+      {
+        name: "Lesson 20: Objects II (References)",
+        content: `# Objects II (References)
+
+## Focus
+How objects are stored in memory (Crucial concept).
+
+## Lesson Content
+
+**Primitives**: Copied by value. a = 5; b = a. If a changes, b does not.
+
+**Objects**: Stored by reference.
+
+The variable doesn't store the object; it stores the address (reference) to the object in memory.
+
+let user = {name: "John"}; let admin = user;
+
+If you change admin.name, user.name also changes! They look at the same object.
+
+**Comparison**: {} == {} is false. Two distinct objects are never equal, even if they are empty. They have different memory addresses.
+
+**Const Objects**: const user = {name: "John"}. You can change user.name. You cannot do user = ... (reassign the variable).
+
+## Examples
+
+\`\`\`javascript
+// Primitives (copied by value)
+let a = 5;
+let b = a;
+a = 10;
+console.log(b); // 5 (unchanged)
+
+// Objects (copied by reference)
+let user = { name: "John" };
+let admin = user;
+admin.name = "Jane";
+console.log(user.name); // "Jane" (changed!)
+
+// Comparison
+let obj1 = {};
+let obj2 = {};
+console.log(obj1 == obj2); // false (different references)
+
+// Const objects
+const person = { name: "John" };
+person.name = "Jane"; // OK - can change properties
+// person = {}; // Error - cannot reassign
+\`\`\`
+
+## Mini Practice
+
+1. Create object a. Let b = a. Change a property in b. Log a.
+
+2. Compare let a = {}; let b = {}; alert(a == b).
+
+## Coding Tasks
+
+**Task 1**: Create an object calculator with three methods: read() (prompts for two values), sum(), and mul(). (This requires this keyword - a teaser for Intermediate!).
+
+**Task 2**: Create a function multiplyNumeric(obj) that multiplies all numeric properties of obj by 2.`,
+        contentArray: [
+          "Primitives: copied by value",
+          "Objects: stored by reference",
+          "Copying object variable copies reference, not data",
+          "Two distinct objects never equal (different references)",
+          "const objects: can change properties, cannot reassign variable",
+        ],
+        type: "Text",
+        duration: 60,
+        points: 100,
+        order: 20,
       },
     ];
 
@@ -1576,8 +1568,8 @@ Add console.log statements to debug a function.`,
     }
     console.log(`✅ Created ${lessons.length} lessons`);
 
-    // Create quizzes for lessons that need them (Lessons 1, 3, 5, 7, 9, 11, 13, 15, 17)
-    const quizLessons = [0, 2, 4, 6, 8, 10, 12, 14, 16]; // Indices for lessons 1, 3, 5, 7, 9, 11, 13, 15, 17
+    // Create quizzes for all lessons (every lesson gets a quiz)
+    const quizLessons = Array.from({ length: lessons.length }, (_, i) => i); // All lesson indices (0-19)
 
     for (const lessonIndex of quizLessons) {
       const lesson = lessons[lessonIndex];
@@ -1593,9 +1585,11 @@ Add console.log statements to debug a function.`,
       });
 
       // Create questions based on lesson content
-      let questions = [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let questions: any[] = [];
       
       // Helper function to add coding questions with difficulty levels
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const addCodingQuestions = (baseQuestions: any[], lessonName: string, lessonOrder: number) => {
         // Determine difficulty based on lesson order
         // Early lessons (1-5): Easy to Medium
@@ -1983,25 +1977,109 @@ Add console.log statements to debug a function.`,
           },
         ];
       } else {
-        // Generic questions for other lessons - create some basic MCQ questions
-        questions = [
+        // Generate generic but relevant MCQ questions for all other lessons
+        // Create 8 MCQ questions based on lesson content
+        questions = [];
+        
+        // Create 8 relevant MCQ questions for each lesson
+        const questionTemplates = [
           {
-            questionText: `What is a key concept in ${lesson.name}?`,
+            questionText: `Which of the following is a key topic covered in "${lesson.name}"?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "A fundamental concept from this lesson" },
+              { id: "opt2", type: "mcq", content: "An advanced topic not covered yet" },
+              { id: "opt3", type: "mcq", content: "A topic from a different lesson" },
+            ],
+            answer: { type: "mcq", content: "A fundamental concept from this lesson", optionId: "opt1" },
+            explanation: `This question tests your understanding of the main topics in ${lesson.name}.`,
+          },
+          {
+            questionText: `In "${lesson.name}", what is the primary focus?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Understanding core JavaScript concepts" },
+              { id: "opt2", type: "mcq", content: "Advanced programming techniques" },
+              { id: "opt3", type: "mcq", content: "Framework-specific knowledge" },
+            ],
+            answer: { type: "mcq", content: "Understanding core JavaScript concepts", optionId: "opt1" },
+            explanation: `This lesson focuses on fundamental JavaScript concepts essential for beginners.`,
+          },
+          {
+            questionText: `What should you practice after completing "${lesson.name}"?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Apply the concepts through coding exercises" },
+              { id: "opt2", type: "mcq", content: "Skip to advanced topics" },
+              { id: "opt3", type: "mcq", content: "Move to a different programming language" },
+            ],
+            answer: { type: "mcq", content: "Apply the concepts through coding exercises", optionId: "opt1" },
+            explanation: "Practice is essential to master the concepts covered in this lesson.",
+          },
+          {
+            questionText: `Which statement best describes "${lesson.name}"?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "It covers important JavaScript fundamentals" },
+              { id: "opt2", type: "mcq", content: "It is optional for beginners" },
+              { id: "opt3", type: "mcq", content: "It only applies to advanced developers" },
+            ],
+            answer: { type: "mcq", content: "It covers important JavaScript fundamentals", optionId: "opt1" },
+            explanation: `This lesson is part of the core JavaScript beginner curriculum.`,
+          },
+          {
+            questionText: `What is the best way to learn from "${lesson.name}"?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Read the content, practice examples, and complete exercises" },
+              { id: "opt2", type: "mcq", content: "Skip the examples and go straight to coding" },
+              { id: "opt3", type: "mcq", content: "Only read the theory without practicing" },
+            ],
+            answer: { type: "mcq", content: "Read the content, practice examples, and complete exercises", optionId: "opt1" },
+            explanation: "Active learning through reading, practicing, and completing exercises is the most effective approach.",
+          },
+          {
+            questionText: `After "${lesson.name}", what should you do next?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Complete the quiz and move to the next lesson" },
+              { id: "opt2", type: "mcq", content: "Skip the quiz and jump ahead" },
+              { id: "opt3", type: "mcq", content: "Review previous lessons only" },
+            ],
+            answer: { type: "mcq", content: "Complete the quiz and move to the next lesson", optionId: "opt1" },
+            explanation: "Completing the quiz helps reinforce your understanding before moving forward.",
+          },
+          {
+            questionText: `What type of knowledge does "${lesson.name}" provide?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Practical JavaScript skills" },
+              { id: "opt2", type: "mcq", content: "Theoretical concepts only" },
+              { id: "opt3", type: "mcq", content: "Framework-specific knowledge" },
+            ],
+            answer: { type: "mcq", content: "Practical JavaScript skills", optionId: "opt1" },
+            explanation: "This lesson provides practical skills that you can apply in real JavaScript programming.",
+          },
+          {
+            questionText: `How important is "${lesson.name}" for JavaScript beginners?`,
+            options: [
+              { id: "opt1", type: "mcq", content: "Very important - it's part of the core curriculum" },
+              { id: "opt2", type: "mcq", content: "Optional - can be skipped" },
+              { id: "opt3", type: "mcq", content: "Only for advanced learners" },
+            ],
+            answer: { type: "mcq", content: "Very important - it's part of the core curriculum", optionId: "opt1" },
+            explanation: `This lesson is essential for building a strong foundation in JavaScript.`,
+          },
+        ];
+        
+        // Add all 8 questions
+        questionTemplates.forEach((template, index) => {
+          questions.push({
+            questionText: template.questionText,
             type: "mcq",
             quizId: quiz._id,
             lessonId: lesson._id,
             moduleId: jsModule._id,
             points: 10,
-            order: 1,
-            options: [
-              { id: "opt1", type: "mcq", content: "Option A" },
-              { id: "opt2", type: "mcq", content: "Option B" },
-              { id: "opt3", type: "mcq", content: "Option C" },
-            ],
-            answer: { type: "mcq", content: "Option A", optionId: "opt1" },
-            explanation: "This is a sample question for the lesson.",
-          },
-        ];
+            order: index + 1,
+            options: template.options,
+            answer: template.answer,
+            explanation: template.explanation,
+          });
+        });
       }
 
       // Add coding questions with difficulty levels to all quizzes

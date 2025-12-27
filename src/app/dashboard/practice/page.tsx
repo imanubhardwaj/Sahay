@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
 import { Button } from "@mui/material";
@@ -46,8 +47,9 @@ const LANGUAGE_TECH_CATEGORIES: Record<string, string[]> = {
   Python: ["Array", "Tuple", "Dictionary", "List", "Async/Await"],
 };
 
-export default function PracticePage() {
+function PracticePageContent() {
   const { user, isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [problems, setProblems] = useState<CodingProblem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -78,6 +80,7 @@ export default function PracticePage() {
       error?: string;
     }>;
   } | null>(null);
+  const [isLessonChallenge, setIsLessonChallenge] = useState(false);
 
   // Filter categories based on selected language/tech
   const availableCategories = useMemo(() => {
@@ -161,13 +164,70 @@ export default function PracticePage() {
     }
   }, [selectedDifficulty, selectedCategory]);
 
+  // Check if coming from lesson page with coding challenge
   useEffect(() => {
-    if (!authLoading && user) {
+    const fromLesson = searchParams.get("fromLesson");
+    if (fromLesson === "true") {
+      const task1 = searchParams.get("task1");
+      const task2 = searchParams.get("task2");
+      const lessonTitle = searchParams.get("lessonTitle") || "Coding Challenge";
+      const moduleLanguage = searchParams.get("language") as "javascript" | "python" | "typescript" | null;
+      const moduleName = searchParams.get("moduleName") || "";
+      
+      if (task1 || task2) {
+        setIsLessonChallenge(true);
+        
+        // Set language from module
+        if (moduleLanguage) {
+          setLanguage(moduleLanguage);
+        }
+        
+        // Create a temporary coding problem from the lesson challenge
+        const challengeDescription = `# ${lessonTitle}\n\n${
+          task1 ? `## Task 1\n${task1}\n\n` : ""
+        }${
+          task2 ? `## Task 2\n${task2}\n\n` : ""
+        }\n**Instructions:**\n- Write your solution in the code editor\n- Click "Run" to test your code\n- Make sure your code handles the requirements correctly`;
+
+        const lessonProblem: CodingProblem = {
+          _id: `lesson-challenge-${Date.now()}`,
+          title: `${lessonTitle} - Coding Challenge`,
+          description: challengeDescription,
+          difficulty: "medium",
+          category: moduleName || "Lesson Challenge",
+          tags: ["lesson", "practice"],
+          starterCode: {
+            [moduleLanguage || "javascript"]: moduleLanguage === "python"
+              ? `# Write your solution here\ndef solution():\n    # Your code here\n    pass`
+              : `// Write your solution here\nfunction solution() {\n  // Your code here\n  return null;\n}`,
+          },
+          testCases: [
+            {
+              input: "",
+              expectedOutput: "",
+              isHidden: false,
+            },
+          ],
+          hints: ["Review the lesson content for guidance", "Test your code step by step"],
+          points: 20,
+          solvedCount: 0,
+          attemptCount: 0,
+        };
+        
+        setSelectedProblem(lessonProblem);
+        setCode(lessonProblem.starterCode[moduleLanguage || "javascript"] || "");
+        setLoading(false);
+      }
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!authLoading && user && !isLessonChallenge) {
       fetchProblems();
     } else if (!authLoading && !user) {
       setLoading(false);
     }
-  }, [user, authLoading, fetchProblems]);
+  }, [user, authLoading, fetchProblems, isLessonChallenge]);
 
   const selectProblem = (problem: CodingProblem) => {
     setSelectedProblem(problem);
@@ -217,6 +277,67 @@ function solution(input: string): string {
     setTestResults(null);
 
     try {
+      // For lesson challenges (no test cases), just execute and show output
+      if (isLessonChallenge && selectedProblem._id.startsWith("lesson-challenge-")) {
+        try {
+          // Simple execution for lesson challenges
+          const wrappedCode = `
+            "use strict";
+            ${code}
+            
+            // Try to execute common function names
+            let __result__ = null;
+            try {
+              if (typeof solution === 'function') {
+                __result__ = solution();
+              } else if (typeof main === 'function') {
+                __result__ = main();
+              } else {
+                __result__ = "Code executed successfully. Review your solution against the requirements.";
+              }
+            } catch (e) {
+              throw e;
+            }
+            __result__;
+          `;
+          
+          const fn = new Function(wrappedCode);
+          const result = fn();
+          
+          setOutput(`✅ Code executed successfully!\n\nOutput: ${result !== undefined && result !== null ? String(result) : "No return value"}\n\nNote: For lesson challenges, verify your solution matches the requirements manually.`);
+          setTestResults({
+            passed: true,
+            testsPassed: 1,
+            totalTests: 1,
+            testResults: [{
+              input: "N/A",
+              expectedOutput: "N/A",
+              actualOutput: String(result || "Code executed"),
+              passed: true,
+            }],
+          });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          setOutput(`⚠️ Code Error:\n${errorMessage}`);
+          setTestResults({
+            passed: false,
+            testsPassed: 0,
+            totalTests: 1,
+            testResults: [{
+              input: "N/A",
+              expectedOutput: "N/A",
+              actualOutput: "",
+              passed: false,
+              error: errorMessage,
+            }],
+          });
+        } finally {
+          setIsRunning(false);
+        }
+        return;
+      }
+
+      // For regular coding problems with test cases
       const { getAuthHeaders } = await import("@/lib/token-storage");
       const response = await fetch("/api/coding-problems/submit", {
         method: "POST",
@@ -777,5 +898,19 @@ function solution(input: string): string {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
+        </div>
+      </DashboardLayout>
+    }>
+      <PracticePageContent />
+    </Suspense>
   );
 }

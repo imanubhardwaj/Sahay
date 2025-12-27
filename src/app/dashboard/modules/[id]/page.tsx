@@ -6,6 +6,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
 import LessonContentRenderer from "@/components/ui/LessonContentRenderer";
+import { Button } from "../../../../../packages/ui";
+import {
+  extractCodingChallenge,
+  getModuleLanguage,
+  createProblemDescription,
+} from "@/lib/lesson-utils";
 
 interface ModuleData {
   _id: string;
@@ -337,12 +343,13 @@ export default function SecureModulePage() {
             <p className="text-sm text-gray-500 mb-6">
               The module you&apos;re looking for doesn&apos;t exist.
             </p>
-            <button
+            <Button
+              variant="text"
               onClick={() => router.push("/dashboard/explore")}
-              className="px-5 py-2 bg-white text-black hover:text-black hover:bg-white cursor-pointer rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="!px-5 !py-2 !bg-white !text-black !hover:text-black !hover:bg-white !cursor-pointer !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors"
             >
               Back to Explore
-            </button>
+            </Button>
           </div>
         </div>
       </DashboardLayout>
@@ -353,9 +360,9 @@ export default function SecureModulePage() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto px-4 py-6 pb-32 relative">
         {/* Navigation */}
-        <button
+        <Button
           onClick={() => router.push("/dashboard/explore")}
-          className="inline-flex items-center gap-1.5 text-gray-500 hover:text-white mb-6 transition-colors text-sm cursor-pointer"
+          className="!inline-flex !items-center !gap-1.5 !text-gray-500 !hover:text-white !mb-6 !transition-colors !text-sm !cursor-pointer"
         >
           <svg
             className="w-4 h-4"
@@ -371,7 +378,7 @@ export default function SecureModulePage() {
             />
           </svg>
           Back
-        </button>
+        </Button>
 
         {/* Main Content */}
         {!hasMoreLessons ? (
@@ -401,12 +408,13 @@ export default function SecureModulePage() {
             <p className="text-base font-medium text-amber-400 mb-6">
               {progress?.pointsEarned || 0} points earned
             </p>
-            <button
+            <Button
+              variant="text"
               onClick={() => router.push("/dashboard/explore")}
-              className="px-6 py-2.5 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="!px-6 !py-2.5 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors"
             >
               Explore More
-            </button>
+            </Button>
           </div>
         ) : showResults && quizResults ? (
           /* Quiz/Lesson Results */
@@ -561,19 +569,26 @@ export default function SecureModulePage() {
 
             {/* Action Buttons */}
             <div className="p-5 pt-0 flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={handleNextLesson}
-                className="flex-1 px-5 py-2.5 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-              >
-                Continue →
-              </button>
-              {currentLesson?.hasQuiz && (
-                <button
-                  onClick={handleStartQuiz}
-                  className="px-5 py-2.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              {/* Only show Continue button if quiz is passed (score >= 80%) */}
+              {quizResults.quizResults.isPassed && (
+                <Button
+                  variant="text"
+                  onClick={handleNextLesson}
+                  className="!flex-1 !px-5 !py-2.5 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors"
                 >
-                  Retake
-                </button>
+                  Continue →
+                </Button>
+              )}
+              {currentLesson?.hasQuiz && (
+                <Button
+                  variant="text"
+                  onClick={handleStartQuiz}
+                  className={`px-5 py-2.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors ${
+                    quizResults.quizResults.isPassed ? '' : '!flex-1'
+                  }`}
+                >
+                  {quizResults.quizResults.isPassed ? 'Retake' : 'Retake Quiz'}
+                </Button>
               )}
             </div>
           </div>
@@ -630,13 +645,27 @@ export default function SecureModulePage() {
                           {currentQuestionIndex + 1}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-white leading-relaxed">
-                            {question.questionText || question.question}
-                          </h3>
-                          {question.points && (
-                            <p className="text-[10px] text-gray-500 mt-1">
-                              {question.points} points
-                            </p>
+                          <div className="mb-3">
+                            <h3 className="text-sm font-medium text-white leading-relaxed mb-2">
+                              {question.questionText || question.question}
+                            </h3>
+                            {question.points && (
+                              <p className="text-[10px] text-gray-500">
+                                {question.points} points
+                              </p>
+                            )}
+                          </div>
+                          {/* Show full question content in a formatted box for better readability */}
+                          {(question.questionText || question.question) && 
+                           (question.type === 'code' || question.type === 'subjective') && (
+                            <div className="mt-3 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                              <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">
+                                Question Details:
+                              </p>
+                              <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                {question.questionText || question.question}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -658,23 +687,23 @@ export default function SecureModulePage() {
                                       option._id || option.id
                                     )
                                   }
-                                  className={`w-full text-left p-3 rounded-lg border transition-all ${
+                                  className={`!w-full !text-left !p-3 !flex !items-start !gap-3 !rounded-lg !border !transition-all ${
                                     isSelected
-                                      ? "border-white bg-white/5"
-                                      : "border-gray-800 hover:border-gray-700 hover:bg-gray-800/50"
+                                      ? "!border-white !bg-white/5"
+                                      : "!border-gray-800 !hover:border-gray-700 !hover:bg-gray-800/50"
                                   }`}
                                 >
-                                  <div className="flex items-center gap-3">
+                                  <div className="!flex !items-center !gap-3">
                                     <div
-                                      className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium ${
+                                      className={`!flex-shrink-0 !w-6 !h-6 !rounded-md !flex !items-center !justify-center !text-xs !font-medium ${
                                         isSelected
-                                          ? "bg-white text-black"
-                                          : "bg-gray-800 text-gray-500"
+                                          ? "!bg-white !text-black"
+                                          : "!bg-gray-800 !text-gray-500"
                                       }`}
                                     >
                                       {String.fromCharCode(65 + index)}
                                     </div>
-                                    <span className="text-sm text-gray-300">
+                                    <span className="!text-sm !text-gray-300">
                                       {option.text || option.content}
                                     </span>
                                   </div>
@@ -718,35 +747,37 @@ export default function SecureModulePage() {
                     {/* Navigation Buttons */}
                     <div className="flex gap-2 pt-5 border-t border-gray-800">
                       {currentQuestionIndex > 0 && (
-                        <button
+                        <Button
+                          variant="text"
                           onClick={() =>
                             setCurrentQuestionIndex(currentQuestionIndex - 1)
                           }
-                          className="px-4 py-2 border border-gray-700 text-gray-400 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                          className="!px-4 !py-2 !border !border-gray-700 !text-gray-400 !rounded-lg !text-sm !font-medium !hover:bg-gray-800 !transition-colors"
                         >
                           ← Previous
-                        </button>
+                        </Button>
                       )}
 
                       {currentQuestionIndex < quizData.questions.length - 1 ? (
-                        <button
+                        <Button
                           onClick={() =>
                             setCurrentQuestionIndex(currentQuestionIndex + 1)
                           }
-                          className="ml-auto px-4 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                          className="!ml-auto !px-4 !py-2 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors"
                         >
                           Next →
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="text"
                           onClick={handleSubmitQuiz}
-                          className="ml-auto px-5 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="!ml-auto !px-5 !py-2 !bg-emerald-500 !text-white !rounded-lg !text-sm !font-medium !hover:bg-emerald-600 !transition-colors !disabled:opacity-50 !disabled:cursor-not-allowed"
                           disabled={
                             userAnswers.length !== quizData.questions.length
                           }
                         >
                           Submit
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -831,10 +862,41 @@ export default function SecureModulePage() {
               {/* Practice button - shows when lesson content has code blocks or exercises */}
               {(currentLesson.type === "Code" ||
                 currentLesson.content?.includes("```") ||
-                currentLesson.content?.toLowerCase().includes("exercise")) && (
-                <button
-                  onClick={() => router.push("/dashboard/practice")}
-                  className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors inline-flex items-center gap-2 border border-gray-700"
+                currentLesson.content?.toLowerCase().includes("exercise") ||
+                currentLesson.content?.includes("Coding Challenge")) && (
+                <Button
+                  onClick={() => {
+                    // Extract coding challenge from lesson content
+                    const challenge = currentLesson.content
+                      ? extractCodingChallenge(currentLesson.content)
+                      : null;
+
+                    // Get module language
+                    const language = moduleData
+                      ? getModuleLanguage(moduleData.name)
+                      : "javascript";
+
+                    // Navigate to practice page with challenge data
+                    const params = new URLSearchParams();
+                    if (challenge) {
+                      params.set("fromLesson", "true");
+                      params.set("lessonId", currentLesson._id);
+                      params.set("lessonTitle", currentLesson.title);
+                      if (challenge.task1) params.set("task1", challenge.task1);
+                      if (challenge.task2) params.set("task2", challenge.task2);
+                      params.set("language", language);
+                      if (moduleData) {
+                        params.set("moduleName", moduleData.name);
+                      }
+                    }
+
+                    router.push(
+                      `/dashboard/practice${
+                        params.toString() ? `?${params.toString()}` : ""
+                      }`
+                    );
+                  }}
+                  className="!px-4 !py-2 !bg-gray-800 !text-white !rounded-lg !text-sm !font-medium !hover:bg-gray-700 !transition-colors !inline-flex !items-center !gap-2 !border !border-gray-700"
                 >
                   <svg
                     className="w-4 h-4"
@@ -850,13 +912,13 @@ export default function SecureModulePage() {
                     />
                   </svg>
                   Practice Code
-                </button>
+                </Button>
               )}
               <div className="flex gap-3 ml-auto">
                 {currentLesson.hasQuiz ? (
-                  <button
+                  <Button
                     onClick={handleStartQuiz}
-                    className="px-5 py-2.5 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
+                    className="!px-5 !py-2.5 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors !inline-flex !items-center !gap-2"
                   >
                     <svg
                       className="w-4 h-4"
@@ -872,11 +934,11 @@ export default function SecureModulePage() {
                       />
                     </svg>
                     Take Quiz
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={handleCompleteLesson}
-                    className="px-5 py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors inline-flex items-center gap-2 hover:text-white hover:bg-emerald-600 cursor-pointer"
+                    className="!px-5 !py-2.5 !bg-emerald-500 !text-white !rounded-lg !text-sm !font-medium !hover:bg-emerald-600 !transition-colors !inline-flex !items-center !gap-2 !hover:text-white !hover:bg-emerald-600 !cursor-pointer"
                   >
                     <svg
                       className="w-4 h-4"
@@ -892,7 +954,7 @@ export default function SecureModulePage() {
                       />
                     </svg>
                     Complete
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -921,70 +983,70 @@ export default function SecureModulePage() {
             <p className="text-sm text-gray-500 mb-6">
               Check back soon for new content.
             </p>
-            <button
+            <Button
               onClick={() => router.push("/dashboard/explore")}
-              className="px-5 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="!px-5 !py-2 !bg-white !text-black !rounded-lg !text-sm !font-medium !hover:bg-gray-100 !transition-colors"
             >
               Back to Explore
-            </button>
+            </Button>
           </div>
         )}
         {/* Module Header - Fixed at Bottom */}
         {moduleData && (
           <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 shadow-lg w-full">
-              <div className="w-full mx-auto px-10 py-4 max-w-6xl">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ml-36">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <h1 className="text-sm font-semibold text-white truncate">
-                        {moduleData.name}
-                      </h1>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider flex-shrink-0 ${
-                          moduleData.level === "Beginner"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : moduleData.level === "Intermediate"
-                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                        }`}
-                      >
-                        {moduleData.level}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 truncate">
-                      {moduleData.description}
-                    </p>
+            <div className="w-full mx-auto px-10 py-4 max-w-6xl">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ml-36">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <h1 className="text-sm font-semibold text-white truncate">
+                      {moduleData.name}
+                    </h1>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider flex-shrink-0 ${
+                        moduleData.level === "Beginner"
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : moduleData.level === "Intermediate"
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                      }`}
+                    >
+                      {moduleData.level}
+                    </span>
                   </div>
+                  <p className="text-xs text-gray-500 truncate">
+                    {moduleData.description}
+                  </p>
                 </div>
+              </div>
 
-                {/* Progress Bar */}
-                <div className="mt-3 pt-3 border-t border-gray-800 ml-36">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="text-gray-500">Module Progress</span>
-                    <span className="text-white font-medium">
-                      {progress?.completionPercentage || 0}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded-full h-1.5">
-                    <div
-                      className="bg-white h-1.5 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${progress?.completionPercentage || 0}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
-                    <span>
-                      {progress?.completedLessonCount || 0}/
-                      {moduleData.totalLessons} lessons
-                    </span>
-                    <span className="text-amber-400">
-                      {progress?.pointsEarned || 0} pts earned
-                    </span>
-                  </div>
+              {/* Progress Bar */}
+              <div className="mt-3 pt-3 border-t border-gray-800 ml-36">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-gray-500">Module Progress</span>
+                  <span className="text-white font-medium">
+                    {progress?.completionPercentage || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-1.5">
+                  <div
+                    className="bg-white h-1.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${progress?.completionPercentage || 0}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
+                  <span>
+                    {progress?.completedLessonCount || 0}/
+                    {moduleData.totalLessons} lessons
+                  </span>
+                  <span className="text-amber-400">
+                    {progress?.pointsEarned || 0} pts earned
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

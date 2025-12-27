@@ -11,6 +11,7 @@ import {
   calculateCompletionBonus,
   getMentorshipCallCost,
   calculateFirstCallPrice,
+  getMockInterviewCost,
   TRANSACTION_DESCRIPTIONS,
   type CourseLevel,
   type QuestionDifficulty,
@@ -670,6 +671,68 @@ export async function deductMentorshipPoints(
     };
   } catch (error) {
     console.error('Error deducting mentorship points:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deduct points for mock interview booking
+ * @param userId - User ID
+ * @param bookingId - Booking ID
+ * @param mentorName - Mentor name for description
+ * @returns Result object with success status and balance info
+ */
+export async function deductMockInterviewPoints(
+  userId: string,
+  bookingId: string,
+  mentorName: string
+): Promise<{
+  success: boolean;
+  points: number;
+  newBalance: number;
+  error?: string;
+}> {
+  try {
+    await connectDB();
+    
+    const pointsToDeduct = getMockInterviewCost();
+    
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = await createUserWallet(userId, false);
+    }
+
+    // Check if user has enough balance
+    if (wallet.balance < pointsToDeduct) {
+      return {
+        success: false,
+        points: 0,
+        newBalance: wallet.balance,
+        error: `Insufficient balance. You need ${pointsToDeduct} points but have ${wallet.balance} points.`,
+      };
+    }
+
+    wallet.balance -= pointsToDeduct;
+    wallet.totalSpent += pointsToDeduct;
+    await wallet.save();
+
+    await Transaction.create({
+      userId,
+      walletId: wallet._id,
+      type: TRANSACTION_TYPE.Redeem,
+      points: pointsToDeduct,
+      source: TRANSACTION_SOURCE.MockInterview,
+      description: TRANSACTION_DESCRIPTIONS.MOCK_INTERVIEW(mentorName),
+      referenceId: bookingId,
+    });
+
+    return {
+      success: true,
+      points: pointsToDeduct,
+      newBalance: wallet.balance,
+    };
+  } catch (error) {
+    console.error('Error deducting mock interview points:', error);
     throw error;
   }
 }
