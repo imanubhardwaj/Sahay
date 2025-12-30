@@ -4,15 +4,50 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { FaStar, FaTimes, FaClock, FaCalendarAlt, FaLinkedin, FaGithub, FaGlobe, FaFilter, FaSort, FaUser } from "react-icons/fa";
+import {
+  FaStar,
+  FaTimes,
+  FaClock,
+  FaCalendarAlt,
+  FaLinkedin,
+  FaGithub,
+  FaGlobe,
+  FaFilter,
+  FaSort,
+  FaUser,
+} from "react-icons/fa";
 import { HiSparkles, HiBadgeCheck, HiLightningBolt } from "react-icons/hi";
 import Image from "next/image";
 import { Calendar } from "@/components/ui/Calendar";
-import { CompleteProfileModal, useProfileGating } from "@/components/CompleteProfileModal";
-import MentorCard, { MentorProfile as MentorProfileType } from "@/components/MentorCard";
+import {
+  CompleteProfileModal,
+  useProfileGating,
+} from "@/components/CompleteProfileModal";
+import MentorCard, {
+  MentorProfile as MentorProfileType,
+} from "@/components/MentorCard";
 import { CompanyBadge, SkillBadge } from "@/components/MentorCard";
 
 type MentorProfile = MentorProfileType;
+
+// Helper function to get mentor display name
+function getMentorDisplayName(mentor: MentorProfile): string {
+  // Try direct fields first
+  if (
+    (mentor as MentorProfile).firstName &&
+    (mentor as MentorProfile).lastName
+  ) {
+    return `${(mentor as MentorProfile).firstName} ${
+      (mentor as MentorProfile).lastName
+    }`;
+  }
+  // Try userId fields
+  if (mentor.userId?.firstName && mentor.userId?.lastName) {
+    return `${mentor.userId.firstName} ${mentor.userId.lastName}`;
+  }
+  // Fallback to headline/roleh
+  return mentor.headline || mentor.currentRole || "Mentor";
+}
 
 interface Schedule {
   _id: string;
@@ -30,27 +65,33 @@ interface Schedule {
   isActive: boolean;
 }
 
-
 export default function MentorsPage() {
   const { user, refreshUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [mentors, setMentors] = useState<MentorProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMentor, setSelectedMentor] = useState<MentorProfile | null>(null);
+  const [selectedMentor, setSelectedMentor] = useState<MentorProfile | null>(
+    null
+  );
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
+    null
+  );
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingNotes, setBookingNotes] = useState("");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [sortBy, setSortBy] = useState<"relevance" | "rating" | "sessions" | "experience">("relevance");
+  const [sortBy, setSortBy] = useState<
+    "relevance" | "rating" | "sessions" | "experience"
+  >("relevance");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
-  
+
   // Profile gating for booking mentors
-  const { showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
+  const { showModal, setShowModal, blockedAction, checkAndGate } =
+    useProfileGating();
 
   // Check if user is a mentor
   const isMentor = useMemo(() => {
@@ -60,62 +101,74 @@ export default function MentorsPage() {
   // Get user's skills for relevance sorting
   const userSkills = useMemo(() => {
     if (!user?.skills) return [];
-    return user.skills.map((s: { name?: string } | string) => 
-      typeof s === 'object' && s?.name ? s.name.toLowerCase() : (typeof s === 'string' ? s.toLowerCase() : '')
-    ).filter(Boolean);
+    return user.skills
+      .map((s: { name?: string } | string) =>
+        typeof s === "object" && s?.name
+          ? s.name.toLowerCase()
+          : typeof s === "string"
+          ? s.toLowerCase()
+          : ""
+      )
+      .filter(Boolean);
   }, [user?.skills]);
 
   // Get all unique expertise areas
   const allExpertise = useMemo(() => {
     const expertise = new Set<string>();
-    mentors.forEach(m => m.expertise?.forEach(e => expertise.add(e)));
+    mentors.forEach((m) => m.expertise?.forEach((e) => expertise.add(e)));
     return Array.from(expertise).sort();
   }, [mentors]);
 
   // Calculate relevance score for a mentor
-  const calculateRelevanceScore = useCallback((mentor: MentorProfile): number => {
-    if (!mentor.expertise || userSkills.length === 0) return 0;
-    const mentorSkills = mentor.expertise.map(e => e.toLowerCase());
-    const matchingSkills = mentorSkills.filter(skill => 
-      userSkills.some((userSkill: string) => 
-        skill.includes(userSkill) || userSkill.includes(skill)
-      )
-    );
-    return matchingSkills.length;
-  }, [userSkills]);
+  const calculateRelevanceScore = useCallback(
+    (mentor: MentorProfile): number => {
+      if (!mentor.expertise || userSkills.length === 0) return 0;
+      const mentorSkills = mentor.expertise.map((e) => e.toLowerCase());
+      const matchingSkills = mentorSkills.filter((skill) =>
+        userSkills.some(
+          (userSkill: string) =>
+            skill.includes(userSkill) || userSkill.includes(skill)
+        )
+      );
+      return matchingSkills.length;
+    },
+    [userSkills]
+  );
 
   // Check if a skill matches user's skills
   const isMatchingSkill = (skill: string): boolean => {
     const normalizedSkill = skill.toLowerCase();
-    return userSkills.some((userSkill: string) => 
-      normalizedSkill.includes(userSkill) || userSkill.includes(normalizedSkill)
+    return userSkills.some(
+      (userSkill: string) =>
+        normalizedSkill.includes(userSkill) ||
+        userSkill.includes(normalizedSkill)
     );
   };
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    loadMentors();
-  }, [user, router, authLoading]);
-
-  const loadMentors = async () => {
+  const loadMentors = useCallback(async () => {
     try {
       setIsLoading(true);
       const { getAuthHeaders } = await import("@/lib/token-storage");
-      const response = await fetch("/api/mentor-profile?approved=true", {
+
+      const response = await fetch("/api/mentors", {
         headers: getAuthHeaders(),
         credentials: "include",
       });
       const result = await response.json();
 
+      console.log("Mentors API response:", result);
+
       if (result.success && result.data) {
-        const validMentors = (result.data as MentorProfile[])
-          .filter((mentor) => mentor.userId && mentor.isMentor && mentor.isApproved);
+        // Show all mentors - only filter by isMentor flag
+        const validMentors = (result.data as MentorProfile[]).filter(
+          (mentor) => mentor.isMentor
+        );
+        console.log(
+          `Setting ${validMentors.length} mentors (from ${result.data.length} total)`
+        );
         setMentors(validMentors);
       } else {
+        console.error("Failed to load mentors:", result.error);
         setMentors([]);
       }
     } catch (error) {
@@ -124,7 +177,16 @@ export default function MentorsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    loadMentors();
+  }, [user, router, authLoading, loadMentors]);
 
   const loadMentorSchedules = async (mentorId: string, date?: string) => {
     try {
@@ -142,34 +204,36 @@ export default function MentorsPage() {
       const result = await response.json();
 
       if (result.availableSlots) {
-        const availableSchedules = result.availableSlots.map((slot: {
-          scheduleId: string;
-          professionalId: string;
-          title: string;
-          description?: string;
-          date: string;
-          startTime: string;
-          endTime: string;
-          duration: number;
-          totalSpots: number;
-          currentBookings: number;
-          price: number;
-          sessionType: string;
-        }) => ({
-          _id: slot.scheduleId,
-          professionalId: slot.professionalId,
-          title: slot.title,
-          description: slot.description,
-          date: slot.date,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          duration: slot.duration,
-          maxBookings: slot.totalSpots,
-          currentBookings: slot.currentBookings,
-          price: slot.price,
-          sessionType: slot.sessionType,
-          isActive: true,
-        }));
+        const availableSchedules = result.availableSlots.map(
+          (slot: {
+            scheduleId: string;
+            professionalId: string;
+            title: string;
+            description?: string;
+            date: string;
+            startTime: string;
+            endTime: string;
+            duration: number;
+            totalSpots: number;
+            currentBookings: number;
+            price: number;
+            sessionType: string;
+          }) => ({
+            _id: slot.scheduleId,
+            professionalId: slot.professionalId,
+            title: slot.title,
+            description: slot.description,
+            date: slot.date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            duration: slot.duration,
+            maxBookings: slot.totalSpots,
+            currentBookings: slot.currentBookings,
+            price: slot.price,
+            sessionType: slot.sessionType,
+            isActive: true,
+          })
+        );
         setSchedules(availableSchedules);
       } else {
         setSchedules([]);
@@ -185,10 +249,14 @@ export default function MentorsPage() {
   const viewMentorDetails = async (mentor: MentorProfile) => {
     setSelectedMentor(mentor);
     setSelectedDate("");
+    // Only load schedules if mentor has a userId (for now, schedules require userId)
     if (mentor.userId?._id) {
       const today = new Date().toISOString().split("T")[0];
       setSelectedDate(today);
       await loadMentorSchedules(mentor.userId._id, today);
+    } else {
+      // Mentor without userId - can't load schedules but can still view profile
+      setSchedules([]);
     }
   };
 
@@ -209,7 +277,14 @@ export default function MentorsPage() {
   };
 
   const handleBooking = async () => {
-    if (!user || !selectedSchedule || !selectedMentor || !selectedMentor.userId?._id || isBooking) return;
+    if (
+      !user ||
+      !selectedSchedule ||
+      !selectedMentor ||
+      !selectedMentor.userId?._id ||
+      isBooking
+    )
+      return;
 
     try {
       setIsBooking(true);
@@ -241,7 +316,9 @@ export default function MentorsPage() {
       const result = await response.json();
 
       if (result.success) {
-        alert("✅ Booking request sent! You'll receive an email once approved.");
+        alert(
+          "✅ Booking request sent! You'll receive an email once approved."
+        );
         const mentorId = selectedMentor?.userId?._id;
         setShowBookingModal(false);
         setSelectedMentor(null);
@@ -265,7 +342,7 @@ export default function MentorsPage() {
     const filtered = mentors.filter((mentor) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const matches = 
+        const matches =
           mentor.headline?.toLowerCase().includes(q) ||
           mentor.expertise?.some((exp) => exp.toLowerCase().includes(q)) ||
           mentor.userId?.firstName?.toLowerCase().includes(q) ||
@@ -274,14 +351,14 @@ export default function MentorsPage() {
           mentor.currentCompany?.toLowerCase().includes(q);
         if (!matches) return false;
       }
-      
+
       if (selectedExpertise.length > 0) {
-        const hasExpertise = selectedExpertise.some(exp => 
+        const hasExpertise = selectedExpertise.some((exp) =>
           mentor.expertise?.includes(exp)
         );
         if (!hasExpertise) return false;
       }
-      
+
       return true;
     });
 
@@ -304,7 +381,13 @@ export default function MentorsPage() {
           return 0;
       }
     });
-  }, [mentors, searchQuery, selectedExpertise, sortBy, calculateRelevanceScore]);
+  }, [
+    mentors,
+    searchQuery,
+    selectedExpertise,
+    sortBy,
+    calculateRelevanceScore,
+  ]);
 
   if (authLoading || !user) {
     return (
@@ -324,7 +407,7 @@ export default function MentorsPage() {
         onClose={() => setShowModal(false)}
         blockedAction={blockedAction}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header with gradient */}
         <div className="mb-8">
@@ -333,8 +416,12 @@ export default function MentorsPage() {
               <HiSparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Find Your Mentor</h1>
-              <p className="text-slate-400">Connect with experienced professionals who match your skills</p>
+              <h1 className="text-3xl font-bold text-white">
+                Find Your Mentor
+              </h1>
+              <p className="text-slate-400">
+                Connect with experienced professionals who match your skills
+              </p>
             </div>
           </div>
         </div>
@@ -351,8 +438,18 @@ export default function MentorsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3.5 pl-12 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
               />
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
               {searchQuery && (
                 <button
@@ -402,7 +499,9 @@ export default function MentorsPage() {
           {showFilters && (
             <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-slate-300">Filter by Expertise</span>
+                <span className="text-sm font-medium text-slate-300">
+                  Filter by Expertise
+                </span>
                 {selectedExpertise.length > 0 && (
                   <button
                     onClick={() => setSelectedExpertise([])}
@@ -417,9 +516,9 @@ export default function MentorsPage() {
                   <button
                     key={exp}
                     onClick={() => {
-                      setSelectedExpertise(prev =>
+                      setSelectedExpertise((prev) =>
                         prev.includes(exp)
-                          ? prev.filter(e => e !== exp)
+                          ? prev.filter((e) => e !== exp)
                           : [...prev, exp]
                       );
                     }}
@@ -440,19 +539,27 @@ export default function MentorsPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-xl p-5">
-            <div className="text-2xl font-bold text-white">{mentors.length}</div>
+            <div className="text-2xl font-bold text-white">
+              {mentors.length}
+            </div>
             <div className="text-sm text-slate-400">Active Mentors</div>
           </div>
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-xl p-5">
-            <div className="text-2xl font-bold text-emerald-400">{mentors.filter((m) => m.zoomConnected).length}</div>
+            <div className="text-2xl font-bold text-emerald-400">
+              {mentors.filter((m) => m.zoomConnected).length}
+            </div>
             <div className="text-sm text-slate-400">Available Now</div>
           </div>
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-xl p-5">
-            <div className="text-2xl font-bold text-violet-400">{new Set(mentors.flatMap((m) => m.expertise || [])).size}</div>
+            <div className="text-2xl font-bold text-violet-400">
+              {new Set(mentors.flatMap((m) => m.expertise || [])).size}
+            </div>
             <div className="text-sm text-slate-400">Expertise Areas</div>
           </div>
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-xl p-5">
-            <div className="text-2xl font-bold text-amber-400">{mentors.reduce((sum, m) => sum + (m.completedSessions || 0), 0)}</div>
+            <div className="text-2xl font-bold text-amber-400">
+              {mentors.reduce((sum, m) => sum + (m.completedSessions || 0), 0)}
+            </div>
             <div className="text-sm text-slate-400">Sessions Completed</div>
           </div>
         </div>
@@ -462,14 +569,16 @@ export default function MentorsPage() {
           <div className="mb-6 px-4 py-3 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center gap-3">
             <HiLightningBolt className="w-5 h-5 text-violet-400" />
             <p className="text-sm text-violet-300">
-              <span className="font-medium">Mentor View:</span> Showing expert mentors for networking and growth opportunities.
+              <span className="font-medium">Mentor View:</span> Showing expert
+              mentors for networking and growth opportunities.
             </p>
           </div>
         ) : (
           <div className="mb-6 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
             <HiLightningBolt className="w-5 h-5 text-blue-400" />
             <p className="text-sm text-blue-300">
-              <span className="font-medium">Student View:</span> Showing all available mentors for booking.
+              <span className="font-medium">Student View:</span> Showing all
+              available mentors for booking.
             </p>
           </div>
         )}
@@ -479,7 +588,10 @@ export default function MentorsPage() {
           <div className="mb-6 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
             <HiLightningBolt className="w-5 h-5 text-emerald-400" />
             <p className="text-sm text-emerald-300">
-              Mentors are sorted by skills matching your profile. Skills highlighted in <span className="text-emerald-400 font-medium">green</span> match yours.
+              Mentors are sorted by skills matching your profile. Skills
+              highlighted in{" "}
+              <span className="text-emerald-400 font-medium">green</span> match
+              yours.
             </p>
           </div>
         )}
@@ -488,7 +600,10 @@ export default function MentorsPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 animate-pulse">
+              <div
+                key={i}
+                className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 animate-pulse"
+              >
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-16 h-16 bg-slate-800 rounded-xl" />
                   <div className="flex-1">
@@ -509,17 +624,21 @@ export default function MentorsPage() {
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center">
             <div className="text-5xl mb-4">👨‍🏫</div>
             <h3 className="text-xl font-semibold text-white mb-2">
-              {mentors.length === 0 ? "No mentors available" : "No mentors found"}
+              {mentors.length === 0
+                ? "No mentors available"
+                : "No mentors found"}
             </h3>
             <p className="text-slate-400">
-              {mentors.length === 0 ? "Check back soon!" : "Try adjusting your search or filters"}
+              {mentors.length === 0
+                ? "Check back soon!"
+                : "Try adjusting your search or filters"}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedMentors.map((mentor) => {
               const relevanceScore = calculateRelevanceScore(mentor);
-              
+
               return (
                 <MentorCard
                   key={mentor._id}
@@ -544,7 +663,13 @@ export default function MentorsPage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <Image
-                        src={selectedMentor.userId?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((selectedMentor.userId?.firstName || "") + " " + (selectedMentor.userId?.lastName || ""))}&background=6366f1&color=fff&bold=true`}
+                        src={
+                          selectedMentor.avatar ||
+                          selectedMentor.userId?.avatar ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            getMentorDisplayName(selectedMentor)
+                          )}&background=6366f1&color=fff&bold=true`
+                        }
                         alt=""
                         width={80}
                         height={80}
@@ -559,23 +684,33 @@ export default function MentorsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-2xl font-bold text-white">
-                          {selectedMentor.userId?.firstName} {selectedMentor.userId?.lastName}
+                          {getMentorDisplayName(selectedMentor)}
                         </h2>
                         {selectedMentor.averageRating >= 4.5 && (
                           <HiBadgeCheck className="w-5 h-5 text-violet-400" />
                         )}
                       </div>
-                      <p className="text-slate-400">{selectedMentor.headline || selectedMentor.currentRole}</p>
+                      <p className="text-slate-400">
+                        {selectedMentor.headline || selectedMentor.currentRole}
+                      </p>
                       <div className="flex items-center gap-4 mt-2">
                         <div className="flex items-center gap-1.5">
                           <FaStar className="text-amber-400 w-4 h-4" />
-                          <span className="text-white font-medium">{selectedMentor.averageRating.toFixed(1)}</span>
-                          <span className="text-slate-500 text-sm">({selectedMentor.totalReviews})</span>
+                          <span className="text-white font-medium">
+                            {selectedMentor.averageRating.toFixed(1)}
+                          </span>
+                          <span className="text-slate-500 text-sm">
+                            ({selectedMentor.totalReviews})
+                          </span>
                         </div>
                         <span className="text-slate-600">·</span>
-                        <span className="text-slate-400">{selectedMentor.completedSessions} sessions</span>
+                        <span className="text-slate-400">
+                          {selectedMentor.completedSessions} sessions
+                        </span>
                         <span className="text-slate-600">·</span>
-                        <span className="text-slate-400">{selectedMentor.yearsOfExperience}+ yrs</span>
+                        <span className="text-slate-400">
+                          {selectedMentor.yearsOfExperience}+ yrs
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -605,17 +740,32 @@ export default function MentorsPage() {
                       View Full Profile
                     </button>
                     {selectedMentor.linkedIn && (
-                      <a href={selectedMentor.linkedIn} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+                      <a
+                        href={selectedMentor.linkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <FaLinkedin className="w-4 h-4 text-slate-400" />
                       </a>
                     )}
                     {selectedMentor.github && (
-                      <a href={selectedMentor.github} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+                      <a
+                        href={selectedMentor.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <FaGithub className="w-4 h-4 text-slate-400" />
                       </a>
                     )}
                     {selectedMentor.website && (
-                      <a href={selectedMentor.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+                      <a
+                        href={selectedMentor.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <FaGlobe className="w-4 h-4 text-slate-400" />
                       </a>
                     )}
@@ -627,34 +777,45 @@ export default function MentorsPage() {
                 {/* Bio */}
                 {selectedMentor.bio && (
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">About</h3>
-                    <p className="text-slate-300 leading-relaxed">{selectedMentor.bio}</p>
+                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                      About
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      {selectedMentor.bio}
+                    </p>
                   </div>
                 )}
 
                 {/* Expertise */}
-                {selectedMentor.expertise && selectedMentor.expertise.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Expertise</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMentor.expertise.map((skill, idx) => (
-                        <SkillBadge 
-                          key={idx} 
-                          skill={skill} 
-                          isMatching={isMatchingSkill(skill)}
-                        />
-                      ))}
+                {selectedMentor.expertise &&
+                  selectedMentor.expertise.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                        Expertise
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMentor.expertise.map((skill, idx) => (
+                          <SkillBadge
+                            key={idx}
+                            skill={skill}
+                            isMatching={isMatchingSkill(skill)}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Book Session */}
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Book a Session</h3>
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                    Book a Session
+                  </h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Calendar */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                      <label className="block text-sm font-medium text-slate-300 mb-3">Select Date</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-3">
+                        Select Date
+                      </label>
                       <Calendar
                         selectedDate={selectedDate}
                         onDateSelect={handleDateChange}
@@ -664,7 +825,9 @@ export default function MentorsPage() {
 
                     {/* Slots */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                      <label className="block text-sm font-medium text-slate-300 mb-3">Available Slots</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-3">
+                        Available Slots
+                      </label>
                       {loadingSlots ? (
                         <div className="flex items-center justify-center py-12">
                           <div className="animate-spin rounded-full h-6 w-6 border-2 border-violet-500 border-t-transparent" />
@@ -672,12 +835,16 @@ export default function MentorsPage() {
                       ) : !selectedDate ? (
                         <div className="text-center py-12">
                           <FaCalendarAlt className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                          <p className="text-slate-500">Select a date to view slots</p>
+                          <p className="text-slate-500">
+                            Select a date to view slots
+                          </p>
                         </div>
                       ) : schedules.length === 0 ? (
                         <div className="text-center py-12">
                           <p className="text-slate-500">No slots available</p>
-                          <p className="text-slate-600 text-sm mt-1">Try another date</p>
+                          <p className="text-slate-600 text-sm mt-1">
+                            Try another date
+                          </p>
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -694,10 +861,21 @@ export default function MentorsPage() {
                                     {schedule.startTime} - {schedule.endTime}
                                   </span>
                                 </div>
-                                <span className="text-violet-400 font-bold">{schedule.price} pts</span>
+                                <span className="text-violet-400 font-bold">
+                                  {schedule.price} pts
+                                </span>
                               </div>
                               <div className="text-xs text-slate-500 mt-1">
-                                {schedule.duration} min · {schedule.maxBookings - schedule.currentBookings} spot{schedule.maxBookings - schedule.currentBookings !== 1 ? "s" : ""} left
+                                {schedule.duration} min ·{" "}
+                                {schedule.maxBookings -
+                                  schedule.currentBookings}{" "}
+                                spot
+                                {schedule.maxBookings -
+                                  schedule.currentBookings !==
+                                1
+                                  ? "s"
+                                  : ""}{" "}
+                                left
                               </div>
                             </button>
                           ))}
@@ -715,20 +893,28 @@ export default function MentorsPage() {
         {showBookingModal && selectedSchedule && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
             <div className="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-800 shadow-2xl">
-              <h2 className="text-xl font-bold text-white mb-4">Confirm Booking</h2>
+              <h2 className="text-xl font-bold text-white mb-4">
+                Confirm Booking
+              </h2>
 
               <div className="bg-slate-800/50 rounded-xl p-4 mb-4 space-y-3 text-sm border border-slate-700/50">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Date</span>
-                  <span className="text-white font-medium">{new Date(selectedSchedule.date).toLocaleDateString()}</span>
+                  <span className="text-white font-medium">
+                    {new Date(selectedSchedule.date).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Time</span>
-                  <span className="text-white font-medium">{selectedSchedule.startTime} - {selectedSchedule.endTime}</span>
+                  <span className="text-white font-medium">
+                    {selectedSchedule.startTime} - {selectedSchedule.endTime}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Duration</span>
-                  <span className="text-white font-medium">{selectedSchedule.duration} min</span>
+                  <span className="text-white font-medium">
+                    {selectedSchedule.duration} min
+                  </span>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-slate-700">
                   <span className="text-white font-medium">Total</span>
@@ -739,7 +925,9 @@ export default function MentorsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Notes (optional)</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Notes (optional)
+                </label>
                 <textarea
                   value={bookingNotes}
                   onChange={(e) => setBookingNotes(e.target.value)}

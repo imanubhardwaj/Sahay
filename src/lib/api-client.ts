@@ -31,7 +31,7 @@ export async function authenticatedFetch(
 /**
  * Helper to make authenticated GET requests
  */
-export async function authenticatedGet<T = any>(
+export async function authenticatedGet<T = unknown>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -51,9 +51,9 @@ export async function authenticatedGet<T = any>(
 /**
  * Helper to make authenticated POST requests
  */
-export async function authenticatedPost<T = any>(
+export async function authenticatedPost<T = unknown>(
   url: string,
-  data: any,
+  data: unknown,
   options: RequestInit = {}
 ): Promise<T> {
   const headers = new Headers(options.headers || {});
@@ -83,9 +83,9 @@ export async function authenticatedPost<T = any>(
 /**
  * Helper to make authenticated PUT requests
  */
-export async function authenticatedPut<T = any>(
+export async function authenticatedPut<T = unknown>(
   url: string,
-  data: any,
+  data: unknown,
   options: RequestInit = {}
 ): Promise<T> {
   const headers = new Headers(options.headers || {});
@@ -115,7 +115,7 @@ export async function authenticatedPut<T = any>(
 /**
  * Helper to make authenticated DELETE requests
  */
-export async function authenticatedDelete<T = any>(
+export async function authenticatedDelete<T = unknown>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {

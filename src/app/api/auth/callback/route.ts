@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const stateParam = url.searchParams.get("state");
-    
+
     // Parse state to get redirect URL
     let redirectTo = "/dashboard";
     if (stateParam) {
@@ -99,10 +99,16 @@ export async function GET(req: Request) {
         });
         isNewUser = true;
         console.log("New user created:", dbUser._id);
-      } catch (createError: any) {
+      } catch (createError) {
         console.error("Error creating user:", createError);
         // If username conflict, try with different random suffix
-        if (createError.code === 11000 && createError.keyPattern?.username) {
+        if (
+          createError instanceof Error &&
+          "code" in createError &&
+          createError.code === 11000 &&
+          "keyPattern" in createError &&
+          (createError.keyPattern as Record<string, unknown>)?.username
+        ) {
           console.log("Username conflict, retrying with different username...");
           dbUser = await User.create({
             firstName: user.firstName || user.email.split("@")[0],
@@ -132,6 +138,7 @@ export async function GET(req: Request) {
             completionRate: 0,
             selectedModules: [],
           });
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           isNewUser = true;
           console.log("New user created with retry:", dbUser._id);
         } else {

@@ -68,38 +68,7 @@ export default function ExplorePage() {
   const [selectedSkill, setSelectedSkill] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Profile gating for starting courses
-  const {
-    isProfileComplete,
-    showModal,
-    setShowModal,
-    blockedAction,
-    checkAndGate,
-  } = useProfileGating();
-  const [profileJustCompleted, setProfileJustCompleted] = useState(false);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.push(
-        `/login?redirect=${encodeURIComponent("/dashboard/explore")}`
-      );
-      return;
-    }
-    loadModules();
-    loadUserProgress();
-  }, [user, router, authLoading]);
-
-  // Refresh user data only once when profile is completed
-  useEffect(() => {
-    if (profileJustCompleted && refreshUser) {
-      setProfileJustCompleted(false);
-      // Single refresh after profile completion
-      refreshUser().catch(console.error);
-    }
-  }, [profileJustCompleted, refreshUser]);
-
-  const loadModules = async () => {
+  const loadModules = useCallback(async () => {
     try {
       setIsLoading(true);
       const { authenticatedFetch } = await import("@/lib/api-client");
@@ -126,9 +95,9 @@ export default function ExplorePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadUserProgress = async () => {
+  const loadUserProgress = useCallback(async () => {
     try {
       if (!user?._id) return;
       const { authenticatedFetch } = await import("@/lib/api-client");
@@ -154,7 +123,38 @@ export default function ExplorePage() {
     } catch (error) {
       console.error("Failed to load user progress:", error);
     }
-  };
+  }, [user?._id]);
+
+  // Profile gating for starting courses
+  const {
+    isProfileComplete,
+    showModal,
+    setShowModal,
+    blockedAction,
+    checkAndGate,
+  } = useProfileGating();
+  const [profileJustCompleted, setProfileJustCompleted] = useState(false);
+
+  // Refresh user data only once when profile is completed
+  useEffect(() => {
+    if (profileJustCompleted && refreshUser) {
+      setProfileJustCompleted(false);
+      // Single refresh after profile completion
+      refreshUser().catch(console.error);
+    }
+  }, [profileJustCompleted, refreshUser]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push(
+        `/login?redirect=${encodeURIComponent("/dashboard/explore")}`
+      );
+      return;
+    }
+    loadModules();
+    loadUserProgress();
+  }, [user, router, authLoading, loadUserProgress, loadModules]);
 
   // Memoized filtering and sorting
   const filteredModules = useMemo(() => {

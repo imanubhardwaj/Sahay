@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -95,13 +95,7 @@ export default function MentorSetupPage() {
     description: "",
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchMentorProfile();
-    }
-  }, [user]);
-
-  const fetchMentorProfile = async () => {
+  const fetchMentorProfile = useCallback(async () => {
     try {
       const response = await fetch(`/api/mentor-profile?userId=${user?._id}`);
       const result = await response.json();
@@ -131,7 +125,13 @@ export default function MentorSetupPage() {
     } catch (error) {
       console.error("Error fetching mentor profile:", error);
     }
-  };
+  }, [formData.sessionTypes, user?._id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchMentorProfile();
+    }
+  }, [fetchMentorProfile, user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -407,7 +407,7 @@ export default function MentorSetupPage() {
               <p className="text-sm text-gray-500 mb-4">
                 Add your previous work experience to showcase your expertise
               </p>
-              
+
               {/* Add Past Company Form */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -415,14 +415,20 @@ export default function MentorSetupPage() {
                     placeholder="Company Name"
                     value={newPastCompany.company}
                     onChange={(e) =>
-                      setNewPastCompany({ ...newPastCompany, company: e.target.value })
+                      setNewPastCompany({
+                        ...newPastCompany,
+                        company: e.target.value,
+                      })
                     }
                   />
                   <Input
                     placeholder="Role/Position"
                     value={newPastCompany.role}
                     onChange={(e) =>
-                      setNewPastCompany({ ...newPastCompany, role: e.target.value })
+                      setNewPastCompany({
+                        ...newPastCompany,
+                        role: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -432,7 +438,10 @@ export default function MentorSetupPage() {
                     placeholder="Start Date (YYYY-MM)"
                     value={newPastCompany.startDate}
                     onChange={(e) =>
-                      setNewPastCompany({ ...newPastCompany, startDate: e.target.value })
+                      setNewPastCompany({
+                        ...newPastCompany,
+                        startDate: e.target.value,
+                      })
                     }
                   />
                   <Input
@@ -440,7 +449,10 @@ export default function MentorSetupPage() {
                     placeholder="End Date (YYYY-MM) or leave empty if current"
                     value={newPastCompany.endDate}
                     onChange={(e) =>
-                      setNewPastCompany({ ...newPastCompany, endDate: e.target.value })
+                      setNewPastCompany({
+                        ...newPastCompany,
+                        endDate: e.target.value,
+                      })
                     }
                     disabled={newPastCompany.isCurrent}
                   />
@@ -467,7 +479,10 @@ export default function MentorSetupPage() {
                   placeholder="Description (optional)"
                   value={newPastCompany.description}
                   onChange={(e) =>
-                    setNewPastCompany({ ...newPastCompany, description: e.target.value })
+                    setNewPastCompany({
+                      ...newPastCompany,
+                      description: e.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={2}
@@ -478,7 +493,10 @@ export default function MentorSetupPage() {
                     if (newPastCompany.company && newPastCompany.role) {
                       setFormData((prev) => ({
                         ...prev,
-                        pastCompanies: [...prev.pastCompanies, { ...newPastCompany }],
+                        pastCompanies: [
+                          ...prev.pastCompanies,
+                          { ...newPastCompany },
+                        ],
                       }));
                       setNewPastCompany({
                         company: "",
@@ -505,14 +523,22 @@ export default function MentorSetupPage() {
                       className="flex items-start justify-between p-3 bg-white border border-gray-200 rounded-lg"
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{exp.role}</div>
-                        <div className="text-sm text-gray-600">{exp.company}</div>
+                        <div className="font-medium text-gray-900">
+                          {exp.role}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {exp.company}
+                        </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {exp.startDate || "Unknown"} -{" "}
-                          {exp.isCurrent || !exp.endDate ? "Present" : exp.endDate}
+                          {exp.isCurrent || !exp.endDate
+                            ? "Present"
+                            : exp.endDate}
                         </div>
                         {exp.description && (
-                          <div className="text-sm text-gray-600 mt-1">{exp.description}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {exp.description}
+                          </div>
                         )}
                       </div>
                       <button
@@ -520,7 +546,9 @@ export default function MentorSetupPage() {
                         onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
-                            pastCompanies: prev.pastCompanies.filter((_, i) => i !== index),
+                            pastCompanies: prev.pastCompanies.filter(
+                              (_, i) => i !== index
+                            ),
                           }));
                         }}
                         className="ml-4 text-red-600 hover:text-red-700"

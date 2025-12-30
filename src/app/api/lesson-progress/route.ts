@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     const progressMap = progress.reduce((map, p) => {
       map[p.lessonId.toString()] = p;
       return map;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
 
     // Combine lessons with progress
     const lessonsWithProgress = lessons.map((lesson, index) => {
@@ -222,7 +222,7 @@ export async function PUT(req: NextRequest) {
     // CRITICAL VALIDATION: Check if score meets 80% passing requirement
     if (score < QUIZ_PASSING_PERCENTAGE) {
       return NextResponse.json(
-        { 
+        {
           error: `Quiz score must be at least ${QUIZ_PASSING_PERCENTAGE}% to complete the lesson and unlock the next one.`,
           score,
           required: QUIZ_PASSING_PERCENTAGE,

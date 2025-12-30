@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get module with basic info
-    const moduleDoc = await Module.findById(moduleId).lean();
+    const moduleDoc = await Module.findById(moduleId);
 
     if (!moduleDoc) {
       return NextResponse.json(
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       order: moduleProgress.nextLessonOrder,
     }).lean();
 
-    if (!lesson) {
+    if (!lesson || Array.isArray(lesson)) {
       // No more lessons - module might be complete
       const totalLessons = await Lesson.countDocuments({ moduleId });
 
@@ -115,20 +115,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if lesson has a quiz
-    const associatedQuiz = await Quiz.findOne({ lessonId: lesson._id }).lean();
+    const associatedQuiz = await Quiz.findOne({ lessonId: lesson._id });
 
     // Prepare lesson data (WITHOUT order or internal IDs)
     const lessonData = {
-      _id: lesson._id, // Lesson ID is OK to send (opaque identifier)
+      _id: lesson._id as string, // Lesson ID is OK to send (opaque identifier)
       title: lesson.name as string,
       type: lesson.type as string,
       duration: lesson.duration as number | undefined,
       points: lesson.points as number,
       hasQuiz: !!associatedQuiz,
       isCompleted:
-        moduleProgress.completedLessons?.some(
-          (id) => id.toString() === lesson._id.toString()
-        ) || false,
+        moduleProgress.completedLessons?.some((id: unknown) => {
+          const lessonId = String(lesson._id);
+          const completedId = String(id);
+          return completedId === lessonId;
+        }) || false,
       content:
         lesson.type === "Text" || lesson.type === "Code"
           ? (lesson.content as string)

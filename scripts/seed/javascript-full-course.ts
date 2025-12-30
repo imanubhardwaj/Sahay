@@ -26,6 +26,45 @@ const connectDB = async () => {
   }
 };
 
+// Type definitions for question and coding problem data
+interface QuestionData {
+  questionText: string;
+  options: Array<{
+    id: string;
+    type: string;
+    content: string;
+  }>;
+  answer: {
+    type: string;
+    content: string;
+    optionId: string;
+  };
+  explanation: string;
+  points?: number;
+  order?: number;
+}
+
+interface CodingProblemData {
+  title: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  starterCode: {
+    javascript?: string;
+    python?: string;
+    typescript?: string;
+  };
+  testCases: Array<{
+    input: string;
+    expectedOutput: string;
+    isHidden: boolean;
+  }>;
+  hints: string[];
+  points?: number;
+  solvedCount?: number;
+  attemptCount?: number;
+}
+
 // Organize topics by level
 const TOPICS_BY_LEVEL = {
   Beginner: [
@@ -161,11 +200,11 @@ const TOPICS_BY_LEVEL = {
 };
 
 // Generate quiz questions for a topic
-function generateQuizQuestions(topic: string, level: string, lessonOrder: number): any[] {
-  const questions: any[] = [];
+function generateQuizQuestions(topic: string): QuestionData[] {
+  const questions: QuestionData[] = [];
   
   // Generate 10+ MCQ questions based on topic
-  const questionTemplates: Record<string, any[]> = {
+  const questionTemplates: Record<string, QuestionData[]> = {
     'Variables': [
       {
         questionText: 'Which keyword is used to declare a variable that can be reassigned?',
@@ -463,10 +502,8 @@ function generateQuizQuestions(topic: string, level: string, lessonOrder: number
 }
 
 // Generate coding problems for a topic
-function generateCodingProblems(topic: string, level: string): any[] {
-  const problems: any[] = [];
-  
-  const problemTemplates: Record<string, any[]> = {
+function generateCodingProblems(topic: string, level: string): CodingProblemData[] {
+  const problemTemplates: Record<string, CodingProblemData[]> = {
     'Variables': [
       {
         title: 'Variable Declaration Practice',
@@ -571,33 +608,6 @@ function generateCodingProblems(topic: string, level: string): any[] {
   ];
 }
 
-// Generate mini practice questions (2-3 per lesson)
-function generateMiniPracticeQuestions(topic: string): any[] {
-  return [
-    {
-      questionText: `Quick check: What is the main concept in ${topic}?`,
-      type: 'mcq',
-      options: [
-        { id: 'opt1', type: 'mcq', content: 'Concept A' },
-        { id: 'opt2', type: 'mcq', content: 'Concept B' },
-        { id: 'opt3', type: 'mcq', content: 'Concept C' }
-      ],
-      answer: { type: 'mcq', content: 'Concept A', optionId: 'opt1' },
-      explanation: `This is a quick practice question about ${topic}.`
-    },
-    {
-      questionText: `Practice: Which statement is true about ${topic}?`,
-      type: 'mcq',
-      options: [
-        { id: 'opt1', type: 'mcq', content: 'Statement A' },
-        { id: 'opt2', type: 'mcq', content: 'Statement B' },
-        { id: 'opt3', type: 'mcq', content: 'Statement C' }
-      ],
-      answer: { type: 'mcq', content: 'Statement A', optionId: 'opt1' },
-      explanation: `This helps reinforce your understanding of ${topic}.`
-    }
-  ];
-}
 
 async function seedJavaScriptFullCourse() {
   try {
@@ -627,7 +637,7 @@ async function seedJavaScriptFullCourse() {
     await Module.deleteMany({ skillId: jsSkill._id });
     console.log('✅ Cleaned up existing JavaScript modules');
 
-    const createdModules: any[] = [];
+    const createdModules: Array<{ _id: unknown; name: string }> = [];
 
     // Create modules for each level
     for (const level of ['Beginner', 'Intermediate', 'Advanced']) {
@@ -641,7 +651,7 @@ async function seedJavaScriptFullCourse() {
       const totalMinutes = hoursPerLevel * 60;
       const avgLessonDuration = Math.round(totalMinutes / topics.length);
 
-      const module = await Module.create({
+      const newModule = await Module.create({
         name: moduleName,
         description: `${level} level JavaScript course covering ${topics.length} essential topics`,
         level: level,
@@ -653,11 +663,11 @@ async function seedJavaScriptFullCourse() {
         image: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=400&fit=crop'
       });
 
-      createdModules.push(module);
+      createdModules.push(newModule);
       console.log(`✅ Created ${moduleName} module`);
 
       // Create lessons for each topic
-      const createdLessons: any[] = [];
+      const createdLessons: Array<{ _id: unknown; name: string; order: number }> = [];
       
       for (let i = 0; i < topics.length; i++) {
         const topic = topics[i];
@@ -674,7 +684,7 @@ async function seedJavaScriptFullCourse() {
             `Common pitfalls`
           ],
           type: i % 2 === 0 ? 'Text' : 'Code',
-          moduleId: module._id,
+          moduleId: newModule._id,
           skillId: jsSkill._id,
           duration: avgLessonDuration,
           points: 100,
@@ -686,13 +696,13 @@ async function seedJavaScriptFullCourse() {
 
         // Create quiz for each lesson (skip first lesson)
         if (lessonNumber > 1) {
-          const quizQuestions = generateQuizQuestions(topic, level, lessonNumber);
+          const quizQuestions = generateQuizQuestions(topic);
           
           const quiz = await Quiz.create({
             name: `Quiz: ${topic}`,
             description: `Test your knowledge of ${topic}`,
             duration: 30,
-            moduleId: module._id,
+            moduleId: newModule._id,
             lessonId: lesson._id,
             numberOfQuestions: quizQuestions.length + 2, // +2 for coding questions
             points: (quizQuestions.length * 10) + 20 // 10 points per MCQ + 20 for coding
@@ -700,35 +710,24 @@ async function seedJavaScriptFullCourse() {
 
           // Create quiz questions
           for (let q = 0; q < quizQuestions.length; q++) {
-            await Question.create({
-              questionText: quizQuestions[q].questionText,
-              type: 'mcq',
+            await new Question({
+              ...quizQuestions[q],
               quizId: quiz._id,
               lessonId: lesson._id,
-              moduleId: module._id,
-              points: 10,
-              order: q + 1,
-              options: quizQuestions[q].options,
-              answer: quizQuestions[q].answer,
-              explanation: quizQuestions[q].explanation
-            });
+              moduleId: newModule._id
+            }).save();
           }
 
           // Create coding problems for the lesson
           const codingProblems = generateCodingProblems(topic, level);
           for (const problem of codingProblems) {
             await CodingProblem.create({
-              title: problem.title,
-              description: problem.description,
-              difficulty: problem.difficulty,
+              ...problem,
               category: problem.category,
               tags: [topic.toLowerCase().replace(/\s+/g, '-'), level.toLowerCase()],
-              starterCode: problem.starterCode,
-              testCases: problem.testCases,
-              hints: problem.hints || [`Think about ${topic}`, 'Break down the problem'],
-              points: problem.difficulty === 'easy' ? 10 : problem.difficulty === 'medium' ? 20 : 30,
-              solvedCount: 0,
-              attemptCount: 0
+              solvedCount: problem.solvedCount || 0,
+              attemptCount: problem.attemptCount || 0,
+              points: problem.points || 10
             });
           }
 
@@ -737,7 +736,7 @@ async function seedJavaScriptFullCourse() {
       }
 
       // Update module with actual lessons count
-      await Module.findByIdAndUpdate(module._id, {
+      await Module.findByIdAndUpdate(newModule._id, {
         lessonsCount: createdLessons.length
       });
     }
@@ -745,10 +744,10 @@ async function seedJavaScriptFullCourse() {
     console.log('\n🎉 JavaScript full course seeded successfully!');
     console.log(`\n📊 Summary:`);
     console.log(`- Modules created: ${createdModules.length}`);
-    for (const module of createdModules) {
-      const lessons = await Lesson.countDocuments({ moduleId: module._id });
-      const quizzes = await Quiz.countDocuments({ moduleId: module._id });
-      console.log(`  - ${module.name}: ${lessons} lessons, ${quizzes} quizzes`);
+    for (const newModule of createdModules) { 
+      const lessons = await Lesson.countDocuments({ moduleId: newModule._id });
+      const quizzes = await Quiz.countDocuments({ moduleId: newModule._id });
+      console.log(`  - ${newModule.name}: ${lessons} lessons, ${quizzes} quizzes`);
     }
 
     process.exit(0);

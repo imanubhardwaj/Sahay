@@ -21,7 +21,7 @@ const workingProfessionalSchema = new mongoose.Schema({
 workingProfessionalSchema.pre('save', updateUpdatedAt);
 
 // Index for efficient queries
-workingProfessionalSchema.index({ userId: 1 });
+// Note: userId already has an index from unique: true, so we don't need to index it again
 workingProfessionalSchema.index({ companyId: 1 });
 workingProfessionalSchema.index({ 'availability.isAvailable': 1 });
 

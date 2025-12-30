@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 // Button component removed - using native button elements
@@ -30,7 +30,6 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Initialize sidebar state from localStorage to prevent flash
@@ -76,9 +75,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     checkAdminStatus();
   }, [user]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = async () => {
+    await logout();
+    // logout() already redirects, but if it fails, redirect here as fallback
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   };
 
   const handleSidebarMouseEnter = () => {
@@ -251,7 +253,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 w-full flex flex-col gap-4 px-4 mt-4">
+          <nav className="flex-1 w-full flex flex-col gap-2 px-4 mt-1.5">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (

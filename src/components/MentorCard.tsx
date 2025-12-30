@@ -15,10 +15,12 @@ const getCompanyLogo = (companyName: string): string => {
     .trim()
     .replace(/[^a-z0-9\s]/g, "")
     .replace(/\s+/g, "");
-  
+
   // Construct domain (assume .com if no domain extension found)
-  const domain = normalizedName.includes(".") ? normalizedName : `${normalizedName}.com`;
-  
+  const domain = normalizedName.includes(".")
+    ? normalizedName
+    : `${normalizedName}.com`;
+
   // Brandfetch API URL
   return `https://cdn.brandfetch.io/${domain}/w/400/h/400/theme/dark/fallback/lettermark/type/icon`;
 };
@@ -30,34 +32,45 @@ const getSkillIcon = (skill: string): string | null => {
 };
 
 // Skill badge with icon
-function SkillBadge({ skill, isMatching = false }: { skill: string; isMatching?: boolean }) {
+function SkillBadge({
+  skill,
+  isMatching = false,
+}: {
+  skill: string;
+  isMatching?: boolean;
+}) {
   const icon = getSkillIcon(skill);
-  
+
   return (
-    <div 
+    <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium
         transition-all duration-200 cursor-default
-        ${isMatching 
-          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ring-1 ring-emerald-500/20" 
-          : "bg-slate-800/80 text-slate-300 border border-slate-700/50 hover:border-slate-600"
+        ${
+          isMatching
+            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ring-1 ring-emerald-500/20"
+            : "bg-slate-800/80 text-slate-300 border border-slate-700/50 hover:border-slate-600"
         }
       `}
       title={skill}
     >
       {icon ? (
-        <Image 
-          src={icon} 
-          alt={skill} 
-          width={14} 
-          height={14} 
+        <Image
+          src={icon}
+          alt={skill}
+          width={14}
+          height={14}
           className="object-contain"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            e.currentTarget.style.display = "none";
           }}
         />
       ) : (
-        <div className={`w-2 h-2 rounded-full ${isMatching ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+        <div
+          className={`w-2 h-2 rounded-full ${
+            isMatching ? "bg-emerald-400" : "bg-slate-500"
+          }`}
+        />
       )}
       <span className="truncate max-w-[80px]">{skill}</span>
     </div>
@@ -65,16 +78,17 @@ function SkillBadge({ skill, isMatching = false }: { skill: string; isMatching?:
 }
 
 // Company badge with logo
-function CompanyBadge({ company, showName = true }: { company: string; showName?: boolean }) {
+function CompanyBadge({ company }: { company: string; showName?: boolean }) {
   const [imgError, setImgError] = useState(false);
   const logoUrl = getCompanyLogo(company);
 
   return (
-    <div 
+    <div
       className="flex items-center gap-2 rounded-lg  transition-all"
       title={company}
     >
       {!imgError ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
           alt={company}
@@ -101,7 +115,11 @@ export interface MentorProfile {
     email: string;
     avatar?: string;
     skills?: Array<{ _id: string; name: string }>;
-  };
+  } | null;
+  firstName?: string; // Direct name fields from MentorProfile
+  lastName?: string;
+  email?: string;
+  avatar?: string;
   isMentor: boolean;
   isApproved: boolean;
   bio?: string;
@@ -143,6 +161,20 @@ interface MentorCardProps {
   className?: string;
 }
 
+// Helper function to get mentor name
+function getMentorName(mentor: MentorProfile): string {
+  // Try direct fields first
+  if (mentor.firstName && mentor.lastName) {
+    return `${mentor.firstName} ${mentor.lastName}`;
+  }
+  // Try userId fields
+  if (mentor.userId?.firstName && mentor.userId?.lastName) {
+    return `${mentor.userId.firstName} ${mentor.userId.lastName}`;
+  }
+  // Fallback to headline/role
+  return mentor.headline || mentor.currentRole || "Mentor";
+}
+
 export default function MentorCard({
   mentor,
   onClick,
@@ -161,9 +193,10 @@ export default function MentorCard({
         relative bg-slate-900/60 border rounded-2xl p-6 
         transition-all duration-300 cursor-pointer group
         hover:shadow-xl hover:shadow-violet-500/5 hover:-translate-y-1
-        ${hasMatchingSkills && showRelevanceBadge
-          ? "border-emerald-500/30 hover:border-emerald-500/50"
-          : "border-slate-800 hover:border-slate-700"
+        ${
+          hasMatchingSkills && showRelevanceBadge
+            ? "border-emerald-500/30 hover:border-emerald-500/50"
+            : "border-slate-800 hover:border-slate-700"
         }
         ${className}
       `}
@@ -180,7 +213,13 @@ export default function MentorCard({
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
           <Image
-            src={mentor.userId?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((mentor.userId?.firstName || "") + " " + (mentor.userId?.lastName || ""))}&background=6366f1&color=fff&bold=true`}
+            src={
+              mentor.avatar ||
+              mentor.userId?.avatar ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                getMentorName(mentor)
+              )}&background=6366f1&color=fff&bold=true`
+            }
             alt=""
             width={64}
             height={64}
@@ -195,7 +234,7 @@ export default function MentorCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white truncate group-hover:text-violet-300 transition-colors">
-              {mentor.userId?.firstName} {mentor.userId?.lastName}
+              {getMentorName(mentor)}
             </h3>
             {mentor.averageRating >= 4.5 && (
               <HiBadgeCheck className="w-4 h-4 text-violet-400 flex-shrink-0" />
@@ -206,13 +245,18 @@ export default function MentorCard({
           </p>
           <div className="flex items-center gap-2 mt-1">
             <FaStar className="text-amber-400 w-3.5 h-3.5" />
-            <span className="text-sm font-medium text-white">{mentor.averageRating.toFixed(1)}</span>
-            <span className="text-xs text-slate-500">({mentor.totalReviews} reviews)</span>
+            <span className="text-sm font-medium text-white">
+              {mentor.averageRating.toFixed(1)}
+            </span>
+            <span className="text-xs text-slate-500">
+              ({mentor.totalReviews} reviews)
+            </span>
           </div>
         </div>
       </div>
       {/* Companies */}
-      {(mentor.currentCompany || (mentor.pastCompanies && mentor.pastCompanies.length > 0)) && (
+      {(mentor.currentCompany ||
+        (mentor.pastCompanies && mentor.pastCompanies.length > 0)) && (
         <div className="mb-4 flex flex-wrap gap-2">
           {mentor.currentCompany && (
             <CompanyBadge company={mentor.currentCompany} />
@@ -220,7 +264,11 @@ export default function MentorCard({
           {mentor.pastCompanies && mentor.pastCompanies.length > 0 && (
             <>
               {mentor.pastCompanies.slice(0, 3).map((pastCompany, idx) => (
-                <CompanyBadge key={idx} company={pastCompany.company} showName={false} />
+                <CompanyBadge
+                  key={idx}
+                  company={pastCompany.company}
+                  showName={false}
+                />
               ))}
               {mentor.pastCompanies.length > 3 && (
                 <span className="text-xs text-slate-500 self-center">
@@ -236,9 +284,9 @@ export default function MentorCard({
       {mentor.expertise && mentor.expertise.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
           {mentor.expertise.slice(0, 4).map((skill, idx) => (
-            <SkillBadge 
-              key={idx} 
-              skill={skill} 
+            <SkillBadge
+              key={idx}
+              skill={skill}
               isMatching={showRelevanceBadge && matchingSkillFn(skill)}
             />
           ))}
@@ -282,4 +330,3 @@ export default function MentorCard({
 }
 
 export { CompanyBadge, SkillBadge, getCompanyLogo, getSkillIcon };
-

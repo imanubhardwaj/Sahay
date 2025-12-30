@@ -67,7 +67,13 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { defaultAvailability, timezone, duration = 30, price = 100, maxBookings = 1, daysToGenerate = 7 } = body;
+    const {
+      defaultAvailability,
+      timezone,
+      price = 100,
+      maxBookings = 1,
+      daysToGenerate = 7,
+    } = body;
 
     // Enforce session constraints
     const sessionDuration = 30; // Fixed 30 minutes per session
@@ -99,7 +105,15 @@ export async function POST(request: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayNames = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
 
     // Track daily and weekly counts to enforce limits
     const dailyCounts: Record<string, number> = {};
@@ -121,24 +135,31 @@ export async function POST(request: NextRequest) {
 
     // Count existing schedules per day and total for week
     existingSchedules.forEach((schedule) => {
-      const scheduleDate = schedule.date.toISOString().split('T')[0];
+      const scheduleDate = schedule.date.toISOString().split("T")[0];
       dailyCounts[scheduleDate] = (dailyCounts[scheduleDate] || 0) + 1;
       weeklyTotal++;
     });
 
     // Check if already at weekly limit
     if (weeklyTotal >= MAX_SLOTS_PER_WEEK) {
-      return NextResponse.json({
-        success: false,
-        error: `Weekly limit of ${MAX_SLOTS_PER_WEEK} slots already reached. Please wait until next week or remove existing slots.`,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Weekly limit of ${MAX_SLOTS_PER_WEEK} slots already reached. Please wait until next week or remove existing slots.`,
+        },
+        { status: 400 }
+      );
     }
 
-    for (let dayOffset = 0; dayOffset < Math.min(daysToGenerate, 7); dayOffset++) {
+    for (
+      let dayOffset = 0;
+      dayOffset < Math.min(daysToGenerate, 7);
+      dayOffset++
+    ) {
       const date = new Date(today);
       date.setDate(date.getDate() + dayOffset);
-      const dateKey = date.toISOString().split('T')[0];
-      
+      const dateKey = date.toISOString().split("T")[0];
+
       const dayName = dayNames[date.getDay()];
       const dayAvailability = defaultAvailability[dayName] || [];
 
@@ -150,9 +171,9 @@ export async function POST(request: NextRequest) {
 
       // Generate slots for each time range on this day
       for (const timeSlot of dayAvailability) {
-        const [startHour, startMin] = timeSlot.start.split(':').map(Number);
-        const [endHour, endMin] = timeSlot.end.split(':').map(Number);
-        
+        const [startHour, startMin] = timeSlot.start.split(":").map(Number);
+        const [endHour, endMin] = timeSlot.end.split(":").map(Number);
+
         const startMinutes = startHour * 60 + startMin;
         const endMinutes = endHour * 60 + endMin;
 
@@ -170,13 +191,28 @@ export async function POST(request: NextRequest) {
           }
 
           const slotStart = new Date(date);
-          slotStart.setHours(Math.floor(currentStart / 60), currentStart % 60, 0, 0);
-          
+          slotStart.setHours(
+            Math.floor(currentStart / 60),
+            currentStart % 60,
+            0,
+            0
+          );
+
           const slotEnd = new Date(slotStart);
           slotEnd.setMinutes(slotEnd.getMinutes() + sessionDuration);
 
-          const startTimeStr = `${Math.floor(currentStart / 60).toString().padStart(2, '0')}:${(currentStart % 60).toString().padStart(2, '0')}`;
-          const endTimeStr = `${Math.floor((currentStart + sessionDuration) / 60).toString().padStart(2, '0')}:${((currentStart + sessionDuration) % 60).toString().padStart(2, '0')}`;
+          const startTimeStr = `${Math.floor(currentStart / 60)
+            .toString()
+            .padStart(2, "0")}:${(currentStart % 60)
+            .toString()
+            .padStart(2, "0")}`;
+          const endTimeStr = `${Math.floor(
+            (currentStart + sessionDuration) / 60
+          )
+            .toString()
+            .padStart(2, "0")}:${((currentStart + sessionDuration) % 60)
+            .toString()
+            .padStart(2, "0")}`;
 
           // Check if slot already exists
           const existingSlot = await Schedule.findOne({
@@ -197,9 +233,9 @@ export async function POST(request: NextRequest) {
               duration: sessionDuration,
               maxBookings,
               price,
-              sessionType: 'one-on-one',
+              sessionType: "one-on-one",
               isActive: true,
-              location: 'online',
+              location: "online",
             });
 
             generatedSlots.push(newSlot);
@@ -222,11 +258,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const limitMessage = weeklyTotal >= MAX_SLOTS_PER_WEEK 
-      ? ` (Weekly limit of ${MAX_SLOTS_PER_WEEK} slots reached)`
-      : generatedSlots.length === 0
-      ? " (No new slots generated - daily/weekly limits may have been reached)"
-      : "";
+    const limitMessage =
+      weeklyTotal >= MAX_SLOTS_PER_WEEK
+        ? ` (Weekly limit of ${MAX_SLOTS_PER_WEEK} slots reached)`
+        : generatedSlots.length === 0
+        ? " (No new slots generated - daily/weekly limits may have been reached)"
+        : "";
 
     return NextResponse.json({
       success: true,
@@ -246,4 +283,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

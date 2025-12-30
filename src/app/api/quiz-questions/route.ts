@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       try {
         const quizObjectId = new mongoose.Types.ObjectId(quizId);
         query.quizId = quizObjectId;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         return NextResponse.json(
           { error: "Invalid quizId format" },
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
       try {
         const lessonObjectId = new mongoose.Types.ObjectId(lessonId);
         query.lessonId = lessonObjectId;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         return NextResponse.json(
           { error: "Invalid lessonId format" },

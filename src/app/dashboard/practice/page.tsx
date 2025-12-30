@@ -51,7 +51,7 @@ function PracticePageContent() {
   const { user, isLoading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const [problems, setProblems] = useState<CodingProblem[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [, setCategories] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedProblem, setSelectedProblem] = useState<CodingProblem | null>(
     null
@@ -81,16 +81,6 @@ function PracticePageContent() {
     }>;
   } | null>(null);
   const [isLessonChallenge, setIsLessonChallenge] = useState(false);
-
-  // Filter categories based on selected language/tech
-  const availableCategories = useMemo(() => {
-    if (selectedLanguageTech === "all") {
-      return categories;
-    }
-    const techCategories = LANGUAGE_TECH_CATEGORIES[selectedLanguageTech] || [];
-    // Return intersection of tech categories and available categories from API
-    return techCategories.filter((cat) => categories.includes(cat));
-  }, [selectedLanguageTech, categories]);
 
   // Filter problems based on selected language/tech and category
   const filteredProblems = useMemo(() => {
@@ -171,17 +161,21 @@ function PracticePageContent() {
       const task1 = searchParams.get("task1");
       const task2 = searchParams.get("task2");
       const lessonTitle = searchParams.get("lessonTitle") || "Coding Challenge";
-      const moduleLanguage = searchParams.get("language") as "javascript" | "python" | "typescript" | null;
+      const moduleLanguage = searchParams.get("language") as
+        | "javascript"
+        | "python"
+        | "typescript"
+        | null;
       const moduleName = searchParams.get("moduleName") || "";
-      
+
       if (task1 || task2) {
         setIsLessonChallenge(true);
-        
+
         // Set language from module
         if (moduleLanguage) {
           setLanguage(moduleLanguage);
         }
-        
+
         // Create a temporary coding problem from the lesson challenge
         const challengeDescription = `# ${lessonTitle}\n\n${
           task1 ? `## Task 1\n${task1}\n\n` : ""
@@ -197,9 +191,10 @@ function PracticePageContent() {
           category: moduleName || "Lesson Challenge",
           tags: ["lesson", "practice"],
           starterCode: {
-            [moduleLanguage || "javascript"]: moduleLanguage === "python"
-              ? `# Write your solution here\ndef solution():\n    # Your code here\n    pass`
-              : `// Write your solution here\nfunction solution() {\n  // Your code here\n  return null;\n}`,
+            [moduleLanguage || "javascript"]:
+              moduleLanguage === "python"
+                ? `# Write your solution here\ndef solution():\n    # Your code here\n    pass`
+                : `// Write your solution here\nfunction solution() {\n  // Your code here\n  return null;\n}`,
           },
           testCases: [
             {
@@ -208,14 +203,19 @@ function PracticePageContent() {
               isHidden: false,
             },
           ],
-          hints: ["Review the lesson content for guidance", "Test your code step by step"],
+          hints: [
+            "Review the lesson content for guidance",
+            "Test your code step by step",
+          ],
           points: 20,
           solvedCount: 0,
           attemptCount: 0,
         };
-        
+
         setSelectedProblem(lessonProblem);
-        setCode(lessonProblem.starterCode[moduleLanguage || "javascript"] || "");
+        setCode(
+          lessonProblem.starterCode[moduleLanguage || "javascript"] || ""
+        );
         setLoading(false);
       }
     }
@@ -278,7 +278,10 @@ function solution(input: string): string {
 
     try {
       // For lesson challenges (no test cases), just execute and show output
-      if (isLessonChallenge && selectedProblem._id.startsWith("lesson-challenge-")) {
+      if (
+        isLessonChallenge &&
+        selectedProblem._id.startsWith("lesson-challenge-")
+      ) {
         try {
           // Simple execution for lesson challenges
           const wrappedCode = `
@@ -300,36 +303,47 @@ function solution(input: string): string {
             }
             __result__;
           `;
-          
+
           const fn = new Function(wrappedCode);
           const result = fn();
-          
-          setOutput(`✅ Code executed successfully!\n\nOutput: ${result !== undefined && result !== null ? String(result) : "No return value"}\n\nNote: For lesson challenges, verify your solution matches the requirements manually.`);
+
+          setOutput(
+            `✅ Code executed successfully!\n\nOutput: ${
+              result !== undefined && result !== null
+                ? String(result)
+                : "No return value"
+            }\n\nNote: For lesson challenges, verify your solution matches the requirements manually.`
+          );
           setTestResults({
             passed: true,
             testsPassed: 1,
             totalTests: 1,
-            testResults: [{
-              input: "N/A",
-              expectedOutput: "N/A",
-              actualOutput: String(result || "Code executed"),
-              passed: true,
-            }],
+            testResults: [
+              {
+                input: "N/A",
+                expectedOutput: "N/A",
+                actualOutput: String(result || "Code executed"),
+                passed: true,
+              },
+            ],
           });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           setOutput(`⚠️ Code Error:\n${errorMessage}`);
           setTestResults({
             passed: false,
             testsPassed: 0,
             totalTests: 1,
-            testResults: [{
-              input: "N/A",
-              expectedOutput: "N/A",
-              actualOutput: "",
-              passed: false,
-              error: errorMessage,
-            }],
+            testResults: [
+              {
+                input: "N/A",
+                expectedOutput: "N/A",
+                actualOutput: "",
+                passed: false,
+                error: errorMessage,
+              },
+            ],
           });
         } finally {
           setIsRunning(false);
@@ -903,13 +917,15 @@ function solution(input: string): string {
 
 export default function PracticePage() {
   return (
-    <Suspense fallback={
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
-        </div>
-      </DashboardLayout>
-    }>
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
+          </div>
+        </DashboardLayout>
+      }
+    >
       <PracticePageContent />
     </Suspense>
   );

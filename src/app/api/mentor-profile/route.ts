@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const requestedUserId = searchParams.get("userId");
     const mentorId = searchParams.get("mentorId");
-    const approved = searchParams.get("approved");
 
     // Public access: Get specific mentor profile by mentorId (no auth required)
     if (mentorId) {
@@ -41,29 +40,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all approved mentors (if no specific userId requested)
+    // Get all mentors (if no specific userId requested)
     if (!requestedUserId) {
+      // Simple query: get all mentors, no level filter, no approval filter
       const query: Record<string, unknown> = { isMentor: true };
-      if (approved === "true") {
-        query.isApproved = true;
-      }
 
-      // Check if user is a mentor - if so, only show L1 and L2 mentors for networking
-      const user = await User.findById(userId);
-      const userMentorProfile = await MentorProfile.findOne({ userId: userId, isMentor: true });
-      const isMentor = userMentorProfile?.isMentor || user?.userType?.includes("professional") || user?.role === "mentor";
-      
-      if (isMentor) {
-        // Mentors see only L1 and L2 experts for networking/growth
-        query.level = { $in: ["L1", "L2"] };
-      }
-      // Students see all tiers (L1, L2, L3) - no level filter needed
+      console.log("Fetching all mentors with query:", query);
 
       const mentors = await MentorProfile.find(query)
-        .select('+level') // Include level field for filtering
+        .select('+level') // Include level field if needed
         .populate("userId", "firstName lastName email avatar bio")
         .sort({ averageRating: -1, totalSessions: -1 })
-        .limit(50);
+        .limit(100); // Increased limit to show more mentors
+
+      console.log(`Found ${mentors.length} mentors in database`);
 
       return NextResponse.json({
         success: true,

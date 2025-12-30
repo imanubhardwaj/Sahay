@@ -11,7 +11,7 @@ const skillSchema = new mongoose.Schema({
 skillSchema.pre('save', updateUpdatedAt);
 
 // Index for efficient queries
-skillSchema.index({ name: 1 });
+// Note: name already has an index from unique: true, so we don't need to index it again
 skillSchema.index({ parentSkillId: 1 });
 
 export default mongoose.models.Skill || mongoose.model('Skill', skillSchema);

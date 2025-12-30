@@ -9,7 +9,7 @@ import {
   awardCourseCompletionBonus,
   validateWalletBalance,
 } from "@/lib/wallet";
-import { isEligibleForFreeCourse, COURSE_START_COST, type CourseLevel } from "@/lib/points-economy";
+import { COURSE_START_COST, type CourseLevel } from "@/lib/points-economy";
 
 // GET /api/user-course-progress - Get course progress for a user
 export async function GET(request: NextRequest) {
@@ -174,7 +174,6 @@ export async function POST(request: NextRequest) {
     // Get module details for course name and level
     const moduleData = await Module.findById(moduleObjectId);
     const courseName = moduleData?.name || "Course";
-    const courseLevel = (moduleData?.level || "Beginner") as CourseLevel;
 
     // Find or create user progress document
     let userProgress = await UserCourseProgress.findOne({
@@ -230,18 +229,21 @@ export async function POST(request: NextRequest) {
     } else {
       // NEW COURSE - Need to check points and deduct
       isNewCourse = true;
-      
+
       // Check if this is user's first course (FREE) or needs points
       const user = await User.findById(userId);
       const isFirstCourse = !user?.hasStartedFirstCourse;
-      
+
       // CRITICAL VALIDATION: If not first course, validate wallet balance FIRST
       if (!isFirstCourse) {
-        const validation = await validateWalletBalance(userId, COURSE_START_COST);
-        
+        const validation = await validateWalletBalance(
+          userId,
+          COURSE_START_COST
+        );
+
         if (!validation.isValid) {
           return NextResponse.json(
-            { 
+            {
               error: validation.error,
               requiredPoints: COURSE_START_COST,
               currentBalance: validation.currentBalance,
@@ -251,7 +253,7 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-      
+
       // Deduct points for starting course
       const deductResult = await deductCourseStartPoints(
         userId,
@@ -259,24 +261,26 @@ export async function POST(request: NextRequest) {
         courseName,
         isFirstCourse
       );
-      
+
       if (!deductResult.success) {
         return NextResponse.json(
-          { error: deductResult.error || "Failed to process course enrollment" },
+          {
+            error: deductResult.error || "Failed to process course enrollment",
+          },
           { status: 400 }
         );
       }
-      
+
       // Mark that user has started their first course
       if (isFirstCourse) {
         await User.findByIdAndUpdate(userId, { hasStartedFirstCourse: true });
       }
-      
+
       pointsInfo = {
         pointsDeducted: deductResult.points,
         isFree: deductResult.isFree,
         newBalance: deductResult.newBalance,
-        message: deductResult.isFree 
+        message: deductResult.isFree
           ? "🎉 First course is FREE! Enjoy learning!"
           : `${COURSE_START_COST} points deducted for course enrollment.`,
       };
@@ -347,12 +351,15 @@ export async function POST(request: NextRequest) {
       // Continue without population if it fails
     }
 
-    return NextResponse.json({ 
-      userProgress, 
-      courseProgress,
-      isNewCourse,
-      pointsInfo,
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        userProgress,
+        courseProgress,
+        isNewCourse,
+        pointsInfo,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error creating/updating user course progress:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -467,11 +474,11 @@ export async function PUT(request: NextRequest) {
     // Check if module is completed and award completion bonus (40%)
     let completionBonusEarned = 0;
     const wasAlreadyCompleted = courseProgress.status === "completed";
-    
+
     if (courseProgress.completedLessonIds.length >= lessons.length) {
       courseProgress.status = "completed";
       courseProgress.completedAt = new Date();
-      
+
       // Award completion bonus (40% of total points) - only once
       if (!wasAlreadyCompleted) {
         const completionResult = await awardCourseCompletionBonus(
@@ -480,7 +487,7 @@ export async function PUT(request: NextRequest) {
           courseName,
           courseLevel
         );
-        
+
         if (completionResult.success && !completionResult.alreadyAwarded) {
           completionBonusEarned = completionResult.points;
           courseProgress.pointsEarned += completionBonusEarned;
@@ -518,24 +525,24 @@ export async function PUT(request: NextRequest) {
 
     // Calculate total points earned this session
     const totalPointsEarned = progressPointsEarned + completionBonusEarned;
-    
+
     // Build response message
     let message = "Lesson completed!";
     const pointsMessages: string[] = [];
-    
+
     if (progressPointsEarned > 0) {
       pointsMessages.push(`+${progressPointsEarned} progress points`);
     }
     if (completionBonusEarned > 0) {
       pointsMessages.push(`+${completionBonusEarned} completion bonus`);
     }
-    
+
     if (courseProgress.status === "completed") {
       message = "🎉 Congratulations! You have completed the course!";
     } else if (nextLesson) {
       message = "Lesson completed! Moving to next lesson.";
     }
-    
+
     if (pointsMessages.length > 0) {
       message += ` (${pointsMessages.join(", ")})`;
     }

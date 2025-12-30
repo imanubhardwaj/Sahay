@@ -620,7 +620,6 @@ export default function MentorProfilePage() {
                             onClick={() => handleRemoveExperience(index)}
                             disabled={saving}
                             className="!ml-4 !p-2 !text-red-400 !hover:!text-red-300 !hover:!bg-red-500/10 !rounded-lg !transition-colors disabled:opacity-50"
-                            title="Remove experience"
                           >
                             <Trash2 className="h-4 w-4" />
                           </IconButton>

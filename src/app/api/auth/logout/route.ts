@@ -7,13 +7,18 @@ export async function POST() {
       message: 'Logged out successfully' 
     });
 
-    // Clear the session cookie
-    response.cookies.set('user_id', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0, // Expire immediately
-      expires: new Date(0) // Set to epoch time
+    // Clear all authentication cookies
+    const cookiesToClear = ['user_id', 'auth_token'];
+    
+    cookiesToClear.forEach(cookieName => {
+      response.cookies.set(cookieName, '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0, // Expire immediately
+        expires: new Date(0), // Set to epoch time
+        path: '/' // Ensure it clears from root path
+      });
     });
 
     return response;

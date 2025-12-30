@@ -9,7 +9,7 @@ import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require authentication
@@ -23,7 +23,7 @@ export async function GET(
 
     await connectDB();
 
-    const moduleId = params.id;
+    const { id: moduleId } = await params;
 
     // Convert to ObjectId
     let moduleObjectId;
@@ -73,7 +73,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require authentication
@@ -81,7 +81,7 @@ export async function PUT(
 
     await connectDB();
 
-    const moduleId = params.id;
+    const { id: moduleId } = await params;
     const body = await request.json();
 
     const moduleData = await Module.findByIdAndUpdate(moduleId, body, {
@@ -111,7 +111,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Require authentication
@@ -119,7 +119,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const moduleId = params.id;
+    const { id: moduleId } = await params;
 
     // Delete related lessons and quizzes first
     await Lesson.deleteMany({ moduleId });

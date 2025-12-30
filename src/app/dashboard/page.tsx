@@ -80,6 +80,23 @@ interface ModuleProgress {
   progress: number;
 }
 
+interface UserModule {
+  moduleId?: string;
+  status?: string;
+  progress?: number;
+}
+
+interface LessonProgress {
+  progress?: {
+    status?: string;
+    completedAt?: string;
+  };
+  lesson?: {
+    name?: string;
+    points?: number;
+  };
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -269,11 +286,11 @@ export default function DashboardPage() {
         // Use fallback data
         completedModules =
           user.selectedModules?.filter(
-            (module: any) => module.status === "completed"
+            (module: UserModule) => module.status === "completed"
           ).length || 0;
         inProgressModules =
           user.selectedModules?.filter(
-            (module: any) => module.status === "in_progress"
+            (module: UserModule) => module.status === "in_progress"
           ).length || 0;
       }
 
@@ -322,25 +339,29 @@ export default function DashboardPage() {
           const recentCompletions =
             recentData.lessonsWithProgress
               ?.filter(
-                (lp: any) =>
+                (lp: LessonProgress) =>
                   lp.progress?.status === "completed" &&
                   lp.progress?.completedAt
               )
               .slice(0, 3) || [];
 
-          recentCompletions.forEach((completion: any, index: number) => {
-            const completedAt = new Date(completion.progress.completedAt);
-            const timeAgo = getTimeAgo(completedAt);
+          recentCompletions.forEach(
+            (completion: LessonProgress, index: number) => {
+              const completedAt = new Date(
+                completion.progress?.completedAt || ""
+              );
+              const timeAgo = getTimeAgo(completedAt);
 
-            recentActivityData.push({
-              id: index + 1,
-              type: "lesson_completed",
-              title: `Completed: ${completion.lesson.name}`,
-              points: completion.lesson.points || 0,
-              time: timeAgo,
-              icon: "✅",
-            });
-          });
+              recentActivityData.push({
+                id: index + 1,
+                type: "lesson_completed",
+                title: `Completed: ${completion.lesson?.name || ""}`,
+                points: completion.lesson?.points || 0,
+                time: timeAgo,
+                icon: "✅",
+              });
+            }
+          );
         }
       } catch (error) {
         console.error("Failed to fetch recent activity:", error);
@@ -508,7 +529,10 @@ export default function DashboardPage() {
               </p>
             </div>
             <Link href="/dashboard/explore">
-              <Button variant="outlined" className=" !bg-white !text-black !rounded-lg !hover:scale-105 !transition-all !duration-300 !cursor-pointer">
+              <Button
+                variant="outlined"
+                className=" !bg-white !text-black !rounded-lg !hover:scale-105 !transition-all !duration-300 !cursor-pointer"
+              >
                 View All Modules
               </Button>
             </Link>
@@ -669,7 +693,10 @@ export default function DashboardPage() {
                     Start learning to see your progress here!
                   </p>
                   <Link href="/dashboard/explore">
-                    <Button variant="contained" className="!bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white">
+                    <Button
+                      variant="contained"
+                      className="!bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white"
+                    >
                       Explore Modules
                     </Button>
                   </Link>
@@ -706,7 +733,10 @@ export default function DashboardPage() {
                         No modules available
                       </p>
                       <Link href="/dashboard/explore">
-                        <Button variant="contained" className="!w-full !bg-gradient-to-r !from-indigo-500 !to-blue-500 !text-white">
+                        <Button
+                          variant="contained"
+                          className="!w-full !bg-gradient-to-r !from-indigo-500 !to-blue-500 !text-white"
+                        >
                           Explore Modules
                         </Button>
                       </Link>
@@ -734,7 +764,10 @@ export default function DashboardPage() {
                     <Link
                       href={`/dashboard/modules/${displayModule.module.id}`}
                     >
-                      <Button variant="outlined" className="!w-full !text-black !px-4 !py-2 !rounded-lg !hover:scale-105 !transition-all !duration-300">
+                      <Button
+                        variant="outlined"
+                        className="!w-full !text-black !px-4 !py-2 !rounded-lg !hover:scale-105 !transition-all !duration-300"
+                      >
                         {displayModule.status === "in_progress"
                           ? "Continue"
                           : displayModule.status === "completed"
@@ -755,19 +788,28 @@ export default function DashboardPage() {
             </h3>
             <div className="flex flex-col gap-2">
               <Link href="/dashboard/community">
-                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
+                <Button
+                  variant="outlined"
+                  className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer"
+                >
                   <span className="mr-2 text-xs">💬</span>
                   Ask a Question
                 </Button>
               </Link>
               <Link href="/dashboard/portfolio">
-                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
+                <Button
+                  variant="outlined"
+                  className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer"
+                >
                   <span className="mr-2 text-xs">🎨</span>
                   Add Project
                 </Button>
               </Link>
               <Link href="/dashboard/mentors">
-                <Button variant="outlined" className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer">
+                <Button
+                  variant="outlined"
+                  className="!w-full !text-black !justify-start !text-left !border-gray-200 !hover:bg-gray-50 !cursor-pointer"
+                >
                   <span className="mr-2 text-xs">👨‍🏫</span>
                   Book Mentor
                 </Button>

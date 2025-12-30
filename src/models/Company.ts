@@ -12,7 +12,7 @@ const companySchema = new mongoose.Schema({
 companySchema.pre("save", updateUpdatedAt);
 
 // Index for efficient queries
-companySchema.index({ name: 1 });
+// Note: name already has an index from unique: true, so we don't need to index it again
 companySchema.index({ email: 1 });
 
 export default mongoose.models.Company ||

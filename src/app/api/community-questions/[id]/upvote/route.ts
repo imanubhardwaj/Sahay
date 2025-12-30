@@ -33,7 +33,7 @@ export async function POST(
 
     // Check if user already upvoted
     const hasUpvoted = question.upvotedBy?.some(
-      (upvoterId: any) => upvoterId.toString() === userId
+      (upvoterId: { toString: () => string }) => upvoterId.toString() === userId
     );
 
     if (hasUpvoted) {
@@ -57,7 +57,9 @@ export async function POST(
     const questionObj = question.toObject();
     const responseData = {
       ...questionObj,
-      upvotedBy: (question.upvotedBy || []).map((id: { toString: () => string }) => id.toString())
+      upvotedBy: (question.upvotedBy || []).map(
+        (id: { toString: () => string }) => id.toString()
+      ),
     };
 
     return NextResponse.json({ success: true, question: responseData });
@@ -69,4 +71,3 @@ export async function POST(
     );
   }
 }
-

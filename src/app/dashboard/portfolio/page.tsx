@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Loader from "@/components/Loader";
 // Removed mock API - using real API calls
@@ -253,7 +252,6 @@ export default function PortfolioPage() {
 
               <div className="flex items-center justify-end space-x-3">
                 <button
-                  variant="outline"
                   onClick={() => setShowAddForm(false)}
                   className="px-6 py-2 rounded-2xl"
                 >

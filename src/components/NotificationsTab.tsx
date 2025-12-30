@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaCheck, FaTimes } from "react-icons/fa";
+import { useState, useEffect, useCallback } from "react";
+import {
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaInfoCircle,
+  FaCheck,
+} from "react-icons/fa";
 import { useSocket } from "@/hooks/useSocket";
 import { getAuthHeaders } from "@/lib/token-storage";
 
@@ -22,9 +27,34 @@ export function NotificationsTab() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      const url =
+        filter === "unread"
+          ? "/api/notifications?unreadOnly=true&limit=100"
+          : "/api/notifications?unreadOnly=false&limit=100";
+
+      const response = await fetch(url, {
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setNotifications(result.data || []);
+        setUnreadCount(result.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
   useEffect(() => {
     fetchNotifications();
-  }, [filter]);
+  }, [fetchNotifications]);
 
   // Listen for real-time notifications via Socket.io
   useEffect(() => {
@@ -43,31 +73,7 @@ export function NotificationsTab() {
     };
   }, [socket, isConnected]);
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const url = filter === "unread" 
-        ? "/api/notifications?unreadOnly=true&limit=100"
-        : "/api/notifications?unreadOnly=false&limit=100";
-      
-      const response = await fetch(url, {
-        headers: getAuthHeaders(),
-        credentials: "include",
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        setNotifications(result.data || []);
-        setUnreadCount(result.unreadCount || 0);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = useCallback(async (notificationId: string) => {
     try {
       const response = await fetch("/api/notifications", {
         method: "PATCH",
@@ -78,18 +84,16 @@ export function NotificationsTab() {
 
       if (response.ok) {
         setNotifications((prev) =>
-          prev.map((n) =>
-            n._id === notificationId ? { ...n, read: true } : n
-          )
+          prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
-  };
+  }, []);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     try {
       const response = await fetch("/api/notifications", {
         method: "PATCH",
@@ -105,9 +109,9 @@ export function NotificationsTab() {
     } catch (error) {
       console.error("Error marking all as read:", error);
     }
-  };
+  }, []);
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = useCallback((type: string) => {
     switch (type) {
       case "booking_confirmed":
       case "booking_completed":
@@ -119,9 +123,9 @@ export function NotificationsTab() {
       default:
         return <FaInfoCircle className="text-blue-500 text-xl" />;
     }
-  };
+  }, []);
 
-  const formatTime = (dateString: string) => {
+  const formatTime = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -130,15 +134,17 @@ export function NotificationsTab() {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffMins < 60)
+      return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -155,7 +161,11 @@ export function NotificationsTab() {
         <div>
           <h2 className="text-2xl font-bold text-white">Notifications</h2>
           <p className="text-gray-400 mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
+            {unreadCount > 0
+              ? `${unreadCount} unread notification${
+                  unreadCount > 1 ? "s" : ""
+                }`
+              : "All caught up!"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -193,12 +203,22 @@ export function NotificationsTab() {
       </div>
 
       {/* Connection Status */}
-      <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-        isConnected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-      }`}>
-        <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500"}`} />
+      <div
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+          isConnected
+            ? "bg-green-500/20 text-green-400"
+            : "bg-yellow-500/20 text-yellow-400"
+        }`}
+      >
+        <div
+          className={`w-2 h-2 rounded-full ${
+            isConnected ? "bg-green-500" : "bg-yellow-500"
+          }`}
+        />
         <span className="text-sm">
-          {isConnected ? "Real-time notifications active" : "Using polling - notifications may be delayed"}
+          {isConnected
+            ? "Real-time notifications active"
+            : "Using polling - notifications may be delayed"}
         </span>
       </div>
 
@@ -206,9 +226,11 @@ export function NotificationsTab() {
       {notifications.length === 0 ? (
         <div className="bg-gray-800 rounded-xl p-12 text-center">
           <FaInfoCircle className="mx-auto text-6xl mb-4 text-gray-600" />
-          <h3 className="text-xl font-semibold text-white mb-2">No notifications</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No notifications
+          </h3>
           <p className="text-gray-400">
-            {filter === "unread" 
+            {filter === "unread"
               ? "You're all caught up! No unread notifications."
               : "You don't have any notifications yet."}
           </p>
@@ -219,7 +241,9 @@ export function NotificationsTab() {
             <div
               key={notification._id}
               className={`bg-gray-800 rounded-xl p-6 hover:bg-gray-700 transition-colors ${
-                !notification.read ? "border-l-4 border-blue-500 bg-gray-800/50" : ""
+                !notification.read
+                  ? "border-l-4 border-blue-500 bg-gray-800/50"
+                  : ""
               }`}
             >
               <div className="flex items-start gap-4">
@@ -236,7 +260,9 @@ export function NotificationsTab() {
                       >
                         {notification.title}
                       </h3>
-                      <p className="text-gray-400 mb-3">{notification.message}</p>
+                      <p className="text-gray-400 mb-3">
+                        {notification.message}
+                      </p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>{formatTime(notification.createdAt)}</span>
                         {!notification.read && (
@@ -266,5 +292,3 @@ export function NotificationsTab() {
     </div>
   );
 }
-
-

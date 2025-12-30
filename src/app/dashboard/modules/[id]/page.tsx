@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
 import LessonContentRenderer from "@/components/ui/LessonContentRenderer";
 import { Button } from "../../../../../packages/ui";
-import {
-  extractCodingChallenge,
-  getModuleLanguage,
-  createProblemDescription,
-} from "@/lib/lesson-utils";
+import { extractCodingChallenge, getModuleLanguage } from "@/lib/lesson-utils";
+
+interface QuestionResult {
+  questionId: string;
+  correctOptionId?: string;
+  userOptionId?: string;
+  userContent?: string;
+  isCorrect: boolean;
+}
 
 interface ModuleData {
   _id: string;
@@ -45,6 +49,51 @@ interface UserAnswer {
   content?: string;
 }
 
+interface QuizOption {
+  _id?: string;
+  id?: string;
+  text?: string;
+  content?: string;
+  isCorrect?: boolean;
+  isSelected?: boolean;
+}
+
+interface QuizQuestion {
+  _id: string;
+  questionText?: string;
+  question?: string;
+  type: string;
+  points?: number;
+  options?: QuizOption[];
+  evaluationCriteria?: string;
+}
+
+interface QuizData {
+  questions: QuizQuestion[];
+}
+
+interface QuizResult {
+  quizResults: {
+    isPassed: boolean;
+    earnedPoints: number;
+    totalPoints: number;
+    scorePercentage: number;
+    attempts: number;
+  };
+  feedback: string;
+  questionResults: QuestionResult[];
+}
+
+interface ExtendedQuestionResult extends QuestionResult {
+  question?: string;
+  type?: string;
+  options?: QuizOption[];
+  userAnswer?: string;
+  explanation?: string;
+  earnedPoints?: number;
+  points?: number;
+}
+
 export default function SecureModulePage() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
@@ -59,31 +108,15 @@ export default function SecureModulePage() {
 
   // Quiz state
   const [showQuiz, setShowQuiz] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [quizData, setQuizData] = useState<any>(null);
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
 
   // Results state
   const [showResults, setShowResults] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [quizResults, setQuizResults] = useState<any>(null);
+  const [quizResults, setQuizResults] = useState<QuizResult | null>(null);
 
-  useEffect(() => {
-    if (!user) {
-      router.push(
-        `/login?redirect=${encodeURIComponent(
-          `/dashboard/modules/${moduleId}`
-        )}`
-      );
-      return;
-    }
-
-    loadCurrentLesson();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, router, moduleId]);
-
-  const loadCurrentLesson = async () => {
+  const loadCurrentLesson = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -127,9 +160,9 @@ export default function SecureModulePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, moduleId]);
 
-  const handleStartQuiz = async () => {
+  const handleStartQuiz = useCallback(async () => {
     if (!currentLesson || !currentLesson.hasQuiz) return;
 
     try {
@@ -164,7 +197,20 @@ export default function SecureModulePage() {
       console.error("Error loading quiz:", error);
       alert("Error loading quiz. Please try again.");
     }
-  };
+  }, [user, currentLesson]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push(
+        `/login?redirect=${encodeURIComponent(
+          `/dashboard/modules/${moduleId}`
+        )}`
+      );
+      return;
+    }
+
+    loadCurrentLesson();
+  }, [user, router, moduleId, loadCurrentLesson]);
 
   const handleAnswerSelect = (
     questionId: string,
@@ -191,7 +237,7 @@ export default function SecureModulePage() {
     setUserAnswers(newAnswers);
   };
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = useCallback(async () => {
     if (!user || !currentLesson) return;
 
     try {
@@ -229,9 +275,9 @@ export default function SecureModulePage() {
       console.error("Error submitting quiz:", error);
       alert("An error occurred while submitting the quiz");
     }
-  };
+  }, [user, currentLesson, moduleId, userAnswers]);
 
-  const handleCompleteLesson = async () => {
+  const handleCompleteLesson = useCallback(async () => {
     if (!user || !currentLesson) return;
 
     try {
@@ -251,9 +297,9 @@ export default function SecureModulePage() {
       console.error("Error completing lesson:", error);
       alert("An error occurred while completing the lesson");
     }
-  };
+  }, [user, currentLesson]);
 
-  const handleNextLesson = async () => {
+  const handleNextLesson = useCallback(async () => {
     if (!user || !currentLesson) return;
 
     try {
@@ -302,7 +348,7 @@ export default function SecureModulePage() {
       console.error("Error advancing to next lesson:", error);
       alert("An error occurred while advancing to the next lesson");
     }
-  };
+  }, [user, currentLesson, moduleId, refreshUser, loadCurrentLesson]);
 
   if (isLoading) {
     return (
@@ -482,9 +528,8 @@ export default function SecureModulePage() {
                   <h3 className="text-sm font-medium text-gray-400 mb-3">
                     Results
                   </h3>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {quizResults.questionResults.map(
-                    (result: any, index: number) => (
+                    (result: ExtendedQuestionResult, index: number) => (
                       <div
                         key={result.questionId}
                         className={`border rounded-lg p-4 ${
@@ -514,9 +559,8 @@ export default function SecureModulePage() {
 
                             {result.type === "mcq" && result.options && (
                               <div className="space-y-1.5 mb-2">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 {result.options.map(
-                                  (option: any, optIndex: number) => (
+                                  (option: QuizOption, optIndex: number) => (
                                     <div
                                       key={optIndex}
                                       className={`px-3 py-1.5 rounded-lg text-xs ${
@@ -584,10 +628,10 @@ export default function SecureModulePage() {
                   variant="text"
                   onClick={handleStartQuiz}
                   className={`px-5 py-2.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors ${
-                    quizResults.quizResults.isPassed ? '' : '!flex-1'
+                    quizResults.quizResults.isPassed ? "" : "!flex-1"
                   }`}
                 >
-                  {quizResults.quizResults.isPassed ? 'Retake' : 'Retake Quiz'}
+                  {quizResults.quizResults.isPassed ? "Retake" : "Retake Quiz"}
                 </Button>
               )}
             </div>
@@ -656,26 +700,26 @@ export default function SecureModulePage() {
                             )}
                           </div>
                           {/* Show full question content in a formatted box for better readability */}
-                          {(question.questionText || question.question) && 
-                           (question.type === 'code' || question.type === 'subjective') && (
-                            <div className="mt-3 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                              <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">
-                                Question Details:
-                              </p>
-                              <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                {question.questionText || question.question}
+                          {(question.questionText || question.question) &&
+                            (question.type === "code" ||
+                              question.type === "subjective") && (
+                              <div className="mt-3 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">
+                                  Question Details:
+                                </p>
+                                <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                  {question.questionText || question.question}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </div>
 
                       {/* MCQ Options */}
                       {question.type === "mcq" && question.options ? (
                         <div className="space-y-2">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {question.options.map(
-                            (option: any, index: number) => {
+                            (option: QuizOption, index: number) => {
                               const isSelected =
                                 currentAnswer?.optionId === option._id;
                               return (

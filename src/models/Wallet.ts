@@ -17,7 +17,7 @@ const walletSchema = new mongoose.Schema({
 walletSchema.pre("save", updateUpdatedAt);
 
 // Index for efficient queries
-walletSchema.index({ userId: 1 });
-walletSchema.index({ points: -1 }); // For leaderboards
+// Note: userId already has an index from unique: true, so we don't need to index it again
+walletSchema.index({ balance: -1 }); // For leaderboards
 
 export default mongoose.models.Wallet || mongoose.model("Wallet", walletSchema);

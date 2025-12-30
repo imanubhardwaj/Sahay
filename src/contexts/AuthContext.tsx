@@ -1,8 +1,16 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import { setToken, getAuthHeader } from '@/lib/token-storage';
-import { usePolling } from '@/hooks/usePolling';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  ReactNode,
+} from "react";
+import { setToken, getAuthHeader } from "@/lib/token-storage";
+import { usePolling } from "@/hooks/usePolling";
 
 interface User {
   _id: string;
@@ -16,8 +24,8 @@ interface User {
   title?: string;
   yoe?: number;
   workosId: string;
-  role: 'student' | 'mentor';
-  userType: 'student_fresher' | 'working_professional';
+  role: "student" | "mentor";
+  userType: "student_fresher" | "working_professional";
   college?: string;
   year?: number;
   company?: string;
@@ -42,7 +50,7 @@ interface User {
   signupBonusAwarded?: boolean;
   selectedModules: {
     moduleId: string;
-    status: 'not_started' | 'in_progress' | 'completed';
+    status: "not_started" | "in_progress" | "completed";
     startedAt?: string;
     completedAt?: string;
     progress: number;
@@ -70,27 +78,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Real authentication - check for session cookie or token
       const headers: HeadersInit = {
-        credentials: 'include',
+        credentials: "include",
       };
-      
+
       // Add token to header if available
       const authHeader = getAuthHeader();
       if (authHeader) {
-        headers['Authorization'] = authHeader;
+        headers["Authorization"] = authHeader;
       }
 
-      const response = await fetch('/api/user?current=true', {
+      const response = await fetch("/api/user?current=true", {
         headers,
-        credentials: 'include'
+        credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
         // Construct name from firstName and lastName if not present
-        if (data.user && !data.user.name && (data.user.firstName || data.user.lastName)) {
-          data.user.name = `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim();
+        if (
+          data.user &&
+          !data.user.name &&
+          (data.user.firstName || data.user.lastName)
+        ) {
+          data.user.name = `${data.user.firstName || ""} ${
+            data.user.lastName || ""
+          }`.trim();
         }
-        
+
         // Store token if provided in response (from verify-code endpoint)
         if (data.token) {
           setToken(data.token);
@@ -102,22 +116,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const pointsHeaders: HeadersInit = {};
             const authHeader = getAuthHeader();
             if (authHeader) {
-              pointsHeaders['Authorization'] = authHeader;
+              pointsHeaders["Authorization"] = authHeader;
             }
-            
-            const pointsResponse = await fetch(`/api/user/points?userId=${data.user._id}`, {
-              headers: pointsHeaders,
-              credentials: 'include'
-            });
+
+            const pointsResponse = await fetch(
+              `/api/user/points?userId=${data.user._id}`,
+              {
+                headers: pointsHeaders,
+                credentials: "include",
+              }
+            );
             if (pointsResponse.ok) {
               const pointsData = await pointsResponse.json();
               const newPoints = pointsData.points || 0;
               data.user.points = newPoints;
-              
+
               // Only update user if points changed (to prevent unnecessary re-renders)
-              const pointsChanged = lastPointsRef.current !== null && lastPointsRef.current !== newPoints;
+
               lastPointsRef.current = newPoints;
-              
+
               // Always set user, but we track points changes for polling
               setUser(data.user);
             } else {
@@ -125,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUser(data.user);
             }
           } catch (error) {
-            console.error('Failed to fetch user points:', error);
+            console.error("Failed to fetch user points:", error);
             data.user.points = 0;
             setUser(data.user);
           }
@@ -136,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error("Failed to fetch user:", error);
       setUser(null);
     }
   }, []);
@@ -144,24 +161,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       // First, try to get token from API if we have a cookie but no token in localStorage
-      const { getToken } = await import('@/lib/token-storage');
+      const { getToken } = await import("@/lib/token-storage");
       if (!getToken()) {
         try {
-          const tokenResponse = await fetch('/api/auth/token', {
-            credentials: 'include'
+          const tokenResponse = await fetch("/api/auth/token", {
+            credentials: "include",
           });
           if (tokenResponse.ok) {
             const tokenData = await tokenResponse.json();
             if (tokenData.token) {
-              const { setToken } = await import('@/lib/token-storage');
+              const { setToken } = await import("@/lib/token-storage");
               setToken(tokenData.token);
             }
           }
         } catch (error) {
-          console.error('Failed to get token:', error);
+          console.error("Failed to get token:", error);
         }
       }
-      
+
       await fetchUser();
       setIsLoading(false);
     };
@@ -177,20 +194,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const pointsHeaders: HeadersInit = {};
         const authHeader = getAuthHeader();
         if (authHeader) {
-          pointsHeaders['Authorization'] = authHeader;
+          pointsHeaders["Authorization"] = authHeader;
         }
-        
-        const pointsResponse = await fetch(`/api/user/points?userId=${user._id}`, {
-          headers: pointsHeaders,
-          credentials: 'include'
-        });
-        
+
+        const pointsResponse = await fetch(
+          `/api/user/points?userId=${user._id}`,
+          {
+            headers: pointsHeaders,
+            credentials: "include",
+          }
+        );
+
         if (pointsResponse.ok) {
           const pointsData = await pointsResponse.json();
           const newPoints = pointsData.points || 0;
-          
+
           // Only update if points actually changed
-          if (lastPointsRef.current !== null && lastPointsRef.current !== newPoints) {
+          if (
+            lastPointsRef.current !== null &&
+            lastPointsRef.current !== newPoints
+          ) {
             // Points changed, refresh full user data
             await fetchUser();
           } else if (lastPointsRef.current === null) {
@@ -199,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Failed to refresh wallet points:', error);
+        console.error("Failed to refresh wallet points:", error);
       }
     }
   }, [user?._id, fetchUser]);
@@ -211,59 +234,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Clear token from storage
-      const { removeToken } = await import('@/lib/token-storage');
+      // Call logout API to clear server-side session cookies
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+      } catch (apiError) {
+        console.error("Logout API call failed:", apiError);
+        // Continue with client-side cleanup even if API call fails
+      }
+
+      // Clear token from localStorage
+      const { removeToken } = await import("@/lib/token-storage");
       removeToken();
-      
+
       // Clear user state
       setUser(null);
-      
+
+      // Clear any other cookies as backup
+      document.cookie =
+        "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
       // Redirect to login
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
+      // Fallback: clear everything and redirect anyway
+      const { removeToken } = await import("@/lib/token-storage");
+      removeToken();
+      document.cookie =
+        "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.href = "/login";
     }
   };
 
   const updateUser = async (updates: Partial<User>) => {
     if (!user) return false;
-    
+
     try {
-      console.log('AuthContext: Updating user with:', updates);
-      
+      console.log("AuthContext: Updating user with:", updates);
+
       // Make API call to update user in database
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      const headers: HeadersInit = { "Content-Type": "application/json" };
       const authHeader = getAuthHeader();
       if (authHeader) {
-        headers['Authorization'] = authHeader;
+        headers["Authorization"] = authHeader;
       }
 
-      const response = await fetch('/api/user', {
-        method: 'PUT',
+      const response = await fetch("/api/user", {
+        method: "PUT",
         headers,
-        credentials: 'include',
-        body: JSON.stringify(updates)
+        credentials: "include",
+        body: JSON.stringify(updates),
       });
 
-      console.log('AuthContext: API response status:', response.status);
+      console.log("AuthContext: API response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('AuthContext: Updated user data from server:', data.user);
+        console.log("AuthContext: Updated user data from server:", data.user);
         // Construct name from firstName and lastName if not present
-        if (data.user && !data.user.name && (data.user.firstName || data.user.lastName)) {
-          data.user.name = `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim();
+        if (
+          data.user &&
+          !data.user.name &&
+          (data.user.firstName || data.user.lastName)
+        ) {
+          data.user.name = `${data.user.firstName || ""} ${
+            data.user.lastName || ""
+          }`.trim();
         }
         // Update local state with the updated user data from server
         setUser(data.user);
         return true;
       } else {
         const errorData = await response.json();
-        console.error('AuthContext: API error:', errorData);
-        throw new Error('Failed to update user');
+        console.error("AuthContext: API error:", errorData);
+        throw new Error("Failed to update user");
       }
     } catch (error) {
-      console.error('Profile update failed:', error);
+      console.error("Profile update failed:", error);
       // Fallback: update local state even if API fails
       setUser({ ...user, ...updates });
       return false;
@@ -280,20 +335,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     logout,
     updateUser,
-    refreshUser
+    refreshUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

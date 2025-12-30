@@ -16,26 +16,32 @@ export async function POST() {
     );
 
     // Group modules by name and skillId
-    const moduleGroups = new Map<string, any[]>();
+    const moduleGroups = new Map<string, (typeof Module)[]>();
 
-    for (const module of allModules) {
-      const key = `${module.name}_${module.skillId?._id || "no-skill"}`;
+    for (const moduleItem of allModules) {
+      const key = `${moduleItem.name}_${
+        (moduleItem.skillId as { _id: string })?._id || "no-skill"
+      }`;
       if (!moduleGroups.has(key)) {
         moduleGroups.set(key, []);
       }
-      moduleGroups.get(key)!.push(module);
+      moduleGroups.get(key)!.push(moduleItem);
     }
 
     let deletedCount = 0;
     const duplicates = [];
 
     // Find and handle duplicates
-    for (const [key, modules] of moduleGroups.entries()) {
+    for (const [, modules] of moduleGroups.entries()) {
       if (modules.length > 1) {
         // Sort by creation date (keep the oldest one)
         modules.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
+          const dateA = new Date(
+            (a as unknown as { createdAt: string }).createdAt || 0
+          ).getTime();
+          const dateB = new Date(
+            (b as unknown as { createdAt: string }).createdAt || 0
+          ).getTime();
           return dateA - dateB;
         });
 
@@ -44,33 +50,47 @@ export async function POST() {
 
         duplicates.push({
           name: keepModule.name,
-          keepId: keepModule._id,
-          deleteIds: deleteModules.map((m) => m._id),
+          keepId: (keepModule as unknown as { _id: string })._id,
+          deleteIds: deleteModules.map(
+            (m) => (m as unknown as { _id: string })._id
+          ),
           count: deleteModules.length,
         });
 
         // Delete duplicate modules and their related data
         for (const moduleToDelete of deleteModules) {
           // Delete related lessons
-          await Lesson.deleteMany({ moduleId: moduleToDelete._id });
+          await Lesson.deleteMany({
+            moduleId: (moduleToDelete as unknown as { _id: string })._id,
+          });
 
           // Delete related quizzes
-          const quizzes = await Quiz.find({ moduleId: moduleToDelete._id });
+          const quizzes = await Quiz.find({
+            moduleId: (moduleToDelete as unknown as { _id: string })._id,
+          });
           for (const quiz of quizzes) {
             await Question.deleteMany({ quizId: quiz._id });
           }
-          await Quiz.deleteMany({ moduleId: moduleToDelete._id });
+          await Quiz.deleteMany({
+            moduleId: (moduleToDelete as unknown as { _id: string })._id,
+          });
 
           // Delete the module
-          await Module.findByIdAndDelete(moduleToDelete._id);
+          await Module.findByIdAndDelete(
+            (moduleToDelete as unknown as { _id: string })._id
+          );
           deletedCount++;
           console.log(
-            `🗑️  Deleted duplicate module: ${moduleToDelete.name} (${moduleToDelete._id})`
+            `🗑️  Deleted duplicate module: ${moduleToDelete.name} (${
+              (moduleToDelete as unknown as { _id: string })._id
+            })`
           );
         }
 
         console.log(
-          `✅ Kept module: ${keepModule.name} (${keepModule._id}), deleted ${deleteModules.length} duplicates`
+          `✅ Kept module: ${keepModule.name} (${
+            (keepModule as unknown as { _id: string })._id
+          }), deleted ${deleteModules.length} duplicates`
         );
       }
     }
@@ -108,35 +128,44 @@ export async function GET() {
       "skillId"
     );
 
-    const moduleGroups = new Map<string, any[]>();
+    const moduleGroups = new Map<string, (typeof Module)[]>();
 
-    for (const module of allModules) {
-      const key = `${module.name}_${module.skillId?._id || "no-skill"}`;
+    for (const moduleItem of allModules) {
+      const key = `${moduleItem.name}_${
+        (moduleItem.skillId as { _id: string })?._id || "no-skill"
+      }`;
       if (!moduleGroups.has(key)) {
         moduleGroups.set(key, []);
       }
-      moduleGroups.get(key)!.push(module);
+      moduleGroups.get(key)!.push(moduleItem);
     }
 
     const duplicates = [];
 
-    for (const [key, modules] of moduleGroups.entries()) {
+    for (const [, modules] of moduleGroups.entries()) {
       if (modules.length > 1) {
         modules.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
+          const dateA = new Date(
+            (a as unknown as { createdAt: string }).createdAt || 0
+          ).getTime();
+          const dateB = new Date(
+            (b as unknown as { createdAt: string }).createdAt || 0
+          ).getTime();
           return dateA - dateB;
         });
 
         duplicates.push({
           name: modules[0].name,
-          skillName: modules[0].skillId?.name || "No skill",
+          skillName:
+            (modules[0] as unknown as { skillId: { name: string } })?.skillId
+              ?.name || "No skill",
           totalCount: modules.length,
-          keepId: modules[0]._id,
-          keepCreatedAt: modules[0].createdAt,
+          keepId: (modules[0] as unknown as { _id: string })._id,
+          keepCreatedAt: (modules[0] as unknown as { createdAt: string })
+            .createdAt,
           duplicateIds: modules.slice(1).map((m) => ({
-            id: m._id,
-            createdAt: m.createdAt,
+            id: (m as unknown as { _id: string })._id,
+            createdAt: (m as unknown as { createdAt: string }).createdAt,
           })),
         });
       }

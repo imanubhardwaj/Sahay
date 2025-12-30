@@ -26,7 +26,7 @@ const userCourseProgressSchema = new mongoose.Schema({
 userCourseProgressSchema.pre('save', updateUpdatedAt);
 
 // Index for efficient queries
-userCourseProgressSchema.index({ userId: 1 });
+// Note: userId already has an index from unique: true, so we don't need to index it again
 userCourseProgressSchema.index({ 'completedCourses.courseId': 1 });
 userCourseProgressSchema.index({ 'completedCourses.status': 1 });
 

@@ -4,19 +4,31 @@ import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface UserWithId {
+  _id?: string | { toString(): string };
+}
+
 export function useSocket() {
   const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const userId = user?._id || (user as any)?._id?.toString();
+    const userWithId = user as UserWithId | null;
+    const userId = userWithId?._id
+      ? typeof userWithId._id === "string"
+        ? userWithId._id
+        : userWithId._id.toString()
+      : undefined;
     if (!userId) return;
 
-    const userIdStr = typeof userId === 'string' ? userId : userId.toString();
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 
-                     (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    
+    const userIdStr = userId;
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000");
+
     const newSocket = io(socketUrl, {
       path: "/api/socket",
       transports: ["websocket", "polling"],
@@ -26,7 +38,7 @@ export function useSocket() {
     newSocket.on("connect", () => {
       console.log("✅ Socket connected:", newSocket.id);
       setIsConnected(true);
-      
+
       // Join user's personal room
       newSocket.emit("join", userIdStr);
     });
@@ -49,8 +61,7 @@ export function useSocket() {
       setSocket(null);
       setIsConnected(false);
     };
-  }, [user?._id]);
+  }, [user]);
 
   return { socket, isConnected };
 }
-

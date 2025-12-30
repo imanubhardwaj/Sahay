@@ -16,7 +16,7 @@ import {
 import crypto from "crypto";
 import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
 import { notifyBookingEvent } from "@/lib/notifications";
-import { TRANSACTION_TYPE, TRANSACTION_SOURCE, MENTOR_LEVEL } from "@/lib/constants";
+import { TRANSACTION_SOURCE, MENTOR_LEVEL } from "@/lib/constants";
 import {
   deductMentorshipPoints,
   creditMentorEarnings,
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Require authentication
-    const authenticatedUserId = await authenticateRequest(request);
+    await authenticateRequest(request);
 
     await connectDB();
 
@@ -150,9 +150,9 @@ export async function POST(request: NextRequest) {
     ]);
 
     // Get mentor profile with level info (required for pricing)
-    const mentorProfile = await MentorProfile.findOne({ userId: professionalId }).select(
-      "+zoomAccessToken +zoomRefreshToken +level +customPointRate"
-    );
+    const mentorProfile = await MentorProfile.findOne({
+      userId: professionalId,
+    }).select("+zoomAccessToken +zoomRefreshToken +level +customPointRate");
 
     if (!student) {
       return NextResponse.json(
@@ -160,24 +160,29 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-    
+
     if (!professional) {
       return NextResponse.json(
-        { success: false, error: `Professional not found with ID: ${professionalId}` },
+        {
+          success: false,
+          error: `Professional not found with ID: ${professionalId}`,
+        },
         { status: 404 }
       );
     }
-    
+
     if (!schedule) {
       return NextResponse.json(
         { success: false, error: `Schedule not found with ID: ${scheduleId}` },
         { status: 404 }
       );
     }
-    
+
     // Mentor profile is required for pricing calculation
     if (!mentorProfile) {
-      console.warn(`Mentor profile not found for professional ${professionalId}. Using default L3 pricing.`);
+      console.warn(
+        `Mentor profile not found for professional ${professionalId}. Using default L3 pricing.`
+      );
     }
 
     // Check if schedule is available
@@ -193,26 +198,27 @@ export async function POST(request: NextRequest) {
 
     // Determine mentor level and calculate price
     // Mentor levels: L1 = 3000 points, L2 = 2000 points, L3 = 1000 points
-    const mentorLevel = (mentorProfile?.level || MENTOR_LEVEL.L3) as MentorLevel;
+    const mentorLevel = (mentorProfile?.level ||
+      MENTOR_LEVEL.L3) as MentorLevel;
     const customRate = mentorProfile?.customPointRate;
-    
+
     // Get base price based on mentor level
-    let basePrice = customRate || getMentorshipCallCost(mentorLevel);
-    
+    const basePrice = customRate || getMentorshipCallCost(mentorLevel);
+
     // Check if this is student's first mentorship call (50% discount)
     const studentBookings = await Booking.find({
       studentId,
-      status: { $in: ['confirmed', 'completed'] }
+      status: { $in: ["confirmed", "completed"] },
     });
     const isFirstCall = isEligibleForFirstCallDiscount(
-      studentBookings.map(b => ({ status: b.status }))
+      studentBookings.map((b) => ({ status: b.status }))
     );
-    
+
     // Calculate final price
     let finalPrice: number;
     let mentorReceives: number;
     let isDiscounted = false;
-    
+
     if (isFirstCall) {
       const pricing = calculateFirstCallPrice(mentorLevel);
       finalPrice = customRate ? Math.floor(customRate * 0.5) : pricing.userPays;
@@ -225,11 +231,11 @@ export async function POST(request: NextRequest) {
 
     // CRITICAL VALIDATION: Validate wallet balance BEFORE any transaction
     const walletValidation = await validateWalletBalance(studentId, finalPrice);
-    
+
     if (!walletValidation.isValid) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: walletValidation.error,
           requiredPoints: finalPrice,
           currentBalance: walletValidation.currentBalance,
@@ -257,9 +263,9 @@ export async function POST(request: NextRequest) {
 
     if (!deductResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: deductResult.error || "Failed to process payment"
+        {
+          success: false,
+          error: deductResult.error || "Failed to process payment",
         },
         { status: 400 }
       );
@@ -267,7 +273,9 @@ export async function POST(request: NextRequest) {
 
     // Mark student as having completed first mentorship (if applicable)
     if (isFirstCall) {
-      await User.findByIdAndUpdate(studentId, { hasCompletedFirstMentorship: true });
+      await User.findByIdAndUpdate(studentId, {
+        hasCompletedFirstMentorship: true,
+      });
     }
 
     // Generate approval token
@@ -321,7 +329,7 @@ export async function POST(request: NextRequest) {
         sessionTime,
         duration,
         sessionType: sessionType || "one-on-one",
-        price,
+        price: finalPrice,
         studentNotes,
         bookingId: booking._id.toString(),
         approvalToken,
@@ -348,7 +356,7 @@ export async function POST(request: NextRequest) {
         sessionTime,
         duration,
         sessionType: sessionType || "one-on-one",
-        price,
+        price: finalPrice,
       };
       studentEmailResult = await sendBookingRequestConfirmation(
         studentConfirmationData
@@ -360,7 +368,9 @@ export async function POST(request: NextRequest) {
 
     // Send booking created emails to both student and mentor (don't fail if email fails)
     try {
-      const dummyMeetingLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/meeting/${booking._id}`;
+      const dummyMeetingLink = `${
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+      }/meeting/${booking._id}`;
       await sendBookingCreatedEmail({
         studentName: `${student.firstName} ${student.lastName}`,
         studentEmail: student.email,
@@ -397,14 +407,14 @@ export async function POST(request: NextRequest) {
           studentName: `${student.firstName} ${student.lastName}`,
           sessionDate: new Date(sessionDate).toLocaleDateString(),
           sessionTime,
-          price,
+          price: finalPrice,
         }),
         notifyBookingEvent(studentId, "booking_request", {
           bookingId: booking._id.toString(),
           mentorName: `${professional.firstName} ${professional.lastName}`,
           sessionDate: new Date(sessionDate).toLocaleDateString(),
           sessionTime,
-          price,
+          price: finalPrice,
         }),
       ]);
     } catch (notifError) {
@@ -422,9 +432,12 @@ export async function POST(request: NextRequest) {
     ]);
 
     // Build response message
-    let bookingMessage = "Booking request sent! The mentor will review and approve your session.";
+    let bookingMessage =
+      "Booking request sent! The mentor will review and approve your session.";
     if (isDiscounted) {
-      bookingMessage = `🎉 First mentorship call! You saved ${basePrice - finalPrice} points (50% discount). ${bookingMessage}`;
+      bookingMessage = `🎉 First mentorship call! You saved ${
+        basePrice - finalPrice
+      } points (50% discount). ${bookingMessage}`;
     }
 
     return NextResponse.json(
@@ -450,15 +463,19 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
       body: JSON.stringify(request.body || {}),
     });
-    
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: errorMessage || "Failed to create booking",
-        details: process.env.NODE_ENV === "development" 
-          ? (error instanceof Error ? error.stack : String(error))
-          : undefined
+        details:
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.stack
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -525,10 +542,10 @@ export async function PATCH(request: NextRequest) {
 
       // Only refund if payment was already processed (points were debited)
       if (refundAmount > 0 && booking.paymentStatus === "paid") {
-        const refundReason = isStudentCancellation 
+        const refundReason = isStudentCancellation
           ? `Cancelled mentorship session (student cancellation)`
           : `Cancelled mentorship session by mentor`;
-        
+
         await processRefund(
           booking.studentId._id.toString(),
           booking._id.toString(),
@@ -602,9 +619,10 @@ export async function PATCH(request: NextRequest) {
       if (booking.paymentStatus === "paid") {
         // Determine how much mentor receives
         // If first call discount was applied, mentor still receives full value
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mentorReceivesPoints = (booking as any).mentorReceivesPoints || booking.price;
-        
+        const mentorReceivesPoints =
+          (booking as unknown as { mentorReceivesPoints: number })
+            .mentorReceivesPoints || booking.price;
+
         // Credit to mentor using the economy system
         await creditMentorEarnings(
           booking.professionalId._id.toString(),
@@ -663,10 +681,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: booking,
-        mentorWallet: updatedMentorWallet ? {
-          balance: updatedMentorWallet.balance,
-          totalEarned: updatedMentorWallet.totalEarned,
-        } : null,
+        mentorWallet: updatedMentorWallet
+          ? {
+              balance: updatedMentorWallet.balance,
+              totalEarned: updatedMentorWallet.totalEarned,
+            }
+          : null,
         message: `Booking ${status} successfully. Points credited to mentor wallet.`,
       });
     }

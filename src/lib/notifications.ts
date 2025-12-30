@@ -3,18 +3,18 @@ import connectDB from "./mongodb";
 
 export interface NotificationData {
   userId: string;
-  type: 
-    | 'booking_request'
-    | 'booking_confirmed'
-    | 'booking_cancelled'
-    | 'booking_completed'
-    | 'session_reminder'
-    | 'payment_received'
-    | 'payment_refunded'
-    | 'mentor_approved'
-    | 'mentor_rejected'
-    | 'new_message'
-    | 'system_update';
+  type:
+    | "booking_request"
+    | "booking_confirmed"
+    | "booking_cancelled"
+    | "booking_completed"
+    | "session_reminder"
+    | "payment_received"
+    | "payment_refunded"
+    | "mentor_approved"
+    | "mentor_rejected"
+    | "new_message"
+    | "system_update";
   title: string;
   message: string;
   data?: Record<string, unknown>;
@@ -26,7 +26,7 @@ export interface NotificationData {
 export async function createNotification(notificationData: NotificationData) {
   try {
     await connectDB();
-    
+
     const notification = await Notification.create({
       userId: notificationData.userId,
       type: notificationData.type,
@@ -39,23 +39,40 @@ export async function createNotification(notificationData: NotificationData) {
     try {
       const { getIO } = await import("@/lib/socket");
       const io = getIO();
-      if (io) {
-        io.to(notificationData.userId).emit("notification", {
-          _id: notification._id.toString(),
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          data: notification.data,
-          read: notification.read,
-          createdAt: notification.createdAt,
-        });
-        console.log(`📤 Notification emitted to user ${notificationData.userId}`);
+      if (
+        io &&
+        typeof (io as unknown as { to: (userId: string) => void }).to ===
+          "function"
+      ) {
+        (
+          io as unknown as {
+            to: (userId: string) => {
+              emit: (event: string, data: unknown) => void;
+            };
+          }
+        )
+          .to(notificationData.userId)
+          .emit("notification", {
+            _id: notification._id.toString(),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            data: notification.data,
+            read: notification.read,
+            createdAt: notification.createdAt,
+          });
+        console.log(
+          `📤 Notification emitted to user ${notificationData.userId}`
+        );
       } else {
         console.log("Socket.io not initialized, notification saved to DB only");
       }
     } catch (socketError) {
       // Socket.io not available, continue without real-time emit
-      console.log("Socket.io not available, notification saved to DB:", socketError);
+      console.log(
+        "Socket.io not available, notification saved to DB:",
+        socketError
+      );
     }
 
     return notification;
@@ -70,7 +87,11 @@ export async function createNotification(notificationData: NotificationData) {
  */
 export async function notifyBookingEvent(
   userId: string,
-  type: 'booking_request' | 'booking_confirmed' | 'booking_cancelled' | 'booking_completed',
+  type:
+    | "booking_request"
+    | "booking_confirmed"
+    | "booking_cancelled"
+    | "booking_completed",
   bookingData: {
     bookingId: string;
     mentorName?: string;
@@ -83,11 +104,15 @@ export async function notifyBookingEvent(
   const messages = {
     booking_request: {
       title: "New Booking Request",
-      message: `${bookingData.studentName || 'A student'} requested to book a session with you`,
+      message: `${
+        bookingData.studentName || "A student"
+      } requested to book a session with you`,
     },
     booking_confirmed: {
       title: "Booking Confirmed",
-      message: `Your session with ${bookingData.mentorName || 'the mentor'} has been confirmed`,
+      message: `Your session with ${
+        bookingData.mentorName || "the mentor"
+      } has been confirmed`,
     },
     booking_cancelled: {
       title: "Booking Cancelled",
@@ -95,7 +120,9 @@ export async function notifyBookingEvent(
     },
     booking_completed: {
       title: "Session Completed",
-      message: `Your session with ${bookingData.mentorName || 'the mentor'} has been completed`,
+      message: `Your session with ${
+        bookingData.mentorName || "the mentor"
+      } has been completed`,
     },
   };
 
@@ -107,4 +134,3 @@ export async function notifyBookingEvent(
     data: bookingData,
   });
 }
-

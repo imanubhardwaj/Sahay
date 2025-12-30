@@ -1,4 +1,4 @@
-import modulesData from '@/data/modules.json';
+import modulesData from "@/data/modules.json";
 
 export interface Module {
   id: string;
@@ -48,7 +48,7 @@ export interface ModulesData {
 }
 
 export function getModulesForUserType(userType: string): LearningPath | null {
-  const modules = modulesData as ModulesData;
+  const modules = modulesData as unknown as ModulesData;
   return modules.learningPaths[userType] || null;
 }
 
@@ -57,8 +57,8 @@ export function getAllModulesForUserType(userType: string): Module[] {
   if (!learningPath) return [];
 
   const allModules: Module[] = [];
-  
-  Object.values(learningPath.domains).forEach(domain => {
+
+  Object.values(learningPath.domains).forEach((domain) => {
     if (domain.modules) {
       allModules.push(...domain.modules);
     }
@@ -73,16 +73,19 @@ export function getAllModulesForUserType(userType: string): Module[] {
   return allModules;
 }
 
-export function getModuleById(moduleId: string, userType: string): Module | null {
+export function getModuleById(
+  moduleId: string,
+  userType: string
+): Module | null {
   const allModules = getAllModulesForUserType(userType);
-  return allModules.find(module => module.id === moduleId) || null;
+  return allModules.find((module) => module.id === moduleId) || null;
 }
 
 export function getUserTypeDisplayName(userType: string): string {
   const displayNames: { [key: string]: string } = {
-    'student_fresher': 'Student / Fresher',
-    'working_professional': 'Working Professional'
+    student_fresher: "Student / Fresher",
+    working_professional: "Working Professional",
   };
-  
+
   return displayNames[userType] || userType;
 }

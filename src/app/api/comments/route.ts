@@ -19,15 +19,14 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
-    const requestedUserId = searchParams.get("userId");
     const limit = parseInt(searchParams.get("limit") || "20");
     const page = parseInt(searchParams.get("page") || "1");
 
     const query: Record<string, unknown> = { deletedAt: null };
-    
+
     if (postId) query.postId = postId;
     if (userId) query.userId = userId;
 
@@ -48,8 +47,8 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -65,9 +64,9 @@ export async function POST(request: NextRequest) {
   try {
     // Require authentication
     await authenticateRequest(request);
-    
+
     await connectDB();
-    
+
     const commentData = await request.json();
     const { userId, postId, ...otherData } = commentData;
 
@@ -85,32 +84,29 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Verify post exists
     const post = await Post.findById(postId);
     if (!post) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     const comment = new Comment({
       ...otherData,
       userId,
       postId,
-      likes: 0
+      likes: 0,
     });
 
     await comment.save();
 
     // Populate the related data for the response
-    await comment.populate("userId", "firstName lastName email avatar userType");
+    await comment.populate(
+      "userId",
+      "firstName lastName email avatar userType"
+    );
     await comment.populate("postId", "title content");
 
     return NextResponse.json(comment, { status: 201 });

@@ -8,16 +8,32 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
-  status: { type: String, enum: ["active", "inactive", "suspended"], default: "active" },
+  status: {
+    type: String,
+    enum: ["active", "inactive", "suspended"],
+    default: "active",
+  },
   collegeId: { type: mongoose.Schema.Types.ObjectId, ref: "College" },
   bio: { type: String, default: "" },
   resume: { type: String }, // URL or file path to resume
   yoe: { type: Number, default: 0 }, // Years of Experience
   title: { type: String, default: "" }, // e.g., "Senior Frontend Engineer"
-  profilePictureAttachmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Attachment" },
+  profilePictureAttachmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Attachment",
+  },
   location: { type: String, default: "" },
-  walletId: { type: mongoose.Schema.Types.ObjectId, ref: "Wallet", unique: true, sparse: true },
-  visibility: { type: String, enum: ["public", "private", "connections"], default: "public" },
+  walletId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Wallet",
+    unique: true,
+    sparse: true,
+  },
+  visibility: {
+    type: String,
+    enum: ["public", "private", "connections"],
+    default: "public",
+  },
   workosId: { type: String, required: true, unique: true },
   role: { type: String, enum: USER_ROLE, default: "student" },
   userType: {
@@ -71,7 +87,9 @@ userSchema.pre("save", async function (next) {
   }
 
   // Calculate profile completion percentage
-  const { calculateProfileCompletionPercentage } = await import("../lib/points-economy");
+  const { calculateProfileCompletionPercentage } = await import(
+    "../lib/points-economy"
+  );
   this.profileCompletionPercentage = calculateProfileCompletionPercentage({
     firstName: this.firstName,
     lastName: this.lastName,
@@ -97,6 +115,7 @@ userSchema.post("save", async function (doc) {
         // Create wallet with signup bonus (100 points)
         const wallet = await createUserWallet(doc._id.toString(), true);
         // Update user with wallet reference
+        const User = mongoose.model("User");
         await User.findByIdAndUpdate(doc._id, {
           walletId: wallet._id,
           signupBonusAwarded: true,
@@ -108,10 +127,14 @@ userSchema.post("save", async function (doc) {
     }
 
     // Award profile completion bonus if profile is 100% complete and not yet awarded
-    if (doc.profileCompletionPercentage >= 100 && !doc.profileCompletionBonusAwarded) {
+    if (
+      doc.profileCompletionPercentage >= 100 &&
+      !doc.profileCompletionBonusAwarded
+    ) {
       try {
         const { awardProfileCompletionBonus } = await import("../lib/wallet");
         await awardProfileCompletionBonus(doc._id.toString());
+        const User = mongoose.model("User");
         await User.findByIdAndUpdate(doc._id, {
           profileCompletionBonusAwarded: true,
         });
