@@ -550,72 +550,79 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {modules.slice(0, 6).map((moduleProgress) => (
-                <div
+                <Link
+                  href={`/dashboard/modules/${moduleProgress.module.id}`}
                   key={moduleProgress.module.id}
-                  className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white"
                 >
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2 flex-1">
-                        {moduleProgress.module.icon && (
-                          <Image
-                            width={32}
-                            height={32}
-                            src={moduleProgress.module.icon}
-                            alt={moduleProgress.module.title}
-                            className="object-contain flex-shrink-0 rounded-lg"
-                          />
-                        )}
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                          {moduleProgress.module.title}
-                        </h3>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2 ${
-                          moduleProgress.status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : moduleProgress.status === "in_progress"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {moduleProgress.status === "completed"
-                          ? "✓"
-                          : moduleProgress.status === "in_progress"
-                          ? "⏳"
-                          : "○"}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                      {moduleProgress.module.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>📚 {moduleProgress.module.lessons} lessons</span>
-                        <span>⭐ {moduleProgress.module.points} pts</span>
+                  <div
+                    key={moduleProgress.module.id}
+                    className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          {moduleProgress.module.icon && (
+                            <Image
+                              width={32}
+                              height={32}
+                              src={moduleProgress.module.icon}
+                              alt={moduleProgress.module.title}
+                              className="object-contain flex-shrink-0 rounded-lg"
+                            />
+                          )}
+                          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                            {moduleProgress.module.title}
+                          </h3>
+                        </div>
                         <span
-                          className={`px-1 py-0.5 rounded text-xs ${
-                            moduleProgress.module.level === "Beginner"
+                          className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2 ${
+                            moduleProgress.status === "completed"
                               ? "bg-green-100 text-green-700"
-                              : moduleProgress.module.level === "Intermediate"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
+                              : moduleProgress.status === "in_progress"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {moduleProgress.module.level}
+                          {moduleProgress.status === "completed"
+                            ? "✓"
+                            : moduleProgress.status === "in_progress"
+                            ? "⏳"
+                            : "○"}
                         </span>
                       </div>
-                      {moduleProgress.status === "in_progress" && (
-                        <div className="w-16 bg-gray-200 rounded-full h-1">
-                          <div
-                            className="bg-blue-500 h-1 rounded-full transition-all duration-300"
-                            style={{ width: `${moduleProgress.progress}%` }}
-                          ></div>
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                        {moduleProgress.module.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <span>
+                            📚 {moduleProgress.module.lessons} lessons
+                          </span>
+                          <span>⭐ {moduleProgress.module.points} pts</span>
+                          <span
+                            className={`px-1 py-0.5 rounded text-xs ${
+                              moduleProgress.module.level === "Beginner"
+                                ? "bg-green-100 text-green-700"
+                                : moduleProgress.module.level === "Intermediate"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {moduleProgress.module.level}
+                          </span>
                         </div>
-                      )}
+                        {moduleProgress.status === "in_progress" && (
+                          <div className="w-16 bg-gray-200 rounded-full h-1">
+                            <div
+                              className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                              style={{ width: `${moduleProgress.progress}%` }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

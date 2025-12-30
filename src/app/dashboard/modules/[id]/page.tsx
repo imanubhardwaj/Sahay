@@ -404,11 +404,12 @@ export default function SecureModulePage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto px-4 py-6 pb-32 relative">
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-32 relative">
         {/* Navigation */}
         <Button
+          variant="outlined"
           onClick={() => router.push("/dashboard/explore")}
-          className="!inline-flex !items-center !gap-1.5 !text-gray-500 !hover:text-white !mb-6 !transition-colors !text-sm !cursor-pointer"
+          className="!inline-flex !items-center !gap-1.5 !text-white !hover:scale-105 !mb-6 !transition-colors !text-sm !cursor-pointer"
         >
           <svg
             className="w-4 h-4"
