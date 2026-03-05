@@ -117,7 +117,15 @@ export function NotificationBell({ className = "" }: NotificationBellProps) {
     }
     setIsOpen(false);
     if (notification.link) {
-      router.push(notification.link);
+      // External links (e.g. Google Meet) must open in same tab or new tab
+      if (
+        notification.link.startsWith("http://") ||
+        notification.link.startsWith("https://")
+      ) {
+        window.location.href = notification.link;
+      } else {
+        router.push(notification.link);
+      }
     }
   };
 

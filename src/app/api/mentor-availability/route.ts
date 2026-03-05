@@ -100,8 +100,9 @@ export async function POST(request: NextRequest) {
     if (timezone) mentorProfile.timezone = timezone;
     await mentorProfile.save();
 
-    // Generate slots for the next N days (default 7 days = 1 week)
-    const generatedSlots = [];
+    // Generate slots by weekday: every Monday gets the same slots, every Tuesday, etc., for the next N weeks
+    const WEEKS_TO_GENERATE = 4; // e.g. next 4 Mondays, 4 Tuesdays, ...
+    const generatedSlots: unknown[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -115,159 +116,147 @@ export async function POST(request: NextRequest) {
       "saturday",
     ];
 
-    // Track daily and weekly counts to enforce limits
-    const dailyCounts: Record<string, number> = {};
-    let weeklyTotal = 0;
-
-    // Get start and end of the generation period
     const endDate = new Date(today);
-    endDate.setDate(today.getDate() + Math.min(daysToGenerate, 7)); // Max 1 week at a time
+    endDate.setDate(today.getDate() + WEEKS_TO_GENERATE * 7);
     endDate.setHours(23, 59, 59, 999);
 
     const existingSchedules = await Schedule.find({
       professionalId: userId,
-      date: {
-        $gte: today,
-        $lte: endDate,
-      },
+      date: { $gte: today, $lte: endDate },
       isActive: true,
     });
 
-    // Count existing schedules per day and total for week
+    const dailyCounts: Record<string, number> = {};
+    const weeklyCounts: Record<string, number> = {};
+
+    function getWeekKey(d: Date): string {
+      const d2 = new Date(d);
+      const day = d2.getDay();
+      const diff = d2.getDate() - day + (day === 0 ? -6 : 1);
+      d2.setDate(diff);
+      return d2.toISOString().split("T")[0];
+    }
+
     existingSchedules.forEach((schedule) => {
       const scheduleDate = schedule.date.toISOString().split("T")[0];
       dailyCounts[scheduleDate] = (dailyCounts[scheduleDate] || 0) + 1;
-      weeklyTotal++;
+      const wk = getWeekKey(schedule.date);
+      weeklyCounts[wk] = (weeklyCounts[wk] || 0) + 1;
     });
 
-    // Check if already at weekly limit
-    if (weeklyTotal >= MAX_SLOTS_PER_WEEK) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Weekly limit of ${MAX_SLOTS_PER_WEEK} slots already reached. Please wait until next week or remove existing slots.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    for (
-      let dayOffset = 0;
-      dayOffset < Math.min(daysToGenerate, 7);
-      dayOffset++
-    ) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + dayOffset);
-      const dateKey = date.toISOString().split("T")[0];
-
-      const dayName = dayNames[date.getDay()];
+    // For each weekday (0–6), get the next N occurrences of that day on or after today
+    for (let dayOfWeek = 0; dayOfWeek <= 6; dayOfWeek++) {
+      const dayName = dayNames[dayOfWeek];
       const dayAvailability = defaultAvailability[dayName] || [];
+      if (dayAvailability.length === 0) continue;
 
-      // Check daily limit (max 12 slots per day)
-      const currentDayCount = dailyCounts[dateKey] || 0;
-      if (currentDayCount >= MAX_SLOTS_PER_DAY) {
-        continue; // Skip this day, already at limit
-      }
+      const date = new Date(today);
+      const currentDay = date.getDay();
+      let daysUntil = (dayOfWeek - currentDay + 7) % 7;
+      date.setDate(date.getDate() + daysUntil);
 
-      // Generate slots for each time range on this day
-      for (const timeSlot of dayAvailability) {
-        const [startHour, startMin] = timeSlot.start.split(":").map(Number);
-        const [endHour, endMin] = timeSlot.end.split(":").map(Number);
+      for (let week = 0; week < WEEKS_TO_GENERATE; week++) {
+        const slotDate = new Date(date);
+        slotDate.setDate(slotDate.getDate() + week * 7);
+        if (slotDate > endDate) break;
 
-        const startMinutes = startHour * 60 + startMin;
-        const endMinutes = endHour * 60 + endMin;
+        const dateKey = slotDate.toISOString().split("T")[0];
+        const weekKey = getWeekKey(slotDate);
+        const currentDayCount = dailyCounts[dateKey] || 0;
+        const currentWeekCount = weeklyCounts[weekKey] || 0;
 
-        // Generate 30-minute slots based on the time range
-        let currentStart = startMinutes;
-        while (currentStart + sessionDuration <= endMinutes) {
-          // Check weekly limit before creating (max 84 slots per week)
-          if (weeklyTotal >= MAX_SLOTS_PER_WEEK) {
-            break; // Stop generating if weekly limit reached
-          }
+        if (currentDayCount >= MAX_SLOTS_PER_DAY) continue;
+        if (currentWeekCount >= MAX_SLOTS_PER_WEEK) continue;
 
-          // Check daily limit (max 12 slots per day)
-          if ((dailyCounts[dateKey] || 0) >= MAX_SLOTS_PER_DAY) {
-            break; // Stop generating for this day if limit reached
-          }
+        for (const timeSlot of dayAvailability) {
+          const [startHour, startMin] = timeSlot.start.split(":").map(Number);
+          const [endHour, endMin] = timeSlot.end.split(":").map(Number);
+          const startMinutes = startHour * 60 + startMin;
+          const endMinutes = endHour * 60 + endMin;
 
-          const slotStart = new Date(date);
-          slotStart.setHours(
-            Math.floor(currentStart / 60),
-            currentStart % 60,
-            0,
-            0
-          );
+          let currentStart = startMinutes;
+          while (currentStart + sessionDuration <= endMinutes) {
+            if ((dailyCounts[dateKey] || 0) >= MAX_SLOTS_PER_DAY) break;
+            if ((weeklyCounts[weekKey] || 0) >= MAX_SLOTS_PER_WEEK) break;
 
-          const slotEnd = new Date(slotStart);
-          slotEnd.setMinutes(slotEnd.getMinutes() + sessionDuration);
+            const slotStart = new Date(slotDate);
+            slotStart.setHours(
+              Math.floor(currentStart / 60),
+              currentStart % 60,
+              0,
+              0
+            );
 
-          const startTimeStr = `${Math.floor(currentStart / 60)
-            .toString()
-            .padStart(2, "0")}:${(currentStart % 60)
-            .toString()
-            .padStart(2, "0")}`;
-          const endTimeStr = `${Math.floor(
-            (currentStart + sessionDuration) / 60
-          )
-            .toString()
-            .padStart(2, "0")}:${((currentStart + sessionDuration) % 60)
-            .toString()
-            .padStart(2, "0")}`;
+            const slotEnd = new Date(slotStart);
+            slotEnd.setMinutes(slotEnd.getMinutes() + sessionDuration);
 
-          // Check if slot already exists
-          const existingSlot = await Schedule.findOne({
-            professionalId: userId,
-            date: slotStart,
-            startTime: startTimeStr,
-            isActive: true,
-          });
+            const startTimeStr = `${Math.floor(currentStart / 60)
+              .toString()
+              .padStart(2, "0")}:${(currentStart % 60)
+              .toString()
+              .padStart(2, "0")}`;
+            const endTimeStr = `${Math.floor(
+              (currentStart + sessionDuration) / 60
+            )
+              .toString()
+              .padStart(2, "0")}:${((currentStart + sessionDuration) % 60)
+              .toString()
+              .padStart(2, "0")}`;
 
-          if (!existingSlot) {
-            const newSlot = await Schedule.create({
+            const existingSlot = await Schedule.findOne({
               professionalId: userId,
-              title: `30-min Session`,
-              description: `30-minute mentoring session`,
               date: slotStart,
               startTime: startTimeStr,
-              endTime: endTimeStr,
-              duration: sessionDuration,
-              maxBookings,
-              price,
-              sessionType: "one-on-one",
               isActive: true,
-              location: "online",
             });
 
-            generatedSlots.push(newSlot);
-            dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
-            weeklyTotal++;
+            if (!existingSlot) {
+              const newSlot = await Schedule.create({
+                professionalId: userId,
+                title: `30-min Session`,
+                description: `30-minute mentoring session`,
+                date: slotStart,
+                startTime: startTimeStr,
+                endTime: endTimeStr,
+                duration: sessionDuration,
+                maxBookings,
+                price,
+                sessionType: "one-on-one",
+                isActive: true,
+                location: "online",
+              });
+
+              generatedSlots.push(newSlot);
+              dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
+              weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
+            }
+
+            currentStart += sessionDuration;
           }
-
-          currentStart += sessionDuration;
         }
-
-        // Break outer loop if weekly limit reached
-        if (weeklyTotal >= MAX_SLOTS_PER_WEEK) {
-          break;
-        }
-      }
-
-      // Break main loop if weekly limit reached
-      if (weeklyTotal >= MAX_SLOTS_PER_WEEK) {
-        break;
       }
     }
 
+    const weeklyTotal = Object.values(weeklyCounts).reduce((a, b) => a + b, 0);
+
+    const hasNoAvailability = Object.values(defaultAvailability || {}).every(
+      (slots: unknown) => !Array.isArray(slots) || slots.length === 0
+    );
     const limitMessage =
       weeklyTotal >= MAX_SLOTS_PER_WEEK
         ? ` (Weekly limit of ${MAX_SLOTS_PER_WEEK} slots reached)`
+        : generatedSlots.length === 0 && hasNoAvailability
+        ? " No availability set — select at least one day and set your hours, then try again."
         : generatedSlots.length === 0
-        ? " (No new slots generated - daily/weekly limits may have been reached)"
+        ? " No new slots (daily/weekly limits may have been reached or slots already exist)."
         : "";
 
     return NextResponse.json({
       success: true,
-      message: `Generated ${generatedSlots.length} slots for the next ${daysToGenerate} days${limitMessage}`,
+      message:
+        generatedSlots.length > 0
+          ? `Generated ${generatedSlots.length} slots for the next ${WEEKS_TO_GENERATE} weeks (same times every week — e.g. every Monday, every Tuesday)`
+          : `Generated 0 slots${limitMessage}`,
       data: {
         slotsGenerated: generatedSlots.length,
         availability: defaultAvailability,

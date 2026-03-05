@@ -597,13 +597,15 @@ export async function deductCourseStartPoints(
  * @param mentorName - Mentor name for description
  * @param mentorLevel - Mentor's level
  * @param isFirstCall - Whether this is user's first mentorship call (50% discount)
+ * @param customAmount - Override: use this amount instead of mentor level (e.g. schedule price)
  */
 export async function deductMentorshipPoints(
   userId: string,
   bookingId: string,
   mentorName: string,
   mentorLevel: MentorLevel,
-  isFirstCall: boolean
+  isFirstCall: boolean,
+  customAmount?: number
 ): Promise<{
   success: boolean;
   pointsDeducted: number;
@@ -623,7 +625,10 @@ export async function deductMentorshipPoints(
     let pointsToDeduct: number;
     let mentorReceives: number;
 
-    if (isFirstCall) {
+    if (customAmount != null && customAmount > 0) {
+      pointsToDeduct = isFirstCall ? Math.floor(customAmount * 0.5) : customAmount;
+      mentorReceives = customAmount;
+    } else if (isFirstCall) {
       const pricing = calculateFirstCallPrice(mentorLevel);
       pointsToDeduct = pricing.userPays;
       mentorReceives = pricing.mentorReceives;

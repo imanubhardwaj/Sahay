@@ -3,13 +3,15 @@
 import { useEffect, useRef } from "react";
 import {
   getFCMTokenIfGranted,
+  requestNotificationPermission,
   isNotificationSupported,
   registerFCMTokenWithBackend,
   subscribeToTopicsInBackend,
   getInitialTopicsForUser,
 } from "@/config/firebase";
+import { getAuthHeader } from "@/lib/token-storage";
 
-const FCM_SW_URL = "/firebase-messaging-sw.js";
+const FCM_SW_URL = "/firebase-messaging-sw.js?v=4";
 const FCM_SW_SCOPE = "/";
 
 /**
@@ -68,22 +70,37 @@ export default function FCMTokenInitializer() {
         await ensureServiceWorkerRegistered();
         if (cancelled) return;
 
-        const meRes = await fetch("/api/auth/me", { credentials: "include" });
+        const headers: HeadersInit = { credentials: "include" };
+        const authHeader = getAuthHeader();
+        if (authHeader) headers["Authorization"] = authHeader;
+
+        const meRes = await fetch("/api/auth/me", { headers, credentials: "include" });
         const meData = await meRes.json();
         if (!meData?.success || !meData?.user?.id) {
-          if (typeof window !== "undefined") console.log("[FCM] User not logged in or /api/auth/me failed, skipping token registration");
+          console.log("[FCM] User not logged in or /api/auth/me failed:", meRes.status, meData);
           return;
         }
 
-        const token = await getFCMTokenIfGranted();
+        console.log("[FCM] User logged in, fetching token. Current permission:", Notification.permission);
+
+        // If permission not yet granted, request it (browser will show prompt)
+        if (Notification.permission === "default") {
+          console.log("[FCM] Requesting notification permission (browser will prompt)...");
+          await requestNotificationPermission();
+        }
+
+        let token = await getFCMTokenIfGranted();
         if (cancelled || !token) {
-          if (!token && !cancelled) console.log('[FCM] No token (permission/config/SW or not granted)');
+          console.warn(
+            "[FCM] No token. Permission:",
+            Notification.permission,
+            "| If permission is granted: unregister SW (DevTools > Application > Service Workers), hard refresh, then retry."
+          );
           return;
         }
 
         // Copy this token for testing (e.g. Firebase Console, Postman)
-        console.log("=== FCM TOKEN (copy for testing) ===", token);
-        console.log("[FCM] Token for DB:", token);
+        console.log("[FCM] Token:", token);
         const alreadyRegistered = registeredTokenRef.current === token;
         if (!alreadyRegistered) {
           const ok = await registerFCMTokenWithBackend(token);
@@ -103,8 +120,8 @@ export default function FCMTokenInitializer() {
         if (topics.length > 0) {
           await subscribeToTopicsInBackend(token, topics);
         }
-      } catch {
-        // Ignore errors (e.g. not configured, no permission)
+      } catch (err) {
+        console.warn("[FCM] Token registration error:", err);
       }
     };
 

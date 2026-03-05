@@ -202,13 +202,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine mentor level and calculate price
-    // Mentor levels: L1 = 3000 points, L2 = 2000 points, L3 = 1000 points
+    // Use schedule price when mentor set it; else mentor custom rate or level default
     const mentorLevel = (mentorProfile?.level ||
       MENTOR_LEVEL.L3) as MentorLevel;
     const customRate = mentorProfile?.customPointRate;
+    const schedulePrice = typeof schedule.price === "number" && schedule.price > 0 ? schedule.price : null;
 
-    // Get base price based on mentor level
-    const basePrice = customRate || getMentorshipCallCost(mentorLevel);
+    // Base price: schedule price (from slot) > mentor custom rate > mentor level default
+    const basePrice = schedulePrice ?? customRate ?? getMentorshipCallCost(mentorLevel);
 
     // Check if this is student's first mentorship call (50% discount)
     const studentBookings = await Booking.find({
@@ -257,13 +258,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Deduct points using the new economy system
+    // Deduct points using the new economy system (pass basePrice so schedule price is used)
     const deductResult = await deductMentorshipPoints(
       studentId,
       "", // Will be updated with booking ID
       `${professional.firstName} ${professional.lastName}`,
       mentorLevel,
-      isFirstCall
+      isFirstCall,
+      basePrice
     );
 
     if (!deductResult.success) {

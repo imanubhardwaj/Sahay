@@ -216,6 +216,7 @@ const BOOKING_MESSAGES: Record<
 
 /**
  * Notify a user about a booking event (in-app, email, push).
+ * For booking_confirmed, pass meetingLink in data so student can join directly.
  */
 export async function notifyBookingEvent(
   userId: string,
@@ -225,13 +226,15 @@ export async function notifyBookingEvent(
   const fn = BOOKING_MESSAGES[type];
   if (!fn) return;
   const { title, message } = fn(data);
-  const link = "/dashboard/sessions";
+  // For confirmed sessions, use meeting link so student can tap notification to join
+  const meetingLink = data.meetingLink as string | undefined;
+  const link = meetingLink && type === "booking_confirmed" ? meetingLink : "/dashboard/sessions";
   await createNotification({
     userId,
     type,
     title,
     message,
     link,
-    data,
+    data: { ...data, meetingLink: meetingLink || data.meetingLink },
   });
 }

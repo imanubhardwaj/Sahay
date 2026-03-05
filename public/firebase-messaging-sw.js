@@ -3,33 +3,11 @@
  * All event handlers must be registered during initial script evaluation
  */
 
-// PWA Cache Configuration - only list assets that exist in public/icons
 const CACHE_NAME = "sahay-pwa-v1";
-const PRECACHE_ASSETS = [
-  "/manifest.json",
-  "/firebase-messaging-sw.js",
-  "/icons/icon-72.png",
-  "/icons/icon-96.png",
-  "/icons/icon-128.png",
-  "/icons/icon-144.png",
-  "/icons/icon-192.png",
-  "/icons/icon-384.png",
-  "/icons/icon-512.png",
-];
 
-// Install event - cache PWA assets (skip failed URLs so one 404 doesn't break install)
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        PRECACHE_ASSETS.map((url) =>
-          cache.add(url).catch(() => {
-            /* skip missing assets */
-          }),
-        ),
-      ).then(() => self.skipWaiting());
-    }),
-  );
+// Install - resolve immediately so SW activates (browsers cache SW aggressively)
+self.addEventListener("install", () => {
+  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
@@ -144,10 +122,10 @@ importScripts(
 
 // Firebase config (injected at build time or via postMessage)
 const firebaseConfig = {
-  apiKey: "__NEXT_PUBLIC_FIREBASE_API_KEY__",
-  projectId: "__NEXT_PUBLIC_FIREBASE_PROJECT_ID__",
-  messagingSenderId: "__NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID__",
-  appId: "__NEXT_PUBLIC_FIREBASE_APP_ID__",
+  apiKey: "AIzaSyDc-7Wuvv18hARicsDZK40dkJdquCRfy_o",
+  projectId: "creatorly-5015a",
+  messagingSenderId: "409899362361",
+  appId: "1:409899362361:web:da8a13959b127f249205e8",
 };
 
 // Extract notification data
@@ -181,7 +159,7 @@ let messaging = null;
 try {
   const hasValidConfig =
     firebaseConfig.apiKey &&
-    !firebaseConfig.apiKey.includes("__VITE_") &&
+    !firebaseConfig.apiKey.startsWith("__") &&
     firebaseConfig.apiKey !== "";
 
   if (hasValidConfig && typeof firebase !== "undefined") {
@@ -203,7 +181,7 @@ try {
 // It will work even if Firebase is initialized later via postMessage
 if (messaging) {
   messaging.onBackgroundMessage((payload) => {
-    // Notify all clients about the notification
+    // Notify all clients (for foreground handling)
     self.clients.matchAll().then((clients) => {
       clients.forEach((client) => {
         client.postMessage({
@@ -213,18 +191,8 @@ if (messaging) {
       });
     });
 
-    // IMPORTANT: If the payload contains a 'notification' field, the browser/FCM SDK
-    // will automatically display the notification. We should NOT show it again manually
-    // to avoid duplicate notifications. Only show manually for data-only messages.
-    if (payload.notification) {
-      // Browser handles this automatically - do not show duplicate
-      return;
-    }
-
-    // Data-only message - we need to show the notification manually
+    // Web SDK does NOT auto-display - we must always show the notification
     const notificationData = extractNotificationData(payload);
-
-    // Show notification - this works even when app is closed
     return self.registration.showNotification(notificationData.title, {
       body: notificationData.body,
       icon: "/icons/icon-192.png",
@@ -360,7 +328,6 @@ self.addEventListener("message", (event) => {
         if (!messaging) {
           messaging = firebase.messaging();
 
-          // Register onBackgroundMessage handler now (if not already registered)
           messaging.onBackgroundMessage((payload) => {
             self.clients.matchAll().then((clients) => {
               clients.forEach((client) => {
@@ -370,18 +337,7 @@ self.addEventListener("message", (event) => {
                 });
               });
             });
-
-            // IMPORTANT: If the payload contains a 'notification' field, the browser/FCM SDK
-            // will automatically display the notification. We should NOT show it again manually
-            // to avoid duplicate notifications. Only show manually for data-only messages.
-            if (payload.notification) {
-              // Browser handles this automatically - do not show duplicate
-              return;
-            }
-
-            // Data-only message - we need to show the notification manually
             const notificationData = extractNotificationData(payload);
-
             return self.registration.showNotification(notificationData.title, {
               body: notificationData.body,
               icon: "/icons/icon-192.png",

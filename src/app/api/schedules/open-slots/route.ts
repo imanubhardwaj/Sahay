@@ -81,39 +81,33 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, Array<typeof Booking>>);
 
-    // Calculate available slots
-    const availableSlots = schedules
-      .filter((schedule) => {
-        const bookings = bookingsBySchedule[schedule._id.toString()] || [];
-        return bookings.length < schedule.maxBookings;
-      })
-      .map((schedule) => {
-        const bookings = bookingsBySchedule[schedule._id.toString()] || [];
-        const availableSpots = schedule.maxBookings - bookings.length;
+    // Return all slots; mark full ones as unavailable so UI can show them disabled
+    const availableSlots = schedules.map((schedule) => {
+      const bookings = bookingsBySchedule[schedule._id.toString()] || [];
+      const availableSpots = schedule.maxBookings - bookings.length;
 
-        return {
-          scheduleId: schedule._id,
-          professionalId: schedule.professionalId,
-          title: schedule.title,
-          description: schedule.description,
-          date: schedule.date,
-          startTime: schedule.startTime,
-          endTime: schedule.endTime,
-          duration: schedule.duration,
-          price: schedule.price,
-          sessionType: schedule.sessionType,
-          location: schedule.location,
-          meetingLink: schedule.meetingLink,
-          address: schedule.address,
-          requirements: schedule.requirements,
-          skills: schedule.skills,
-          availableSpots,
-          totalSpots: schedule.maxBookings,
-          isAvailable: availableSpots > 0,
-          currentBookings: bookings.length,
-        };
-      })
-      .filter((slot) => slot.isAvailable);
+      return {
+        scheduleId: schedule._id,
+        professionalId: schedule.professionalId,
+        title: schedule.title,
+        description: schedule.description,
+        date: schedule.date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        duration: schedule.duration,
+        price: schedule.price,
+        sessionType: schedule.sessionType,
+        location: schedule.location,
+        meetingLink: schedule.meetingLink,
+        address: schedule.address,
+        requirements: schedule.requirements,
+        skills: schedule.skills,
+        availableSpots,
+        totalSpots: schedule.maxBookings,
+        isAvailable: availableSpots > 0,
+        currentBookings: bookings.length,
+      };
+    });
 
     return NextResponse.json({
       date: targetDate.toISOString().split("T")[0],

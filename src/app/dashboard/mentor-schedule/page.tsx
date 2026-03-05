@@ -183,7 +183,29 @@ export default function MentorSchedulePage() {
     }));
   };
 
+  const hasAnyAvailability = Object.values(weeklyAvailability).some(
+    (slots) => slots.length > 0
+  );
+
+  const handleSetWeekdaysQuick = () => {
+    const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+    setWeeklyAvailability((prev) => {
+      const next = { ...prev };
+      weekdays.forEach((day) => {
+        next[day] = [{ start: "09:00", end: "17:00" }];
+      });
+      return next;
+    });
+  };
+
   const handleGenerateSlots = async () => {
+    if (!hasAnyAvailability) {
+      alert(
+        "Please set your availability first.\n\nClick the day buttons (Mon, Tue, etc.) to mark when you're available, then set the time range for each day. Or use \"Set weekdays 9 AM–5 PM\" for a quick setup."
+      );
+      return;
+    }
+
     // Calculate how many slots would be generated
     let totalSlots = 0;
     Object.entries(weeklyAvailability).forEach(([, slots]) => {
@@ -201,8 +223,9 @@ export default function MentorSchedulePage() {
 
     if (totalSlots > MAX_SLOTS_PER_WEEK) {
       alert(
-        `Warning: Your availability would generate ${totalSlots} slots, but the weekly limit is ${MAX_SLOTS_PER_WEEK}. Only the first ${MAX_SLOTS_PER_WEEK} slots will be created.`
+        `Your availability would create ${totalSlots} slots, but the max is ${MAX_SLOTS_PER_WEEK}/week. Reduce hours or days and try again.`
       );
+      return;
     }
 
     try {
@@ -224,9 +247,18 @@ export default function MentorSchedulePage() {
       const result = await response.json();
 
       if (result.success) {
-        alert(
-          `✅ ${result.message}\n\nWeekly slots: ${result.data.weeklyTotal}/${MAX_SLOTS_PER_WEEK}`
-        );
+        const count = result.data?.slotsGenerated ?? 0;
+        const weeklyTotal = result.data?.weeklyTotal ?? 0;
+        if (count === 0) {
+          alert(
+            result.message ||
+              "No slots were created. Make sure at least one day has availability (click the day and set start/end time), then try again."
+          );
+        } else {
+          alert(
+            `✅ Created ${count} session slots for the next 4 weeks (same times every Mon, Tue, etc.).\n\nTotal slots: ${weeklyTotal} across all weeks.`
+          );
+        }
         fetchSchedules();
       } else {
         alert(result.error || "Failed to generate slots");
@@ -356,13 +388,20 @@ export default function MentorSchedulePage() {
           <div className="space-y-6">
             {/* Weekly Schedule */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Weekly Availability
+              <h2 className="text-lg font-semibold text-white mb-2">
+                Step 1: Set your weekly availability
               </h2>
-              <p className="text-sm text-gray-400 mb-6">
-                Set your available hours. Sessions will be auto-divided into{" "}
-                {SESSION_DURATION}-minute slots.
+              <p className="text-sm text-gray-400 mb-4">
+                Click each day you’re available (Mon–Sun). For each selected day,
+                set your start and end time. Slots are created as {SESSION_DURATION}-minute sessions.
               </p>
+              <button
+                type="button"
+                onClick={handleSetWeekdaysQuick}
+                className="mb-6 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm text-white transition-colors"
+              >
+                Set weekdays 9 AM – 5 PM (Mon–Fri)
+              </button>
 
               <div className="space-y-4">
                 {DAYS.map((day) => {
@@ -423,7 +462,7 @@ export default function MentorSchedulePage() {
                         </div>
                       ) : (
                         <span className="text-gray-500 text-sm">
-                          Unavailable
+                          Unavailable — click to set hours
                         </span>
                       )}
                     </div>
@@ -465,15 +504,24 @@ export default function MentorSchedulePage() {
 
               {/* Generate Button */}
               <div className="mt-6">
+                <p className="text-sm text-gray-400 mb-2">
+                  Step 2: Create bookable slots from your availability
+                </p>
                 <button
                   onClick={handleGenerateSlots}
-                  className="w-full px-6 py-3 bg-white text-black rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                  disabled={!hasAnyAvailability}
+                  className={`w-full px-6 py-3 rounded-xl font-medium transition-colors ${
+                    hasAnyAvailability
+                      ? "bg-white text-black hover:bg-gray-100"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }`}
                 >
-                  Generate Slots for This Week
+                  {hasAnyAvailability
+                    ? "Generate slots (next 4 weeks by weekday)"
+                    : "Select at least one day above first"}
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  This will create {SESSION_DURATION}-min slots based on your
-                  availability (max {MAX_SLOTS_PER_WEEK}/week)
+                  Creates {SESSION_DURATION}-min slots for every selected day for the next 4 weeks (e.g. every Monday, every Tuesday). Max {MAX_SLOTS_PER_WEEK}/week.
                 </p>
               </div>
             </div>

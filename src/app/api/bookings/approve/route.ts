@@ -8,6 +8,137 @@ import { createGoogleMeetEvent } from '@/lib/google-calendar';
 import { sendBookingConfirmation, sendCancellationEmail } from '@/lib/email';
 import { notifyBookingEvent } from '@/lib/notification-service';
 import { TRANSACTION_TYPE, TRANSACTION_SOURCE } from '@/lib/constants';
+import { authenticateRequest } from '@/lib/auth';
+
+// POST - Approve/reject from dashboard (mentor must be logged in)
+export async function POST(request: NextRequest) {
+  try {
+    const userId = await authenticateRequest(request);
+    await connectDB();
+
+    const body = await request.json();
+    const { bookingId, action } = body;
+    if (!bookingId || !action || !['approve', 'reject'].includes(action)) {
+      return NextResponse.json(
+        { success: false, error: 'Missing bookingId or invalid action (approve/reject)' },
+        { status: 400 }
+      );
+    }
+
+    const booking = await Booking.findById(bookingId)
+      .populate('studentId', 'firstName lastName email')
+      .populate('professionalId', 'firstName lastName email');
+
+    if (!booking) {
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 });
+    }
+
+    const mentorId = (booking.professionalId as { _id: { toString: () => string } })._id?.toString?.() ?? String(booking.professionalId);
+    if (mentorId !== userId) {
+      return NextResponse.json({ success: false, error: 'Only the mentor can approve or decline' }, { status: 403 });
+    }
+
+    if (booking.approvalStatus !== 'pending') {
+      return NextResponse.json(
+        { success: false, error: `Booking already ${booking.approvalStatus}` },
+        { status: 400 }
+      );
+    }
+
+    if (action === 'approve') {
+      const mentorProfile = await MentorProfile.findOne({ userId: mentorId })
+        .select('+googleConnected +googleAccessToken +googleRefreshToken');
+      if (!mentorProfile?.googleConnected || !mentorProfile?.googleAccessToken || !mentorProfile?.googleRefreshToken) {
+        return NextResponse.json(
+          { success: false, error: 'Connect Google in mentor profile (Become a Mentor) to create meeting links' },
+          { status: 400 }
+        );
+      }
+      const sessionDateTime = new Date(`${booking.sessionDate.toISOString().split('T')[0]}T${booking.sessionTime}`);
+      const endDateTime = new Date(sessionDateTime.getTime() + booking.duration * 60000);
+      const sessionTitle = `Mentorship Session: ${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName} & ${(booking.studentId as { firstName: string; lastName: string }).firstName} ${(booking.studentId as { firstName: string; lastName: string }).lastName}`;
+      const meetEvent = await createGoogleMeetEvent({
+        summary: sessionTitle,
+        description: booking.studentNotes || 'Mentorship session',
+        startTime: sessionDateTime,
+        endTime: endDateTime,
+        timezone: mentorProfile.timezone || 'Asia/Kolkata',
+        accessToken: mentorProfile.googleAccessToken,
+        refreshToken: mentorProfile.googleRefreshToken,
+      });
+      if (!meetEvent) {
+        return NextResponse.json({ success: false, error: 'Failed to create Google Meet link' }, { status: 500 });
+      }
+      booking.approvalStatus = 'approved';
+      booking.approvedAt = new Date();
+      booking.status = 'confirmed';
+      booking.meetingLink = meetEvent.hangoutLink;
+      await booking.save();
+      const emailData = {
+        studentName: `${(booking.studentId as { firstName: string; lastName: string }).firstName} ${(booking.studentId as { firstName: string; lastName: string }).lastName}`,
+        studentEmail: (booking.studentId as { email: string }).email,
+        mentorName: `${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName}`,
+        mentorEmail: (booking.professionalId as { email: string }).email,
+        sessionDate: new Date(booking.sessionDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        sessionTime: booking.sessionTime,
+        duration: booking.duration,
+        meetingLink: meetEvent.hangoutLink,
+        sessionType: booking.sessionType || 'one-on-one',
+        price: booking.price,
+      };
+      await sendBookingConfirmation(emailData);
+      booking.emailSentToStudent = true;
+      booking.emailSentToMentor = true;
+      await booking.save();
+      const meetingLink = meetEvent.hangoutLink;
+      await Promise.all([
+        notifyBookingEvent((booking.studentId as { _id: { toString: () => string } })._id.toString(), 'booking_confirmed', { bookingId: booking._id.toString(), mentorName: `${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName}`, sessionDate: new Date(booking.sessionDate).toLocaleDateString(), sessionTime: booking.sessionTime, price: booking.price, meetingLink }),
+        notifyBookingEvent(mentorId, 'booking_confirmed', { bookingId: booking._id.toString(), studentName: `${(booking.studentId as { firstName: string; lastName: string }).firstName} ${(booking.studentId as { firstName: string; lastName: string }).lastName}`, sessionDate: new Date(booking.sessionDate).toLocaleDateString(), sessionTime: booking.sessionTime, price: booking.price, meetingLink }),
+      ]);
+      return NextResponse.json({ success: true, data: booking, message: 'Session approved. Meeting link sent to both parties.' });
+    } else {
+      if (booking.paymentStatus === 'paid') {
+        const studentWallet = await Wallet.findOne({ userId: (booking.studentId as { _id: unknown })._id });
+        if (studentWallet) {
+          studentWallet.balance += booking.price;
+          await studentWallet.save();
+          await Transaction.create({
+            userId: (booking.studentId as { _id: unknown })._id,
+            walletId: studentWallet._id,
+            type: TRANSACTION_TYPE.Earn,
+            points: booking.price,
+            source: TRANSACTION_SOURCE.Mentor,
+            description: `Refund for declined session with ${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName}`,
+            referenceId: booking._id.toString(),
+          });
+        }
+      }
+      booking.approvalStatus = 'rejected';
+      booking.rejectedAt = new Date();
+      booking.status = 'cancelled';
+      if (booking.paymentStatus === 'paid') booking.paymentStatus = 'refunded';
+      booking.cancelledBy = 'professional';
+      booking.cancellationReason = 'Mentor declined the session';
+      await booking.save();
+      await sendCancellationEmail({
+        recipientName: `${(booking.studentId as { firstName: string; lastName: string }).firstName} ${(booking.studentId as { firstName: string; lastName: string }).lastName}`,
+        recipientEmail: (booking.studentId as { email: string }).email,
+        sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
+        sessionTime: booking.sessionTime,
+        cancelledBy: `${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName}`,
+        reason: 'The mentor was unable to accept this session at the requested time.',
+      });
+      await notifyBookingEvent((booking.studentId as { _id: { toString: () => string } })._id.toString(), 'booking_cancelled', { bookingId: booking._id.toString(), mentorName: `${(booking.professionalId as { firstName: string; lastName: string }).firstName} ${(booking.professionalId as { firstName: string; lastName: string }).lastName}`, sessionDate: new Date(booking.sessionDate).toLocaleDateString(), sessionTime: booking.sessionTime, price: booking.price });
+      return NextResponse.json({ success: true, data: booking, message: 'Session declined. Student has been notified and refunded.' });
+    }
+  } catch (error) {
+    console.error('Error in POST /api/bookings/approve:', error);
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Failed to process' },
+      { status: 500 }
+    );
+  }
+}
 
 // GET - Handle approval/rejection from email link
 export async function GET(request: NextRequest) {
@@ -195,7 +326,7 @@ export async function GET(request: NextRequest) {
         booking.emailSentToMentor = true;
         await booking.save();
 
-        // Send real-time notifications
+        // Send real-time notifications (include meetingLink so student can tap to join)
         try {
           await Promise.all([
             notifyBookingEvent(booking.studentId._id.toString(), "booking_confirmed", {
@@ -204,6 +335,7 @@ export async function GET(request: NextRequest) {
               sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
               sessionTime: booking.sessionTime,
               price: booking.price,
+              meetingLink,
             }),
             notifyBookingEvent(booking.professionalId._id.toString(), "booking_confirmed", {
               bookingId: booking._id.toString(),
@@ -211,6 +343,7 @@ export async function GET(request: NextRequest) {
               sessionDate: new Date(booking.sessionDate).toLocaleDateString(),
               sessionTime: booking.sessionTime,
               price: booking.price,
+              meetingLink,
             }),
           ]);
         } catch (notifError) {

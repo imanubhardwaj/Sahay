@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/inject-firebase-sw.js",
+    "prebuild": "node scripts/inject-firebase-sw.js",
     "dev": "next dev --turbopack",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",

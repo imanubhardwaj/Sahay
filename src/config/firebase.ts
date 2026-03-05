@@ -223,13 +223,11 @@ const getFirebaseMessagingServiceWorker = async (): Promise<ServiceWorkerRegistr
 export const getFCMTokenIfGranted = async (): Promise<string | null> => {
   if (typeof window === 'undefined') return null;
   if (!isNotificationSupported()) {
-    if (typeof window !== 'undefined')
-      console.warn('[FCM] Not supported (no Notification/serviceWorker/PushManager)');
+    console.warn('[FCM] Not supported (no Notification/serviceWorker/PushManager)');
     return null;
   }
   if (Notification.permission !== 'granted') {
-    if (typeof window !== 'undefined')
-      console.warn('[FCM] Permission not granted:', Notification.permission);
+    console.warn('[FCM] Permission not granted:', Notification.permission);
     return null;
   }
   if (!isFirebaseConfigValid()) {
@@ -243,28 +241,27 @@ export const getFCMTokenIfGranted = async (): Promise<string | null> => {
       return null;
     }
 
-    const registration = await getFirebaseMessagingServiceWorker();
-    if (!registration) {
-      console.warn('[FCM] No service worker registration found');
-      return null;
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Ensure service worker is ready before getToken (prevents pushManager undefined)
+    console.log('[FCM] Waiting for service worker...');
+    await navigator.serviceWorker.ready;
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const vapidKey =
       process.env.VITE_FIREBASE_VAPID_KEY ?? process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+    if (!vapidKey) {
+      console.warn('[FCM] NEXT_PUBLIC_FIREBASE_VAPID_KEY not set');
+    }
+    console.log('[FCM] Calling getToken...');
     const token = await getToken(firebaseMessaging, {
       vapidKey: vapidKey ?? undefined,
-      serviceWorkerRegistration: registration,
     });
     const result = token ?? null;
     if (result && typeof window !== 'undefined') {
-      console.log("=== FCM TOKEN (copy for testing) ===", result);
-      console.log('[FCM] Token obtained:', result);
+      console.log('[FCM] Token:', result);
     }
     return result;
   } catch (error) {
-    console.error('[Firebase] getFCMTokenIfGranted:', error);
+    console.error('[FCM] getToken error:', error);
     return null;
   }
 };
@@ -286,21 +283,13 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       return null;
     }
 
-    // Get the Firebase messaging service worker registration
-    const registration = await getFirebaseMessagingServiceWorker();
-
-    if (!registration) {
-      return null;
-    }
-
-    // Wait a bit to ensure service worker is fully ready
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await navigator.serviceWorker.ready;
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const vapidKey =
       process.env.VITE_FIREBASE_VAPID_KEY ?? process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
     const token = await getToken(firebaseMessaging, {
       vapidKey: vapidKey ?? undefined,
-      serviceWorkerRegistration: registration,
     });
 
     if (token) {
@@ -365,9 +354,10 @@ export async function subscribeToTopicsInBackend(
     return { subscribed: [], failed: [] };
   }
   try {
+    const { getAuthHeaders } = await import('@/lib/token-storage');
     const res = await fetch('/api/notifications/subscribe-topics', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify({ token, topics }),
     });
@@ -405,9 +395,10 @@ export async function registerFCMTokenWithBackend(
             ?.platform ?? '',
       } as Record<string, string>);
 
+    const { getAuthHeaders } = await import('@/lib/token-storage');
     const res = await fetch('/api/notifications/fcm-token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify({ token, platform, deviceInfo }),
     });

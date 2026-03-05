@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { getAuthHeaders } from "@/lib/token-storage";
 import Image from "next/image";
 
 interface BookingData {
@@ -79,6 +80,64 @@ export default function SessionsPage() {
       fetchBookings();
     }
   }, [user, filter, fetchBookings]);
+
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+
+  const handleApproveBooking = useCallback(
+    async (bookingId: string) => {
+      try {
+        setApprovingId(bookingId);
+        const response = await fetch("/api/bookings/approve", {
+          method: "POST",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          credentials: "include",
+          body: JSON.stringify({ bookingId, action: "approve" }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert("Session approved! Meeting link sent to both parties.");
+          fetchBookings();
+        } else {
+          alert(result.error || "Failed to approve");
+        }
+      } catch (error) {
+        console.error("Error approving booking:", error);
+        alert("An error occurred");
+      } finally {
+        setApprovingId(null);
+      }
+    },
+    [fetchBookings]
+  );
+
+  const handleDeclineBooking = useCallback(
+    async (bookingId: string) => {
+      if (!confirm("Decline this session request? The student will be notified and refunded.")) return;
+      try {
+        setDecliningId(bookingId);
+        const response = await fetch("/api/bookings/approve", {
+          method: "POST",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          credentials: "include",
+          body: JSON.stringify({ bookingId, action: "reject" }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert("Session declined. Student has been notified and refunded.");
+          fetchBookings();
+        } else {
+          alert(result.error || "Failed to decline");
+        }
+      } catch (error) {
+        console.error("Error declining booking:", error);
+        alert("An error occurred");
+      } finally {
+        setDecliningId(null);
+      }
+    },
+    [fetchBookings]
+  );
 
   const handleCancelBooking = useCallback(
     async (bookingId: string) => {
@@ -369,6 +428,42 @@ export default function SessionsPage() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2 mt-4">
+                        {booking.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApproveBooking(booking._id)}
+                              disabled={!!approvingId}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                            >
+                              {approvingId === booking._id ? (
+                                <span className="animate-pulse">Approving...</span>
+                              ) : (
+                                <>
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Approve
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleDeclineBooking(booking._id)}
+                              disabled={!!decliningId}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-rose-500/50 text-rose-400 rounded-lg text-xs font-medium hover:bg-rose-500/10 disabled:opacity-50 transition-colors"
+                            >
+                              {decliningId === booking._id ? (
+                                <span className="animate-pulse">Declining...</span>
+                              ) : (
+                                <>
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                  Decline
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
                         {booking.status === "confirmed" &&
                           booking.meetingLink && (
                             <a

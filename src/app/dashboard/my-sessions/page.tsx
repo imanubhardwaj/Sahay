@@ -417,33 +417,30 @@ export default function MySessionsPage() {
                         </div>
                       )}
 
-                      {/* Meeting Link */}
-                      {booking.meetingLink &&
-                        booking.status === "confirmed" && (
-                          <div className="mt-4">
-                            <a
-                              href={booking.meetingLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"
-                            >
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                      {/* Meeting Link - prominent for confirmed sessions */}
+                      {booking.status === "confirmed" && (
+                        <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                          <p className="text-xs text-emerald-400 font-medium mb-2">Your meeting link</p>
+                          {booking.meetingLink ? (
+                            <>
+                              <a
+                                href={booking.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={1.5}
-                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                              Join Meeting
-                            </a>
-                          </div>
-                        )}
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Join Meeting
+                              </a>
+                              <p className="text-[10px] text-gray-500 mt-2 break-all">{booking.meetingLink}</p>
+                            </>
+                          ) : (
+                            <p className="text-xs text-gray-400">Meeting link will appear here once the mentor confirms.</p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}

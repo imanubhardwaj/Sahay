@@ -60,6 +60,8 @@ interface Schedule {
   duration: number;
   maxBookings: number;
   currentBookings: number;
+  availableSpots?: number;
+  isAvailable?: boolean;
   price: number;
   sessionType: string;
   isActive: boolean;
@@ -211,6 +213,8 @@ export default function MentorsPage() {
             duration: number;
             totalSpots: number;
             currentBookings: number;
+            availableSpots: number;
+            isAvailable: boolean;
             price: number;
             sessionType: string;
           }) => ({
@@ -224,6 +228,8 @@ export default function MentorsPage() {
             duration: slot.duration,
             maxBookings: slot.totalSpots,
             currentBookings: slot.currentBookings,
+            availableSpots: slot.availableSpots,
+            isAvailable: slot.isAvailable,
             price: slot.price,
             sessionType: slot.sessionType,
             isActive: true,
@@ -267,6 +273,9 @@ export default function MentorsPage() {
     if (!checkAndGate("book a mentor session")) {
       return;
     }
+    // Don't open modal for unavailable (full) slots
+    const unavailable = schedule.availableSpots !== undefined && schedule.availableSpots <= 0;
+    if (unavailable) return;
     setSelectedSchedule(schedule);
     setShowBookingModal(true);
   };
@@ -843,37 +852,39 @@ export default function MentorsPage() {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {schedules.map((schedule) => (
-                            <button
-                              key={schedule._id}
-                              onClick={() => selectSchedule(schedule)}
-                              className="w-full p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-all border border-slate-700/50 hover:border-violet-500/50 group"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <FaClock className="text-slate-500 group-hover:text-violet-400 w-3 h-3 transition-colors" />
-                                  <span className="text-white font-medium">
-                                    {schedule.startTime} - {schedule.endTime}
+                          {schedules.map((schedule) => {
+                            const isAvailable = schedule.availableSpots === undefined || schedule.availableSpots > 0;
+                            return (
+                              <button
+                                key={schedule._id}
+                                onClick={() => selectSchedule(schedule)}
+                                disabled={!isAvailable}
+                                className={`w-full p-3 rounded-lg text-left transition-all border ${
+                                  isAvailable
+                                    ? "bg-slate-800 hover:bg-slate-700 border-slate-700/50 hover:border-violet-500/50 group cursor-pointer"
+                                    : "bg-slate-800/50 border-slate-700/50 cursor-not-allowed opacity-60"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <FaClock className={`w-3 h-3 transition-colors ${isAvailable ? "text-slate-500 group-hover:text-violet-400" : "text-slate-600"}`} />
+                                    <span className={`font-medium ${isAvailable ? "text-white" : "text-slate-500"}`}>
+                                      {schedule.startTime} - {schedule.endTime}
+                                    </span>
+                                  </div>
+                                  <span className={`font-bold ${isAvailable ? "text-violet-400" : "text-slate-600"}`}>
+                                    {schedule.price} pts
                                   </span>
                                 </div>
-                                <span className="text-violet-400 font-bold">
-                                  {schedule.price} pts
-                                </span>
-                              </div>
-                              <div className="text-xs text-slate-500 mt-1">
-                                {schedule.duration} min ·{" "}
-                                {schedule.maxBookings -
-                                  schedule.currentBookings}{" "}
-                                spot
-                                {schedule.maxBookings -
-                                  schedule.currentBookings !==
-                                1
-                                  ? "s"
-                                  : ""}{" "}
-                                left
-                              </div>
-                            </button>
-                          ))}
+                                <div className="text-xs text-slate-500 mt-1">
+                                  {schedule.duration} min ·{" "}
+                                  {isAvailable
+                                    ? `${schedule.availableSpots ?? schedule.maxBookings - schedule.currentBookings} spot${(schedule.availableSpots ?? schedule.maxBookings - schedule.currentBookings) !== 1 ? "s" : ""} left`
+                                    : "Unavailable"}
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
