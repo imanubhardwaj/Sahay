@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
+import { Collection } from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   console.error("MONGODB_URI is not defined in environment variables");
   throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
+    "Please define the MONGODB_URI environment variable inside .env.local",
   );
 }
 
@@ -48,6 +49,16 @@ async function connectDB() {
     cached.promise = null;
     throw e;
   }
+}
+
+/**
+ * Get a MongoDB collection by name. Use for raw collection access (e.g. fcm_tokens, notifications).
+ */
+export async function getCollection<T = Record<string, unknown>>(
+  name: string,
+): Promise<Collection<Document & T>> {
+  const conn = await connectDB();
+  return conn.connection.db.collection(name) as Collection<Document & T>;
 }
 
 export default connectDB;

@@ -8,11 +8,10 @@ import Question from "@/models/Question";
 export async function POST() {
   try {
     await connectDB();
-    console.log("🧹 Starting cleanup of duplicate modules...");
 
     // Find all modules
     const allModules = await Module.find({ deletedAt: null }).populate(
-      "skillId"
+      "skillId",
     );
 
     // Group modules by name and skillId
@@ -37,10 +36,10 @@ export async function POST() {
         // Sort by creation date (keep the oldest one)
         modules.sort((a, b) => {
           const dateA = new Date(
-            (a as unknown as { createdAt: string }).createdAt || 0
+            (a as unknown as { createdAt: string }).createdAt || 0,
           ).getTime();
           const dateB = new Date(
-            (b as unknown as { createdAt: string }).createdAt || 0
+            (b as unknown as { createdAt: string }).createdAt || 0,
           ).getTime();
           return dateA - dateB;
         });
@@ -52,7 +51,7 @@ export async function POST() {
           name: keepModule.name,
           keepId: (keepModule as unknown as { _id: string })._id,
           deleteIds: deleteModules.map(
-            (m) => (m as unknown as { _id: string })._id
+            (m) => (m as unknown as { _id: string })._id,
           ),
           count: deleteModules.length,
         });
@@ -77,27 +76,12 @@ export async function POST() {
 
           // Delete the module
           await Module.findByIdAndDelete(
-            (moduleToDelete as unknown as { _id: string })._id
+            (moduleToDelete as unknown as { _id: string })._id,
           );
           deletedCount++;
-          console.log(
-            `🗑️  Deleted duplicate module: ${moduleToDelete.name} (${
-              (moduleToDelete as unknown as { _id: string })._id
-            })`
-          );
         }
-
-        console.log(
-          `✅ Kept module: ${keepModule.name} (${
-            (keepModule as unknown as { _id: string })._id
-          }), deleted ${deleteModules.length} duplicates`
-        );
       }
     }
-
-    console.log(
-      `🎉 Cleanup completed! Deleted ${deletedCount} duplicate modules`
-    );
 
     return NextResponse.json({
       success: true,
@@ -113,7 +97,7 @@ export async function POST() {
         error: "Failed to cleanup duplicate modules",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -122,10 +106,9 @@ export async function POST() {
 export async function GET() {
   try {
     await connectDB();
-    console.log("🔍 Scanning for duplicate modules...");
 
     const allModules = await Module.find({ deletedAt: null }).populate(
-      "skillId"
+      "skillId",
     );
 
     const moduleGroups = new Map<string, (typeof Module)[]>();
@@ -146,10 +129,10 @@ export async function GET() {
       if (modules.length > 1) {
         modules.sort((a, b) => {
           const dateA = new Date(
-            (a as unknown as { createdAt: string }).createdAt || 0
+            (a as unknown as { createdAt: string }).createdAt || 0,
           ).getTime();
           const dateB = new Date(
-            (b as unknown as { createdAt: string }).createdAt || 0
+            (b as unknown as { createdAt: string }).createdAt || 0,
           ).getTime();
           return dateA - dateB;
         });
@@ -185,7 +168,7 @@ export async function GET() {
         error: "Failed to scan for duplicate modules",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

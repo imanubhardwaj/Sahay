@@ -108,8 +108,6 @@ export default function MentorProfilePage() {
           github: result.data.github || "",
           website: result.data.website || "",
         });
-      } else {
-        console.log("No mentor profile found");
       }
     } catch (error) {
       console.error("Error fetching mentor profile:", error);
@@ -162,7 +160,7 @@ export default function MentorProfilePage() {
 
       if (result.success) {
         setProfile((prev) =>
-          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null
+          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null,
         );
         setNewExperience({
           company: "",
@@ -195,7 +193,7 @@ export default function MentorProfilePage() {
       const { getAuthHeaders } = await import("@/lib/token-storage");
       const currentPastCompanies = profile?.pastCompanies || [];
       const updatedPastCompanies = currentPastCompanies.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       );
 
       const response = await fetch("/api/mentor-profile", {
@@ -215,7 +213,7 @@ export default function MentorProfilePage() {
 
       if (result.success) {
         setProfile((prev) =>
-          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null
+          prev ? { ...prev, pastCompanies: updatedPastCompanies } : null,
         );
         alert("Experience removed successfully!");
       } else {
@@ -275,7 +273,7 @@ export default function MentorProfilePage() {
                 github: socialLinks.github || undefined,
                 website: socialLinks.website || undefined,
               }
-            : null
+            : null,
         );
         setEditingSocialLinks(false);
         alert("Social links updated successfully!");

@@ -8,13 +8,10 @@ export async function POST(req: Request) {
   try {
     const { email, code } = await req.json();
 
-    console.log("Code verification request for email:", email);
-    console.log("Code:", code);
-
     if (!email || !code) {
       return NextResponse.json(
         { error: "Email and code are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,8 +22,6 @@ export async function POST(req: Request) {
       clientId: process.env.WORKOS_CLIENT_ID!,
     });
 
-    console.log("WorkOS user authenticated:", authResponse.user.email);
-
     // Connect to MongoDB
     await connectDB();
 
@@ -35,7 +30,6 @@ export async function POST(req: Request) {
     let isNewUser = false;
 
     if (!dbUser) {
-      console.log("Creating new user...");
       try {
         // Create new user with all required fields
         const firstName =
@@ -71,11 +65,9 @@ export async function POST(req: Request) {
           completionRate: 0,
           selectedModules: [],
         };
-        console.log("User data to create:", userData);
 
         dbUser = await User.create(userData);
         isNewUser = true;
-        console.log("New user created successfully:", dbUser._id);
       } catch (createError) {
         console.error("Error creating user:", createError);
         // If username conflict, try with different random suffix
@@ -86,7 +78,6 @@ export async function POST(req: Request) {
           "keyPattern" in createError &&
           (createError.keyPattern as Record<string, unknown>)?.username
         ) {
-          console.log("Username conflict, retrying with different username...");
           const firstName =
             authResponse.user.firstName ||
             authResponse.user.email.split("@")[0];
@@ -122,21 +113,11 @@ export async function POST(req: Request) {
             selectedModules: [],
           });
           isNewUser = true;
-          console.log("New user created with retry:", dbUser._id);
         } else {
           throw createError;
         }
       }
-    } else {
-      console.log("Existing user found:", dbUser._id);
     }
-
-    console.log(
-      "User authenticated successfully:",
-      dbUser.email,
-      "New user:",
-      isNewUser
-    );
 
     // Generate JWT token
     const token = generateToken({
@@ -178,7 +159,7 @@ export async function POST(req: Request) {
         error: "Invalid verification code",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

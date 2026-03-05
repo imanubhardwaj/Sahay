@@ -1,11 +1,8 @@
 import CodingProblem from "../../src/models/CodingProblem";
 
 export const seedCodingProblems = async () => {
-  console.log("🌱 Seeding coding problems...");
-
   // Clear existing problems
   await CodingProblem.deleteMany({});
-  console.log("🗑️ Cleared existing coding problems.");
 
   const problems = [
     // ========== DSA - ARRAY PROBLEMS ==========
@@ -46,7 +43,10 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].`,
         { input: "[3,2,4]\n6", expectedOutput: "[1,2]", isHidden: false },
         { input: "[3,3]\n6", expectedOutput: "[0,1]", isHidden: true },
       ],
-      hints: ["Use a hash map to store seen numbers", "For each number, check if target - num exists in map"],
+      hints: [
+        "Use a hash map to store seen numbers",
+        "For each number, check if target - num exists in map",
+      ],
       points: 10,
     },
     // DSA - Array Problems (continued)
@@ -83,7 +83,11 @@ Explanation: Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-
         { input: "[7,6,4,3,1]", expectedOutput: "0", isHidden: false },
         { input: "[2,4,1]", expectedOutput: "2", isHidden: true },
       ],
-      hints: ["Track minimum price seen so far", "Calculate profit for each day", "Keep track of maximum profit"],
+      hints: [
+        "Track minimum price seen so far",
+        "Calculate profit for each day",
+        "Keep track of maximum profit",
+      ],
       points: 10,
     },
     {
@@ -114,9 +118,17 @@ Output: "true"`,
       testCases: [
         { input: "[1,2,3,1]", expectedOutput: "true", isHidden: false },
         { input: "[1,2,3,4]", expectedOutput: "false", isHidden: false },
-        { input: "[1,1,1,3,3,4,3,2,4,2]", expectedOutput: "true", isHidden: true },
+        {
+          input: "[1,1,1,3,3,4,3,2,4,2]",
+          expectedOutput: "true",
+          isHidden: true,
+        },
       ],
-      hints: ["Use a Set or hash map", "If element already exists, return true", "Time complexity O(n), space O(n)"],
+      hints: [
+        "Use a Set or hash map",
+        "If element already exists, return true",
+        "Time complexity O(n), space O(n)",
+      ],
       points: 10,
     },
     {
@@ -148,10 +160,18 @@ Output: [24,12,8,6]`,
       },
       testCases: [
         { input: "[1,2,3,4]", expectedOutput: "[24,12,8,6]", isHidden: false },
-        { input: "[-1,1,0,-3,3]", expectedOutput: "[0,0,9,0,0]", isHidden: false },
+        {
+          input: "[-1,1,0,-3,3]",
+          expectedOutput: "[0,0,9,0,0]",
+          isHidden: false,
+        },
         { input: "[2,3,4,5]", expectedOutput: "[60,40,30,24]", isHidden: true },
       ],
-      hints: ["Use prefix and suffix products", "First pass: calculate left products", "Second pass: multiply by right products"],
+      hints: [
+        "Use prefix and suffix products",
+        "First pass: calculate left products",
+        "Second pass: multiply by right products",
+      ],
       points: 20,
     },
     {
@@ -183,7 +203,11 @@ Explanation: [2,3] has the largest product 6.`,
         { input: "[-2,0,-1]", expectedOutput: "0", isHidden: false },
         { input: "[-2,3,-4]", expectedOutput: "24", isHidden: true },
       ],
-      hints: ["Track both max and min product", "Negative numbers can flip min to max", "Reset when encountering zero"],
+      hints: [
+        "Track both max and min product",
+        "Negative numbers can flip min to max",
+        "Reset when encountering zero",
+      ],
       points: 20,
     },
     {
@@ -214,7 +238,11 @@ Output: 1`,
         { input: "[4,5,6,7,0,1,2]", expectedOutput: "0", isHidden: false },
         { input: "[11,13,15,17]", expectedOutput: "11", isHidden: true },
       ],
-      hints: ["Use binary search", "Compare mid with right element", "If nums[mid] > nums[right], search right half"],
+      hints: [
+        "Use binary search",
+        "Compare mid with right element",
+        "If nums[mid] > nums[right], search right half",
+      ],
       points: 20,
     },
     {
@@ -243,11 +271,19 @@ Output: [[-1,-1,2],[-1,0,1]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[-1,0,1,2,-1,-4]", expectedOutput: "[[-1,-1,2],[-1,0,1]]", isHidden: false },
+        {
+          input: "[-1,0,1,2,-1,-4]",
+          expectedOutput: "[[-1,-1,2],[-1,0,1]]",
+          isHidden: false,
+        },
         { input: "[0,1,1]", expectedOutput: "[]", isHidden: false },
         { input: "[0,0,0]", expectedOutput: "[[0,0,0]]", isHidden: true },
       ],
-      hints: ["Sort the array first", "Fix one element, use two pointers for the rest", "Skip duplicates"],
+      hints: [
+        "Sort the array first",
+        "Fix one element, use two pointers for the rest",
+        "Skip duplicates",
+      ],
       points: 20,
     },
     {
@@ -282,7 +318,11 @@ Output: 49`,
         { input: "[1,1]", expectedOutput: "1", isHidden: false },
         { input: "[4,3,2,1,4]", expectedOutput: "16", isHidden: true },
       ],
-      hints: ["Use two pointers at both ends", "Calculate area = min(height[left], height[right]) * width", "Move pointer with smaller height"],
+      hints: [
+        "Use two pointers at both ends",
+        "Calculate area = min(height[left], height[right]) * width",
+        "Move pointer with smaller height",
+      ],
       points: 20,
     },
     {
@@ -313,11 +353,23 @@ Output: [5,6,7,1,2,3,4]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,3,4,5,6,7]\n3", expectedOutput: "[5,6,7,1,2,3,4]", isHidden: false },
-        { input: "[-1,-100,3,99]\n2", expectedOutput: "[3,99,-1,-100]", isHidden: false },
+        {
+          input: "[1,2,3,4,5,6,7]\n3",
+          expectedOutput: "[5,6,7,1,2,3,4]",
+          isHidden: false,
+        },
+        {
+          input: "[-1,-100,3,99]\n2",
+          expectedOutput: "[3,99,-1,-100]",
+          isHidden: false,
+        },
         { input: "[1,2]\n1", expectedOutput: "[2,1]", isHidden: true },
       ],
-      hints: ["Reverse entire array", "Reverse first k elements", "Reverse remaining elements"],
+      hints: [
+        "Reverse entire array",
+        "Reverse first k elements",
+        "Reverse remaining elements",
+      ],
       points: 20,
     },
     {
@@ -344,11 +396,19 @@ Output: [[1,6],[8,10],[15,18]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[1,3],[2,6],[8,10],[15,18]]", expectedOutput: "[[1,6],[8,10],[15,18]]", isHidden: false },
+        {
+          input: "[[1,3],[2,6],[8,10],[15,18]]",
+          expectedOutput: "[[1,6],[8,10],[15,18]]",
+          isHidden: false,
+        },
         { input: "[[1,4],[4,5]]", expectedOutput: "[[1,5]]", isHidden: false },
         { input: "[[1,4],[2,3]]", expectedOutput: "[[1,4]]", isHidden: true },
       ],
-      hints: ["Sort intervals by start time", "Check if current interval overlaps with previous", "Merge if overlapping, otherwise add new"],
+      hints: [
+        "Sort intervals by start time",
+        "Check if current interval overlaps with previous",
+        "Merge if overlapping, otherwise add new",
+      ],
       points: 20,
     },
     {
@@ -375,11 +435,23 @@ Output: [1,2,3,6,9,8,7,4,5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[1,2,3],[4,5,6],[7,8,9]]", expectedOutput: "[1,2,3,6,9,8,7,4,5]", isHidden: false },
-        { input: "[[1,2,3,4],[5,6,7,8],[9,10,11,12]]", expectedOutput: "[1,2,3,4,8,12,11,10,9,5,6,7]", isHidden: false },
+        {
+          input: "[[1,2,3],[4,5,6],[7,8,9]]",
+          expectedOutput: "[1,2,3,6,9,8,7,4,5]",
+          isHidden: false,
+        },
+        {
+          input: "[[1,2,3,4],[5,6,7,8],[9,10,11,12]]",
+          expectedOutput: "[1,2,3,4,8,12,11,10,9,5,6,7]",
+          isHidden: false,
+        },
         { input: "[[1]]", expectedOutput: "[1]", isHidden: true },
       ],
-      hints: ["Use four boundaries: top, bottom, left, right", "Traverse right, down, left, up", "Update boundaries after each direction"],
+      hints: [
+        "Use four boundaries: top, bottom, left, right",
+        "Traverse right, down, left, up",
+        "Update boundaries after each direction",
+      ],
       points: 20,
     },
     // ========== DSA - LINKED LIST PROBLEMS ==========
@@ -409,11 +481,19 @@ Output: [5,4,3,2,1]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]", expectedOutput: "[5,4,3,2,1]", isHidden: false },
+        {
+          input: "[1,2,3,4,5]",
+          expectedOutput: "[5,4,3,2,1]",
+          isHidden: false,
+        },
         { input: "[1,2]", expectedOutput: "[2,1]", isHidden: false },
         { input: "[]", expectedOutput: "[]", isHidden: true },
       ],
-      hints: ["Use three pointers: prev, curr, next", "Iterate and reverse links", "Return the new head"],
+      hints: [
+        "Use three pointers: prev, curr, next",
+        "Iterate and reverse links",
+        "Return the new head",
+      ],
       points: 10,
     },
     {
@@ -448,11 +528,19 @@ Output: [1,1,2,3,4,4]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,4]\n[1,3,4]", expectedOutput: "[1,1,2,3,4,4]", isHidden: false },
+        {
+          input: "[1,2,4]\n[1,3,4]",
+          expectedOutput: "[1,1,2,3,4,4]",
+          isHidden: false,
+        },
         { input: "[]\n[]", expectedOutput: "[]", isHidden: false },
         { input: "[]\n[0]", expectedOutput: "[0]", isHidden: true },
       ],
-      hints: ["Use a dummy node", "Compare values and link smaller one", "Append remaining list at the end"],
+      hints: [
+        "Use a dummy node",
+        "Compare values and link smaller one",
+        "Append remaining list at the end",
+      ],
       points: 10,
     },
     {
@@ -489,7 +577,11 @@ Output: "true"`,
         { input: "[[1,2],0]", expectedOutput: "true", isHidden: false },
         { input: "[[1],-1]", expectedOutput: "false", isHidden: true },
       ],
-      hints: ["Use Floyd's cycle detection (tortoise and hare)", "Two pointers: slow moves 1 step, fast moves 2 steps", "If they meet, there's a cycle"],
+      hints: [
+        "Use Floyd's cycle detection (tortoise and hare)",
+        "Two pointers: slow moves 1 step, fast moves 2 steps",
+        "If they meet, there's a cycle",
+      ],
       points: 10,
     },
     {
@@ -520,11 +612,19 @@ Output: [1,2,3,5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]\n2", expectedOutput: "[1,2,3,5]", isHidden: false },
+        {
+          input: "[1,2,3,4,5]\n2",
+          expectedOutput: "[1,2,3,5]",
+          isHidden: false,
+        },
         { input: "[1]\n1", expectedOutput: "[]", isHidden: false },
         { input: "[1,2]\n1", expectedOutput: "[1]", isHidden: true },
       ],
-      hints: ["Use two pointers", "Move first pointer n steps ahead", "Then move both until first reaches end"],
+      hints: [
+        "Use two pointers",
+        "Move first pointer n steps ahead",
+        "Then move both until first reaches end",
+      ],
       points: 20,
     },
     {
@@ -556,11 +656,23 @@ Explanation: 342 + 465 = 807.`,
     return str(result)`,
       },
       testCases: [
-        { input: "[2,4,3]\n[5,6,4]", expectedOutput: "[7,0,8]", isHidden: false },
+        {
+          input: "[2,4,3]\n[5,6,4]",
+          expectedOutput: "[7,0,8]",
+          isHidden: false,
+        },
         { input: "[0]\n[0]", expectedOutput: "[0]", isHidden: false },
-        { input: "[9,9,9,9,9,9,9]\n[9,9,9,9]", expectedOutput: "[8,9,9,9,0,0,0,1]", isHidden: true },
+        {
+          input: "[9,9,9,9,9,9,9]\n[9,9,9,9]",
+          expectedOutput: "[8,9,9,9,0,0,0,1]",
+          isHidden: true,
+        },
       ],
-      hints: ["Simulate addition digit by digit", "Handle carry", "Create new nodes for result"],
+      hints: [
+        "Simulate addition digit by digit",
+        "Handle carry",
+        "Create new nodes for result",
+      ],
       points: 20,
     },
     {
@@ -589,11 +701,27 @@ Output: [[7,null],[13,0],[11,4],[10,2],[1,0]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[7,null],[13,0],[11,4],[10,2],[1,0]]", expectedOutput: "[[7,null],[13,0],[11,4],[10,2],[1,0]]", isHidden: false },
-        { input: "[[1,1],[2,1]]", expectedOutput: "[[1,1],[2,1]]", isHidden: false },
-        { input: "[[3,null],[3,0],[3,null]]", expectedOutput: "[[3,null],[3,0],[3,null]]", isHidden: true },
+        {
+          input: "[[7,null],[13,0],[11,4],[10,2],[1,0]]",
+          expectedOutput: "[[7,null],[13,0],[11,4],[10,2],[1,0]]",
+          isHidden: false,
+        },
+        {
+          input: "[[1,1],[2,1]]",
+          expectedOutput: "[[1,1],[2,1]]",
+          isHidden: false,
+        },
+        {
+          input: "[[3,null],[3,0],[3,null]]",
+          expectedOutput: "[[3,null],[3,0],[3,null]]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use hash map to store old -> new node mapping", "First pass: create all nodes", "Second pass: set next and random pointers"],
+      hints: [
+        "Use hash map to store old -> new node mapping",
+        "First pass: create all nodes",
+        "Second pass: set next and random pointers",
+      ],
       points: 20,
     },
     {
@@ -627,7 +755,11 @@ Output: [1,4,2,3]`,
       },
       testCases: [
         { input: "[1,2,3,4]", expectedOutput: "[1,4,2,3]", isHidden: false },
-        { input: "[1,2,3,4,5]", expectedOutput: "[1,5,2,4,3]", isHidden: false },
+        {
+          input: "[1,2,3,4,5]",
+          expectedOutput: "[1,5,2,4,3]",
+          isHidden: false,
+        },
         { input: "[1]", expectedOutput: "[1]", isHidden: true },
       ],
       hints: ["Find middle of list", "Reverse second half", "Merge two halves"],
@@ -665,10 +797,23 @@ Output: [null,null,null,1,null,-1,null,-1,3,4]`,
     return str(result)`,
       },
       testCases: [
-        { input: '["LRUCache","put","put","get","put","get","put","get","get","get"]\n[[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]', expectedOutput: "[null,null,null,1,null,-1,null,-1,3,4]", isHidden: false },
-        { input: '["LRUCache","put","get"]\n[[1],[1,1],[1]]', expectedOutput: "[null,null,1]", isHidden: false },
+        {
+          input:
+            '["LRUCache","put","put","get","put","get","put","get","get","get"]\n[[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]',
+          expectedOutput: "[null,null,null,1,null,-1,null,-1,3,4]",
+          isHidden: false,
+        },
+        {
+          input: '["LRUCache","put","get"]\n[[1],[1,1],[1]]',
+          expectedOutput: "[null,null,1]",
+          isHidden: false,
+        },
       ],
-      hints: ["Use doubly linked list + hash map", "Move accessed items to front", "Remove from end when capacity exceeded"],
+      hints: [
+        "Use doubly linked list + hash map",
+        "Move accessed items to front",
+        "Remove from end when capacity exceeded",
+      ],
       points: 30,
     },
     {
@@ -701,11 +846,23 @@ Output: [2,1,4,3,5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]\n2", expectedOutput: "[2,1,4,3,5]", isHidden: false },
-        { input: "[1,2,3,4,5]\n3", expectedOutput: "[3,2,1,4,5]", isHidden: false },
+        {
+          input: "[1,2,3,4,5]\n2",
+          expectedOutput: "[2,1,4,3,5]",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3,4,5]\n3",
+          expectedOutput: "[3,2,1,4,5]",
+          isHidden: false,
+        },
         { input: "[1]\n1", expectedOutput: "[1]", isHidden: true },
       ],
-      hints: ["Check if k nodes exist", "Reverse k nodes", "Recursively process remaining"],
+      hints: [
+        "Check if k nodes exist",
+        "Reverse k nodes",
+        "Recursively process remaining",
+      ],
       points: 30,
     },
     // ========== DSA - TREE PROBLEMS ==========
@@ -720,7 +877,12 @@ Input: [3,9,20,null,null,15,7]
 Output: 3`,
       difficulty: "easy",
       category: "Tree",
-      tags: ["tree", "depth-first-search", "breadth-first-search", "binary-tree"],
+      tags: [
+        "tree",
+        "depth-first-search",
+        "breadth-first-search",
+        "binary-tree",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const root = JSON.parse(input);
@@ -735,11 +897,19 @@ Output: 3`,
     return str(result)`,
       },
       testCases: [
-        { input: "[3,9,20,null,null,15,7]", expectedOutput: "3", isHidden: false },
+        {
+          input: "[3,9,20,null,null,15,7]",
+          expectedOutput: "3",
+          isHidden: false,
+        },
         { input: "[1,null,2]", expectedOutput: "2", isHidden: false },
         { input: "[]", expectedOutput: "0", isHidden: true },
       ],
-      hints: ["Use recursion", "Base case: null node returns 0", "Return 1 + max(left depth, right depth)"],
+      hints: [
+        "Use recursion",
+        "Base case: null node returns 0",
+        "Return 1 + max(left depth, right depth)",
+      ],
       points: 10,
     },
     {
@@ -753,7 +923,12 @@ Input: p = [1,2,3], q = [1,2,3]
 Output: "true"`,
       difficulty: "easy",
       category: "Tree",
-      tags: ["tree", "depth-first-search", "breadth-first-search", "binary-tree"],
+      tags: [
+        "tree",
+        "depth-first-search",
+        "breadth-first-search",
+        "binary-tree",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const [pStr, qStr] = input.split('\\n');
@@ -775,10 +950,18 @@ Output: "true"`,
       },
       testCases: [
         { input: "[1,2,3]\n[1,2,3]", expectedOutput: "true", isHidden: false },
-        { input: "[1,2]\n[1,null,2]", expectedOutput: "false", isHidden: false },
+        {
+          input: "[1,2]\n[1,null,2]",
+          expectedOutput: "false",
+          isHidden: false,
+        },
         { input: "[1,2,1]\n[1,1,2]", expectedOutput: "false", isHidden: true },
       ],
-      hints: ["Both null: return true", "One null: return false", "Check values and recurse on children"],
+      hints: [
+        "Both null: return true",
+        "One null: return false",
+        "Check values and recurse on children",
+      ],
       points: 10,
     },
     {
@@ -790,7 +973,12 @@ Input: [4,2,7,1,3,6,9]
 Output: [4,7,2,9,6,3,1]`,
       difficulty: "easy",
       category: "Tree",
-      tags: ["tree", "depth-first-search", "breadth-first-search", "binary-tree"],
+      tags: [
+        "tree",
+        "depth-first-search",
+        "breadth-first-search",
+        "binary-tree",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const root = JSON.parse(input);
@@ -805,11 +993,19 @@ Output: [4,7,2,9,6,3,1]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[4,2,7,1,3,6,9]", expectedOutput: "[4,7,2,9,6,3,1]", isHidden: false },
+        {
+          input: "[4,2,7,1,3,6,9]",
+          expectedOutput: "[4,7,2,9,6,3,1]",
+          isHidden: false,
+        },
         { input: "[2,1,3]", expectedOutput: "[2,3,1]", isHidden: false },
         { input: "[]", expectedOutput: "[]", isHidden: true },
       ],
-      hints: ["Swap left and right children", "Recursively invert left and right subtrees", "Return root"],
+      hints: [
+        "Swap left and right children",
+        "Recursively invert left and right subtrees",
+        "Return root",
+      ],
       points: 10,
     },
     {
@@ -836,11 +1032,19 @@ Output: [[3],[9,20],[15,7]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[3,9,20,null,null,15,7]", expectedOutput: "[[3],[9,20],[15,7]]", isHidden: false },
+        {
+          input: "[3,9,20,null,null,15,7]",
+          expectedOutput: "[[3],[9,20],[15,7]]",
+          isHidden: false,
+        },
         { input: "[1]", expectedOutput: "[[1]]", isHidden: false },
         { input: "[]", expectedOutput: "[]", isHidden: true },
       ],
-      hints: ["Use BFS with queue", "Process nodes level by level", "Track current level size"],
+      hints: [
+        "Use BFS with queue",
+        "Process nodes level by level",
+        "Track current level size",
+      ],
       points: 20,
     },
     {
@@ -875,10 +1079,18 @@ Output: "true"`,
       },
       testCases: [
         { input: "[2,1,3]", expectedOutput: "true", isHidden: false },
-        { input: "[5,1,4,null,null,3,6]", expectedOutput: "false", isHidden: false },
+        {
+          input: "[5,1,4,null,null,3,6]",
+          expectedOutput: "false",
+          isHidden: false,
+        },
         { input: "[2,2,2]", expectedOutput: "false", isHidden: true },
       ],
-      hints: ["Pass min and max bounds", "Left child: max = node.val", "Right child: min = node.val"],
+      hints: [
+        "Pass min and max bounds",
+        "Left child: max = node.val",
+        "Right child: min = node.val",
+      ],
       points: 20,
     },
     {
@@ -910,10 +1122,18 @@ Output: 1`,
       },
       testCases: [
         { input: "[3,1,4,null,2]\n1", expectedOutput: "1", isHidden: false },
-        { input: "[5,3,6,2,4,null,null,1]\n3", expectedOutput: "3", isHidden: false },
+        {
+          input: "[5,3,6,2,4,null,null,1]\n3",
+          expectedOutput: "3",
+          isHidden: false,
+        },
         { input: "[1]\n1", expectedOutput: "1", isHidden: true },
       ],
-      hints: ["In-order traversal gives sorted order", "Count nodes during traversal", "Return when count equals k"],
+      hints: [
+        "In-order traversal gives sorted order",
+        "Count nodes during traversal",
+        "Return when count equals k",
+      ],
       points: 20,
     },
     {
@@ -948,11 +1168,24 @@ Output: 6`,
     return str(result)`,
       },
       testCases: [
-        { input: "[6,2,8,0,4,7,9,null,null,3,5]\n2\n8", expectedOutput: "6", isHidden: false },
-        { input: "[6,2,8,0,4,7,9,null,null,3,5]\n2\n4", expectedOutput: "2", isHidden: false },
+        {
+          input: "[6,2,8,0,4,7,9,null,null,3,5]\n2\n8",
+          expectedOutput: "6",
+          isHidden: false,
+        },
+        {
+          input: "[6,2,8,0,4,7,9,null,null,3,5]\n2\n4",
+          expectedOutput: "2",
+          isHidden: false,
+        },
         { input: "[2,1]\n2\n1", expectedOutput: "2", isHidden: true },
       ],
-      hints: ["Use BST property", "If both values < root, go left", "If both values > root, go right", "Otherwise root is LCA"],
+      hints: [
+        "Use BST property",
+        "If both values < root, go left",
+        "If both values > root, go right",
+        "Otherwise root is LCA",
+      ],
       points: 20,
     },
     {
@@ -966,7 +1199,14 @@ Input: [1,2,3,null,null,4,5]
 Output: [1,2,3,null,null,4,5]`,
       difficulty: "hard",
       category: "Tree",
-      tags: ["tree", "depth-first-search", "breadth-first-search", "design", "binary-tree", "string"],
+      tags: [
+        "tree",
+        "depth-first-search",
+        "breadth-first-search",
+        "design",
+        "binary-tree",
+        "string",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const root = JSON.parse(input);
@@ -983,11 +1223,19 @@ Output: [1,2,3,null,null,4,5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1,2,3,null,null,4,5]", expectedOutput: "[1,2,3,null,null,4,5]", isHidden: false },
+        {
+          input: "[1,2,3,null,null,4,5]",
+          expectedOutput: "[1,2,3,null,null,4,5]",
+          isHidden: false,
+        },
         { input: "[]", expectedOutput: "[]", isHidden: false },
         { input: "[1]", expectedOutput: "[1]", isHidden: true },
       ],
-      hints: ["Use pre-order traversal for serialization", "Use queue for deserialization", "Handle null nodes"],
+      hints: [
+        "Use pre-order traversal for serialization",
+        "Use queue for deserialization",
+        "Handle null nodes",
+      ],
       points: 30,
     },
     {
@@ -1003,7 +1251,12 @@ Input: [1,2,3]
 Output: 6`,
       difficulty: "hard",
       category: "Tree",
-      tags: ["tree", "depth-first-search", "dynamic-programming", "binary-tree"],
+      tags: [
+        "tree",
+        "depth-first-search",
+        "dynamic-programming",
+        "binary-tree",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const root = JSON.parse(input);
@@ -1019,10 +1272,18 @@ Output: 6`,
       },
       testCases: [
         { input: "[1,2,3]", expectedOutput: "6", isHidden: false },
-        { input: "[-10,9,20,null,null,15,7]", expectedOutput: "42", isHidden: false },
+        {
+          input: "[-10,9,20,null,null,15,7]",
+          expectedOutput: "42",
+          isHidden: false,
+        },
         { input: "[-3]", expectedOutput: "-3", isHidden: true },
       ],
-      hints: ["For each node, calculate max path through it", "Path can go through node or stop at node", "Track global maximum"],
+      hints: [
+        "For each node, calculate max path through it",
+        "Path can go through node or stop at node",
+        "Track global maximum",
+      ],
       points: 30,
     },
     // ========== DSA - GRAPH PROBLEMS ==========
@@ -1037,7 +1298,13 @@ Input: [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","
 Output: 1`,
       difficulty: "medium",
       category: "Graph",
-      tags: ["array", "depth-first-search", "breadth-first-search", "union-find", "matrix"],
+      tags: [
+        "array",
+        "depth-first-search",
+        "breadth-first-search",
+        "union-find",
+        "matrix",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const grid = JSON.parse(input);
@@ -1052,11 +1319,29 @@ Output: 1`,
     return str(result)`,
       },
       testCases: [
-        { input: '[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]', expectedOutput: "1", isHidden: false },
-        { input: '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]', expectedOutput: "3", isHidden: false },
-        { input: '[["0","0","0"],["0","0","0"],["0","0","0"]]', expectedOutput: "0", isHidden: true },
+        {
+          input:
+            '[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]',
+          expectedOutput: "1",
+          isHidden: false,
+        },
+        {
+          input:
+            '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]',
+          expectedOutput: "3",
+          isHidden: false,
+        },
+        {
+          input: '[["0","0","0"],["0","0","0"],["0","0","0"]]',
+          expectedOutput: "0",
+          isHidden: true,
+        },
       ],
-      hints: ["Use DFS or BFS", "Mark visited cells", "Count connected components"],
+      hints: [
+        "Use DFS or BFS",
+        "Mark visited cells",
+        "Count connected components",
+      ],
       points: 20,
     },
     {
@@ -1070,7 +1355,12 @@ Input: adjList = [[2,4],[1,3],[2,4],[1,3]]
 Output: [[2,4],[1,3],[2,4],[1,3]]`,
       difficulty: "medium",
       category: "Graph",
-      tags: ["hash-table", "depth-first-search", "breadth-first-search", "graph"],
+      tags: [
+        "hash-table",
+        "depth-first-search",
+        "breadth-first-search",
+        "graph",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const adjList = JSON.parse(input);
@@ -1085,11 +1375,19 @@ Output: [[2,4],[1,3],[2,4],[1,3]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[2,4],[1,3],[2,4],[1,3]]", expectedOutput: "[[2,4],[1,3],[2,4],[1,3]]", isHidden: false },
+        {
+          input: "[[2,4],[1,3],[2,4],[1,3]]",
+          expectedOutput: "[[2,4],[1,3],[2,4],[1,3]]",
+          isHidden: false,
+        },
         { input: "[[]]", expectedOutput: "[[]]", isHidden: false },
         { input: "[]", expectedOutput: "[]", isHidden: true },
       ],
-      hints: ["Use hash map to store old -> new node mapping", "Use DFS or BFS", "Create nodes and connect them"],
+      hints: [
+        "Use hash map to store old -> new node mapping",
+        "Use DFS or BFS",
+        "Create nodes and connect them",
+      ],
       points: 20,
     },
     {
@@ -1103,7 +1401,12 @@ Input: numCourses = 2, prerequisites = [[1,0]]
 Output: "true"`,
       difficulty: "medium",
       category: "Graph",
-      tags: ["depth-first-search", "breadth-first-search", "graph", "topological-sort"],
+      tags: [
+        "depth-first-search",
+        "breadth-first-search",
+        "graph",
+        "topological-sort",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const [numCourses, prerequisites] = JSON.parse(input);
@@ -1121,10 +1424,18 @@ Output: "true"`,
       },
       testCases: [
         { input: "[2,[[1,0]]]", expectedOutput: "true", isHidden: false },
-        { input: "[2,[[1,0],[0,1]]]", expectedOutput: "false", isHidden: false },
+        {
+          input: "[2,[[1,0],[0,1]]]",
+          expectedOutput: "false",
+          isHidden: false,
+        },
         { input: "[1,[]]", expectedOutput: "true", isHidden: true },
       ],
-      hints: ["Detect cycle in directed graph", "Use DFS with visited states", "Three states: unvisited, visiting, visited"],
+      hints: [
+        "Detect cycle in directed graph",
+        "Use DFS with visited states",
+        "Three states: unvisited, visiting, visited",
+      ],
       points: 20,
     },
     {
@@ -1153,10 +1464,20 @@ Output: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]", expectedOutput: "[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]", isHidden: false },
+        {
+          input:
+            "[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]",
+          expectedOutput: "[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]",
+          isHidden: false,
+        },
         { input: "[[1]]", expectedOutput: "[[0,0]]", isHidden: false },
       ],
-      hints: ["Start DFS from ocean edges", "Mark cells reachable from Pacific", "Mark cells reachable from Atlantic", "Find intersection"],
+      hints: [
+        "Start DFS from ocean edges",
+        "Mark cells reachable from Pacific",
+        "Mark cells reachable from Atlantic",
+        "Find intersection",
+      ],
       points: 20,
     },
     {
@@ -1189,11 +1510,27 @@ Output: 5`,
     return str(result)`,
       },
       testCases: [
-        { input: '["hit","cog",["hot","dot","dog","lot","log","cog"]]', expectedOutput: "5", isHidden: false },
-        { input: '["hit","cog",["hot","dot","dog","lot","log"]]', expectedOutput: "0", isHidden: false },
-        { input: '["a","c",["a","b","c"]]', expectedOutput: "2", isHidden: true },
+        {
+          input: '["hit","cog",["hot","dot","dog","lot","log","cog"]]',
+          expectedOutput: "5",
+          isHidden: false,
+        },
+        {
+          input: '["hit","cog",["hot","dot","dog","lot","log"]]',
+          expectedOutput: "0",
+          isHidden: false,
+        },
+        {
+          input: '["a","c",["a","b","c"]]',
+          expectedOutput: "2",
+          isHidden: true,
+        },
       ],
-      hints: ["Use BFS", "For each word, generate all possible transformations", "Use queue and visited set"],
+      hints: [
+        "Use BFS",
+        "For each word, generate all possible transformations",
+        "Use queue and visited set",
+      ],
       points: 30,
     },
     {
@@ -1209,7 +1546,14 @@ Input: ["wrt","wrf","er","ett","rftt"]
 Output: "wertf"`,
       difficulty: "hard",
       category: "Graph",
-      tags: ["array", "string", "depth-first-search", "breadth-first-search", "graph", "topological-sort"],
+      tags: [
+        "array",
+        "string",
+        "depth-first-search",
+        "breadth-first-search",
+        "graph",
+        "topological-sort",
+      ],
       starterCode: {
         javascript: `function solution(input) {
   const words = JSON.parse(input);
@@ -1224,11 +1568,19 @@ Output: "wertf"`,
     return result`,
       },
       testCases: [
-        { input: '["wrt","wrf","er","ett","rftt"]', expectedOutput: "wertf", isHidden: false },
+        {
+          input: '["wrt","wrf","er","ett","rftt"]',
+          expectedOutput: "wertf",
+          isHidden: false,
+        },
         { input: '["z","x"]', expectedOutput: "zx", isHidden: false },
         { input: '["abc","ab"]', expectedOutput: "invalid", isHidden: true },
       ],
-      hints: ["Build graph from word comparisons", "Find topological order", "Detect cycles"],
+      hints: [
+        "Build graph from word comparisons",
+        "Find topological order",
+        "Detect cycles",
+      ],
       points: 30,
     },
     // ========== JAVASCRIPT - ARRAY PROBLEMS ==========
@@ -1255,11 +1607,28 @@ Output: [2,4,6]`,
 }`,
       },
       testCases: [
-        { input: "[1,2,3]\n(x => x * 2)", expectedOutput: "[2,4,6]", isHidden: false },
-        { input: "[1,2,3]\n(x => x + 1)", expectedOutput: "[2,3,4]", isHidden: false },
-        { input: "[5,10,15]\n(x => x / 5)", expectedOutput: "[1,2,3]", isHidden: true },
+        {
+          input: "[1,2,3]\n(x => x * 2)",
+          expectedOutput: "[2,4,6]",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3]\n(x => x + 1)",
+          expectedOutput: "[2,3,4]",
+          isHidden: false,
+        },
+        {
+          input: "[5,10,15]\n(x => x / 5)",
+          expectedOutput: "[1,2,3]",
+          isHidden: true,
+        },
       ],
-      hints: ["Create a new array", "Iterate through original array", "Apply function to each element", "Push result to new array"],
+      hints: [
+        "Create a new array",
+        "Iterate through original array",
+        "Apply function to each element",
+        "Push result to new array",
+      ],
       points: 10,
     },
     {
@@ -1285,11 +1654,28 @@ Output: [3,4,5]`,
 }`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]\n(x => x > 2)", expectedOutput: "[3,4,5]", isHidden: false },
-        { input: "[1,2,3,4,5]\n(x => x % 2 === 0)", expectedOutput: "[2,4]", isHidden: false },
-        { input: "[10,20,30]\n(x => x >= 20)", expectedOutput: "[20,30]", isHidden: true },
+        {
+          input: "[1,2,3,4,5]\n(x => x > 2)",
+          expectedOutput: "[3,4,5]",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3,4,5]\n(x => x % 2 === 0)",
+          expectedOutput: "[2,4]",
+          isHidden: false,
+        },
+        {
+          input: "[10,20,30]\n(x => x >= 20)",
+          expectedOutput: "[20,30]",
+          isHidden: true,
+        },
       ],
-      hints: ["Create a new array", "Iterate through original array", "Test each element with function", "Push if test passes"],
+      hints: [
+        "Create a new array",
+        "Iterate through original array",
+        "Test each element with function",
+        "Push if test passes",
+      ],
       points: 10,
     },
     {
@@ -1316,11 +1702,28 @@ Output: 10`,
 }`,
       },
       testCases: [
-        { input: "[1,2,3,4]\n((acc, x) => acc + x)\n0", expectedOutput: "10", isHidden: false },
-        { input: "[1,2,3]\n((acc, x) => acc * x)\n1", expectedOutput: "6", isHidden: false },
-        { input: "[5,10,15]\n((acc, x) => Math.max(acc, x))\n0", expectedOutput: "15", isHidden: true },
+        {
+          input: "[1,2,3,4]\n((acc, x) => acc + x)\n0",
+          expectedOutput: "10",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3]\n((acc, x) => acc * x)\n1",
+          expectedOutput: "6",
+          isHidden: false,
+        },
+        {
+          input: "[5,10,15]\n((acc, x) => Math.max(acc, x))\n0",
+          expectedOutput: "15",
+          isHidden: true,
+        },
       ],
-      hints: ["Start with initial value", "Iterate through array", "Apply reducer function", "Update accumulator"],
+      hints: [
+        "Start with initial value",
+        "Iterate through array",
+        "Apply reducer function",
+        "Update accumulator",
+      ],
       points: 20,
     },
     {
@@ -1342,11 +1745,28 @@ Output: [1, 2, 3, 4, 5, 6]`,
 }`,
       },
       testCases: [
-        { input: "[1, [2, 3], [4, [5, 6]]]", expectedOutput: "[1,2,3,4,5,6]", isHidden: false },
-        { input: "[[1,2], [3,4], [5,6]]", expectedOutput: "[1,2,3,4,5,6]", isHidden: false },
-        { input: "[1, [2, [3, [4]]]]", expectedOutput: "[1,2,3,4]", isHidden: true },
+        {
+          input: "[1, [2, 3], [4, [5, 6]]]",
+          expectedOutput: "[1,2,3,4,5,6]",
+          isHidden: false,
+        },
+        {
+          input: "[[1,2], [3,4], [5,6]]",
+          expectedOutput: "[1,2,3,4,5,6]",
+          isHidden: false,
+        },
+        {
+          input: "[1, [2, [3, [4]]]]",
+          expectedOutput: "[1,2,3,4]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use recursion", "Check if element is array", "If array, recursively flatten", "Otherwise add to result"],
+      hints: [
+        "Use recursion",
+        "Check if element is array",
+        "If array, recursively flatten",
+        "Otherwise add to result",
+      ],
       points: 20,
     },
     {
@@ -1370,11 +1790,28 @@ Output: [[1,2], [3,4], [5]]`,
 }`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]\n2", expectedOutput: "[[1,2],[3,4],[5]]", isHidden: false },
-        { input: "[1,2,3,4,5,6,7]\n3", expectedOutput: "[[1,2,3],[4,5,6],[7]]", isHidden: false },
-        { input: "[1,2,3,4]\n5", expectedOutput: "[[1,2,3,4]]", isHidden: true },
+        {
+          input: "[1,2,3,4,5]\n2",
+          expectedOutput: "[[1,2],[3,4],[5]]",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3,4,5,6,7]\n3",
+          expectedOutput: "[[1,2,3],[4,5,6],[7]]",
+          isHidden: false,
+        },
+        {
+          input: "[1,2,3,4]\n5",
+          expectedOutput: "[[1,2,3,4]]",
+          isHidden: true,
+        },
       ],
-      hints: ["Create result array", "Iterate with step size", "Slice array into chunks", "Push chunks to result"],
+      hints: [
+        "Create result array",
+        "Iterate with step size",
+        "Slice array into chunks",
+        "Push chunks to result",
+      ],
       points: 20,
     },
     {
@@ -1398,11 +1835,23 @@ Output: [3,4,5]`,
 }`,
       },
       testCases: [
-        { input: "[1,2,3,4,5]\n[3,4,5,6,7]", expectedOutput: "[3,4,5]", isHidden: false },
+        {
+          input: "[1,2,3,4,5]\n[3,4,5,6,7]",
+          expectedOutput: "[3,4,5]",
+          isHidden: false,
+        },
         { input: "[1,2,3]\n[4,5,6]", expectedOutput: "[]", isHidden: false },
-        { input: "[1,1,2,3]\n[1,2,2,3]", expectedOutput: "[1,2,3]", isHidden: true },
+        {
+          input: "[1,1,2,3]\n[1,2,2,3]",
+          expectedOutput: "[1,2,3]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use Set for O(1) lookup", "Filter first array", "Check if element exists in second array"],
+      hints: [
+        "Use Set for O(1) lookup",
+        "Filter first array",
+        "Check if element exists in second array",
+      ],
       points: 10,
     },
     // ========== JAVASCRIPT - FUNCTIONS PROBLEMS ==========
@@ -1430,10 +1879,22 @@ Output: 6`,
 }`,
       },
       testCases: [
-        { input: "((a, b, c) => a + b + c)", expectedOutput: "\"curried function\"", isHidden: false },
-        { input: "((a, b) => a * b)", expectedOutput: "\"curried function\"", isHidden: false },
+        {
+          input: "((a, b, c) => a + b + c)",
+          expectedOutput: '"curried function"',
+          isHidden: false,
+        },
+        {
+          input: "((a, b) => a * b)",
+          expectedOutput: '"curried function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Return a function that takes one argument", "If all arguments collected, call original function", "Otherwise return another curried function"],
+      hints: [
+        "Return a function that takes one argument",
+        "If all arguments collected, call original function",
+        "Otherwise return another curried function",
+      ],
       points: 20,
     },
     {
@@ -1459,10 +1920,23 @@ After memoization, repeated calls with same n should return cached result.`,
 }`,
       },
       testCases: [
-        { input: "((n) => n * 2)", expectedOutput: "\"memoized function\"", isHidden: false },
-        { input: "((a, b) => a + b)", expectedOutput: "\"memoized function\"", isHidden: false },
+        {
+          input: "((n) => n * 2)",
+          expectedOutput: '"memoized function"',
+          isHidden: false,
+        },
+        {
+          input: "((a, b) => a + b)",
+          expectedOutput: '"memoized function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use closure to store cache", "Create cache object/Map", "Check cache before executing", "Store result in cache"],
+      hints: [
+        "Use closure to store cache",
+        "Create cache object/Map",
+        "Check cache before executing",
+        "Store result in cache",
+      ],
       points: 20,
     },
     {
@@ -1487,11 +1961,27 @@ Compose: compose(f, g)(5) = f(g(5)) = f(10) = 11`,
 }`,
       },
       testCases: [
-        { input: "(x => x + 1)\n(x => x * 2)\n5", expectedOutput: "11", isHidden: false },
-        { input: "(x => x * 3)\n(x => x + 2)\n4", expectedOutput: "18", isHidden: false },
-        { input: "(x => x - 1)\n(x => x / 2)\n10", expectedOutput: "4", isHidden: true },
+        {
+          input: "(x => x + 1)\n(x => x * 2)\n5",
+          expectedOutput: "11",
+          isHidden: false,
+        },
+        {
+          input: "(x => x * 3)\n(x => x + 2)\n4",
+          expectedOutput: "18",
+          isHidden: false,
+        },
+        {
+          input: "(x => x - 1)\n(x => x / 2)\n10",
+          expectedOutput: "4",
+          isHidden: true,
+        },
       ],
-      hints: ["Apply functions from right to left", "Result of inner function is input to outer", "Return final result"],
+      hints: [
+        "Apply functions from right to left",
+        "Result of inner function is input to outer",
+        "Return final result",
+      ],
       points: 10,
     },
     {
@@ -1515,10 +2005,23 @@ debounced function should only execute after wait time has passed since last cal
 }`,
       },
       testCases: [
-        { input: "(x => x * 2)\n100", expectedOutput: "\"debounced function\"", isHidden: false },
-        { input: "(() => console.log('called'))\n200", expectedOutput: "\"debounced function\"", isHidden: false },
+        {
+          input: "(x => x * 2)\n100",
+          expectedOutput: '"debounced function"',
+          isHidden: false,
+        },
+        {
+          input: "(() => console.log('called'))\n200",
+          expectedOutput: '"debounced function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use closure to store timeout", "Clear previous timeout on each call", "Set new timeout", "Execute function after wait time"],
+      hints: [
+        "Use closure to store timeout",
+        "Clear previous timeout on each call",
+        "Set new timeout",
+        "Execute function after wait time",
+      ],
       points: 20,
     },
     {
@@ -1542,10 +2045,22 @@ throttled function should execute immediately, then ignore calls until time peri
 }`,
       },
       testCases: [
-        { input: "(x => x * 2)\n100", expectedOutput: "\"throttled function\"", isHidden: false },
-        { input: "(() => console.log('called'))\n200", expectedOutput: "\"throttled function\"", isHidden: false },
+        {
+          input: "(x => x * 2)\n100",
+          expectedOutput: '"throttled function"',
+          isHidden: false,
+        },
+        {
+          input: "(() => console.log('called'))\n200",
+          expectedOutput: '"throttled function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Track last execution time", "If enough time passed, execute immediately", "Otherwise ignore the call"],
+      hints: [
+        "Track last execution time",
+        "If enough time passed, execute immediately",
+        "Otherwise ignore the call",
+      ],
       points: 20,
     },
     {
@@ -1570,10 +2085,22 @@ Calling add(3, 4) again still returns 3`,
 }`,
       },
       testCases: [
-        { input: "((a, b) => a + b)", expectedOutput: "\"once function\"", isHidden: false },
-        { input: "(() => Math.random())", expectedOutput: "\"once function\"", isHidden: false },
+        {
+          input: "((a, b) => a + b)",
+          expectedOutput: '"once function"',
+          isHidden: false,
+        },
+        {
+          input: "(() => Math.random())",
+          expectedOutput: '"once function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use closure to track if called", "Store result on first call", "Return stored result on subsequent calls"],
+      hints: [
+        "Use closure to track if called",
+        "Store result on first call",
+        "Return stored result on subsequent calls",
+      ],
       points: 10,
     },
     // ========== JAVASCRIPT - PROMISES PROBLEMS ==========
@@ -1597,10 +2124,23 @@ Output: Promise resolves with [1, 2, 3]`,
 }`,
       },
       testCases: [
-        { input: "[Promise.resolve(1), Promise.resolve(2)]", expectedOutput: "\"Promise.all implementation\"", isHidden: false },
-        { input: "[Promise.resolve('a'), Promise.resolve('b')]", expectedOutput: "\"Promise.all implementation\"", isHidden: false },
+        {
+          input: "[Promise.resolve(1), Promise.resolve(2)]",
+          expectedOutput: '"Promise.all implementation"',
+          isHidden: false,
+        },
+        {
+          input: "[Promise.resolve('a'), Promise.resolve('b')]",
+          expectedOutput: '"Promise.all implementation"',
+          isHidden: false,
+        },
       ],
-      hints: ["Create new Promise", "Track resolved count", "Store results in array", "Reject if any promise rejects"],
+      hints: [
+        "Create new Promise",
+        "Track resolved count",
+        "Store results in array",
+        "Reject if any promise rejects",
+      ],
       points: 20,
     },
     {
@@ -1623,10 +2163,23 @@ Output: Promise resolves/rejects with result of fastPromise`,
 }`,
       },
       testCases: [
-        { input: "[Promise.resolve(1), Promise.resolve(2)]", expectedOutput: "\"Promise.race implementation\"", isHidden: false },
-        { input: "[Promise.reject('error'), Promise.resolve('success')]", expectedOutput: "\"Promise.race implementation\"", isHidden: false },
+        {
+          input: "[Promise.resolve(1), Promise.resolve(2)]",
+          expectedOutput: '"Promise.race implementation"',
+          isHidden: false,
+        },
+        {
+          input: "[Promise.reject('error'), Promise.resolve('success')]",
+          expectedOutput: '"Promise.race implementation"',
+          isHidden: false,
+        },
       ],
-      hints: ["Create new Promise", "Iterate through promises", "Call then/catch on each", "Resolve/reject with first result"],
+      hints: [
+        "Create new Promise",
+        "Iterate through promises",
+        "Call then/catch on each",
+        "Resolve/reject with first result",
+      ],
       points: 20,
     },
     {
@@ -1650,10 +2203,23 @@ retry(fetchData, 3) should try fetchData up to 3 times before giving up.`,
 }`,
       },
       testCases: [
-        { input: "(() => Promise.resolve('success'))\n3", expectedOutput: "\"retry function\"", isHidden: false },
-        { input: "(() => Promise.reject('error'))\n2", expectedOutput: "\"retry function\"", isHidden: false },
+        {
+          input: "(() => Promise.resolve('success'))\n3",
+          expectedOutput: '"retry function"',
+          isHidden: false,
+        },
+        {
+          input: "(() => Promise.reject('error'))\n2",
+          expectedOutput: '"retry function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use recursion or loop", "Call function", "On failure, decrement retries", "Retry if retries > 0"],
+      hints: [
+        "Use recursion or loop",
+        "Call function",
+        "On failure, decrement retries",
+        "Retry if retries > 0",
+      ],
       points: 20,
     },
     {
@@ -1677,10 +2243,23 @@ timeout(fetchData(), 5000) should reject if fetchData doesn't complete in 5 seco
 }`,
       },
       testCases: [
-        { input: "Promise.resolve('success')\n1000", expectedOutput: "\"timeout function\"", isHidden: false },
-        { input: "new Promise(() => {})\n500", expectedOutput: "\"timeout function\"", isHidden: false },
+        {
+          input: "Promise.resolve('success')\n1000",
+          expectedOutput: '"timeout function"',
+          isHidden: false,
+        },
+        {
+          input: "new Promise(() => {})\n500",
+          expectedOutput: '"timeout function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Create timeout promise", "Use Promise.race", "Race between original promise and timeout", "Reject on timeout"],
+      hints: [
+        "Create timeout promise",
+        "Use Promise.race",
+        "Race between original promise and timeout",
+        "Reject on timeout",
+      ],
       points: 20,
     },
     {
@@ -1704,10 +2283,23 @@ Should execute in order and return [1, 2, 3]`,
 }`,
       },
       testCases: [
-        { input: "[() => Promise.resolve(1), () => Promise.resolve(2)]", expectedOutput: "\"sequential function\"", isHidden: false },
-        { input: "[() => Promise.resolve('a'), () => Promise.resolve('b')]", expectedOutput: "\"sequential function\"", isHidden: false },
+        {
+          input: "[() => Promise.resolve(1), () => Promise.resolve(2)]",
+          expectedOutput: '"sequential function"',
+          isHidden: false,
+        },
+        {
+          input: "[() => Promise.resolve('a'), () => Promise.resolve('b')]",
+          expectedOutput: '"sequential function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use reduce or loop", "Chain promises", "Wait for each to complete before next", "Accumulate results"],
+      hints: [
+        "Use reduce or loop",
+        "Chain promises",
+        "Wait for each to complete before next",
+        "Accumulate results",
+      ],
       points: 20,
     },
     {
@@ -1731,10 +2323,22 @@ promise.finally(() => cleanup()) should always call cleanup regardless of resolv
 }`,
       },
       testCases: [
-        { input: "Promise.resolve('success')\n(() => 'cleanup')", expectedOutput: "\"finally implementation\"", isHidden: false },
-        { input: "Promise.reject('error')\n(() => 'cleanup')", expectedOutput: "\"finally implementation\"", isHidden: false },
+        {
+          input: "Promise.resolve('success')\n(() => 'cleanup')",
+          expectedOutput: '"finally implementation"',
+          isHidden: false,
+        },
+        {
+          input: "Promise.reject('error')\n(() => 'cleanup')",
+          expectedOutput: '"finally implementation"',
+          isHidden: false,
+        },
       ],
-      hints: ["Call finally function in both then and catch", "Return original value/error", "Ensure finally always executes"],
+      hints: [
+        "Call finally function in both then and catch",
+        "Return original value/error",
+        "Ensure finally always executes",
+      ],
       points: 10,
     },
     // ========== JAVASCRIPT - CLOSURES PROBLEMS ==========
@@ -1760,11 +2364,15 @@ counter.getValue(); // 5`,
 }`,
       },
       testCases: [
-        { input: "5", expectedOutput: "\"counter object\"", isHidden: false },
-        { input: "0", expectedOutput: "\"counter object\"", isHidden: false },
-        { input: "-10", expectedOutput: "\"counter object\"", isHidden: true },
+        { input: "5", expectedOutput: '"counter object"', isHidden: false },
+        { input: "0", expectedOutput: '"counter object"', isHidden: false },
+        { input: "-10", expectedOutput: '"counter object"', isHidden: true },
       ],
-      hints: ["Use closure to store count", "Return object with methods", "Methods access count from closure"],
+      hints: [
+        "Use closure to store count",
+        "Return object with methods",
+        "Methods access count from closure",
+      ],
       points: 10,
     },
     {
@@ -1788,9 +2396,13 @@ obj.value; // undefined (private)`,
 }`,
       },
       testCases: [
-        { input: "none", expectedOutput: "\"private object\"", isHidden: false },
+        { input: "none", expectedOutput: '"private object"', isHidden: false },
       ],
-      hints: ["Use closure to store private data", "Return object with methods", "Methods access closure variables"],
+      hints: [
+        "Use closure to store private data",
+        "Return object with methods",
+        "Methods access closure variables",
+      ],
       points: 20,
     },
     {
@@ -1815,11 +2427,27 @@ multiplyBy5(10); // 50`,
 }`,
       },
       testCases: [
-        { input: "2", expectedOutput: "\"multiplier function\"", isHidden: false },
-        { input: "5", expectedOutput: "\"multiplier function\"", isHidden: false },
-        { input: "10", expectedOutput: "\"multiplier function\"", isHidden: true },
+        {
+          input: "2",
+          expectedOutput: '"multiplier function"',
+          isHidden: false,
+        },
+        {
+          input: "5",
+          expectedOutput: '"multiplier function"',
+          isHidden: false,
+        },
+        {
+          input: "10",
+          expectedOutput: '"multiplier function"',
+          isHidden: true,
+        },
       ],
-      hints: ["Return function that captures multiplier", "Inner function accesses outer multiplier", "Return multiplied value"],
+      hints: [
+        "Return function that captures multiplier",
+        "Inner function accesses outer multiplier",
+        "Return multiplied value",
+      ],
       points: 10,
     },
     {
@@ -1842,9 +2470,13 @@ module.privateVar; // undefined`,
 }`,
       },
       testCases: [
-        { input: "none", expectedOutput: "\"module object\"", isHidden: false },
+        { input: "none", expectedOutput: '"module object"', isHidden: false },
       ],
-      hints: ["Use IIFE (Immediately Invoked Function Expression)", "Return object with public methods", "Private variables stay in closure"],
+      hints: [
+        "Use IIFE (Immediately Invoked Function Expression)",
+        "Return object with public methods",
+        "Private variables stay in closure",
+      ],
       points: 20,
     },
     {
@@ -1867,9 +2499,13 @@ emitter.emit('click', 'button clicked');`,
 }`,
       },
       testCases: [
-        { input: "none", expectedOutput: "\"event emitter\"", isHidden: false },
+        { input: "none", expectedOutput: '"event emitter"', isHidden: false },
       ],
-      hints: ["Store event handlers in closure", "on() adds handler to array", "emit() calls all handlers for event"],
+      hints: [
+        "Store event handlers in closure",
+        "on() adds handler to array",
+        "emit() calls all handlers for event",
+      ],
       points: 30,
     },
     {
@@ -1894,10 +2530,23 @@ memoizedAdd(1, 2); // Returns cached result`,
 }`,
       },
       testCases: [
-        { input: "((a, b) => a + b)", expectedOutput: "\"memoized function\"", isHidden: false },
-        { input: "((n) => n * 2)", expectedOutput: "\"memoized function\"", isHidden: false },
+        {
+          input: "((a, b) => a + b)",
+          expectedOutput: '"memoized function"',
+          isHidden: false,
+        },
+        {
+          input: "((n) => n * 2)",
+          expectedOutput: '"memoized function"',
+          isHidden: false,
+        },
       ],
-      hints: ["Use closure to store cache", "Create cache key from arguments", "Check cache before executing", "Store result in cache"],
+      hints: [
+        "Use closure to store cache",
+        "Create cache key from arguments",
+        "Check cache before executing",
+        "Store result in cache",
+      ],
       points: 20,
     },
     // ========== PYTHON - ARRAY PROBLEMS ==========
@@ -1921,9 +2570,16 @@ Output: [1, 4, 9, 16, 25]`,
       testCases: [
         { input: "5", expectedOutput: "[1, 4, 9, 16, 25]", isHidden: false },
         { input: "3", expectedOutput: "[1, 4, 9]", isHidden: false },
-        { input: "10", expectedOutput: "[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]", isHidden: true },
+        {
+          input: "10",
+          expectedOutput: "[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use [x**2 for x in range(1, n+1)]", "List comprehension syntax: [expression for item in iterable]"],
+      hints: [
+        "Use [x**2 for x in range(1, n+1)]",
+        "List comprehension syntax: [expression for item in iterable]",
+      ],
       points: 10,
     },
     {
@@ -1944,11 +2600,23 @@ Output: [2, 4, 6, 8, 10]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]", expectedOutput: "[2, 4, 6, 8, 10]", isHidden: false },
+        {
+          input: "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+          expectedOutput: "[2, 4, 6, 8, 10]",
+          isHidden: false,
+        },
         { input: "[1, 3, 5, 7]", expectedOutput: "[]", isHidden: false },
-        { input: "[2, 4, 6, 8]", expectedOutput: "[2, 4, 6, 8]", isHidden: true },
+        {
+          input: "[2, 4, 6, 8]",
+          expectedOutput: "[2, 4, 6, 8]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use [x for x in arr if x % 2 == 0]", "Or use filter() function", "Check modulo 2"],
+      hints: [
+        "Use [x for x in arr if x % 2 == 0]",
+        "Or use filter() function",
+        "Check modulo 2",
+      ],
       points: 10,
     },
     {
@@ -1969,11 +2637,23 @@ Output: [2, 4, 6, 8, 10]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5]", expectedOutput: "[2, 4, 6, 8, 10]", isHidden: false },
-        { input: "[10, 20, 30]", expectedOutput: "[20, 40, 60]", isHidden: false },
+        {
+          input: "[1, 2, 3, 4, 5]",
+          expectedOutput: "[2, 4, 6, 8, 10]",
+          isHidden: false,
+        },
+        {
+          input: "[10, 20, 30]",
+          expectedOutput: "[20, 40, 60]",
+          isHidden: false,
+        },
         { input: "[0, -1, -2]", expectedOutput: "[0, -2, -4]", isHidden: true },
       ],
-      hints: ["Use [x * 2 for x in arr]", "Or use map(lambda x: x * 2, arr)", "List comprehension is more Pythonic"],
+      hints: [
+        "Use [x * 2 for x in arr]",
+        "Or use map(lambda x: x * 2, arr)",
+        "List comprehension is more Pythonic",
+      ],
       points: 10,
     },
     {
@@ -1998,7 +2678,11 @@ Output: 15`,
         { input: "[10, 20, 30]", expectedOutput: "60", isHidden: false },
         { input: "[5]", expectedOutput: "5", isHidden: true },
       ],
-      hints: ["from functools import reduce", "reduce(lambda acc, x: acc + x, arr, 0)", "Or use sum() built-in"],
+      hints: [
+        "from functools import reduce",
+        "reduce(lambda acc, x: acc + x, arr, 0)",
+        "Or use sum() built-in",
+      ],
       points: 20,
     },
     {
@@ -2019,11 +2703,27 @@ Output: [1, 2, 3, 4, 5, 6]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[1, 2], [3, 4], [5, 6]]", expectedOutput: "[1, 2, 3, 4, 5, 6]", isHidden: false },
-        { input: "[[1, [2, 3]], [4, 5]]", expectedOutput: "[1, 2, 3, 4, 5]", isHidden: false },
-        { input: "[[1], [2], [3]]", expectedOutput: "[1, 2, 3]", isHidden: true },
+        {
+          input: "[[1, 2], [3, 4], [5, 6]]",
+          expectedOutput: "[1, 2, 3, 4, 5, 6]",
+          isHidden: false,
+        },
+        {
+          input: "[[1, [2, 3]], [4, 5]]",
+          expectedOutput: "[1, 2, 3, 4, 5]",
+          isHidden: false,
+        },
+        {
+          input: "[[1], [2], [3]]",
+          expectedOutput: "[1, 2, 3]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use list comprehension with nested loops", "[item for sublist in nested_list for item in sublist]", "Or use recursion for deeper nesting"],
+      hints: [
+        "Use list comprehension with nested loops",
+        "[item for sublist in nested_list for item in sublist]",
+        "Or use recursion for deeper nesting",
+      ],
       points: 20,
     },
     {
@@ -2046,11 +2746,27 @@ Output: [[1, 2, 3], [4, 5, 6], [7]]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5, 6, 7]\n3", expectedOutput: "[[1, 2, 3], [4, 5, 6], [7]]", isHidden: false },
-        { input: "[1, 2, 3, 4]\n2", expectedOutput: "[[1, 2], [3, 4]]", isHidden: false },
-        { input: "[1, 2, 3]\n5", expectedOutput: "[[1, 2, 3]]", isHidden: true },
+        {
+          input: "[1, 2, 3, 4, 5, 6, 7]\n3",
+          expectedOutput: "[[1, 2, 3], [4, 5, 6], [7]]",
+          isHidden: false,
+        },
+        {
+          input: "[1, 2, 3, 4]\n2",
+          expectedOutput: "[[1, 2], [3, 4]]",
+          isHidden: false,
+        },
+        {
+          input: "[1, 2, 3]\n5",
+          expectedOutput: "[[1, 2, 3]]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use range(0, len(arr), size)", "Slice list: arr[i:i+size]", "List comprehension: [arr[i:i+size] for i in range(0, len(arr), size)]"],
+      hints: [
+        "Use range(0, len(arr), size)",
+        "Slice list: arr[i:i+size]",
+        "List comprehension: [arr[i:i+size] for i in range(0, len(arr), size)]",
+      ],
       points: 20,
     },
     // ========== PYTHON - TUPLE PROBLEMS ==========
@@ -2076,7 +2792,11 @@ Output: a = 10, b = 5`,
         { input: "(1, 2)", expectedOutput: "(2, 1)", isHidden: false },
         { input: "(100, 200)", expectedOutput: "(200, 100)", isHidden: true },
       ],
-      hints: ["Use tuple unpacking: a, b = b, a", "Python allows multiple assignment", "No temporary variable needed"],
+      hints: [
+        "Use tuple unpacking: a, b = b, a",
+        "Python allows multiple assignment",
+        "No temporary variable needed",
+      ],
       points: 10,
     },
     {
@@ -2100,11 +2820,27 @@ Output: 'a'`,
     return str(result)`,
       },
       testCases: [
-        { input: "{(1, 2): 'a', (3, 4): 'b'}\n(1, 2)", expectedOutput: "'a'", isHidden: false },
-        { input: "{(1, 2): 'x', (3, 4): 'y'}\n(3, 4)", expectedOutput: "'y'", isHidden: false },
-        { input: "{(0, 0): 'origin'}\n(0, 0)", expectedOutput: "'origin'", isHidden: true },
+        {
+          input: "{(1, 2): 'a', (3, 4): 'b'}\n(1, 2)",
+          expectedOutput: "'a'",
+          isHidden: false,
+        },
+        {
+          input: "{(1, 2): 'x', (3, 4): 'y'}\n(3, 4)",
+          expectedOutput: "'y'",
+          isHidden: false,
+        },
+        {
+          input: "{(0, 0): 'origin'}\n(0, 0)",
+          expectedOutput: "'origin'",
+          isHidden: true,
+        },
       ],
-      hints: ["Tuples are hashable and can be dictionary keys", "Access: dict_data[key]", "Tuples must be immutable"],
+      hints: [
+        "Tuples are hashable and can be dictionary keys",
+        "Access: dict_data[key]",
+        "Tuples must be immutable",
+      ],
       points: 10,
     },
     {
@@ -2125,11 +2861,23 @@ Output: [(1, 'a'), (2, 'b'), (3, 'c')]`,
     return str(result)`,
       },
       testCases: [
-        { input: "([1, 2, 3], ['a', 'b', 'c'])", expectedOutput: "[(1, 'a'), (2, 'b'), (3, 'c')]", isHidden: false },
-        { input: "([10, 20], ['x', 'y'])", expectedOutput: "[(10, 'x'), (20, 'y')]", isHidden: false },
+        {
+          input: "([1, 2, 3], ['a', 'b', 'c'])",
+          expectedOutput: "[(1, 'a'), (2, 'b'), (3, 'c')]",
+          isHidden: false,
+        },
+        {
+          input: "([10, 20], ['x', 'y'])",
+          expectedOutput: "[(10, 'x'), (20, 'y')]",
+          isHidden: false,
+        },
         { input: "([1], ['z'])", expectedOutput: "[(1, 'z')]", isHidden: true },
       ],
-      hints: ["Use zip(list1, list2)", "Convert to list: list(zip(...))", "zip() returns iterator of tuples"],
+      hints: [
+        "Use zip(list1, list2)",
+        "Convert to list: list(zip(...))",
+        "zip() returns iterator of tuples",
+      ],
       points: 10,
     },
     {
@@ -2150,11 +2898,23 @@ Output: ([1, 2, 3], ['a', 'b', 'c'])`,
     return str(result)`,
       },
       testCases: [
-        { input: "[(1, 'a'), (2, 'b'), (3, 'c')]", expectedOutput: "([1, 2, 3], ['a', 'b', 'c'])", isHidden: false },
-        { input: "[(10, 'x'), (20, 'y')]", expectedOutput: "([10, 20], ['x', 'y'])", isHidden: false },
+        {
+          input: "[(1, 'a'), (2, 'b'), (3, 'c')]",
+          expectedOutput: "([1, 2, 3], ['a', 'b', 'c'])",
+          isHidden: false,
+        },
+        {
+          input: "[(10, 'x'), (20, 'y')]",
+          expectedOutput: "([10, 20], ['x', 'y'])",
+          isHidden: false,
+        },
         { input: "[(1, 'z')]", expectedOutput: "([1], ['z'])", isHidden: true },
       ],
-      hints: ["Use zip(*tuples) to unzip", "Convert to lists: [list(x) for x in zip(*tuples)]", "Or use tuple unpacking"],
+      hints: [
+        "Use zip(*tuples) to unzip",
+        "Convert to lists: [list(x) for x in zip(*tuples)]",
+        "Or use tuple unpacking",
+      ],
       points: 10,
     },
     {
@@ -2177,10 +2937,18 @@ Output: Point(x=1, y=2)`,
       },
       testCases: [
         { input: "(1, 2)", expectedOutput: "Point(x=1, y=2)", isHidden: false },
-        { input: "(5, 10)", expectedOutput: "Point(x=5, y=10)", isHidden: false },
+        {
+          input: "(5, 10)",
+          expectedOutput: "Point(x=5, y=10)",
+          isHidden: false,
+        },
         { input: "(0, 0)", expectedOutput: "Point(x=0, y=0)", isHidden: true },
       ],
-      hints: ["from collections import namedtuple", "Point = namedtuple('Point', ['x', 'y'])", "p = Point(x, y)"],
+      hints: [
+        "from collections import namedtuple",
+        "Point = namedtuple('Point', ['x', 'y'])",
+        "p = Point(x, y)",
+      ],
       points: 20,
     },
     {
@@ -2201,11 +2969,23 @@ Output: (1, 2, 3) < (1, 2, 4) -> True`,
     return str(result)`,
       },
       testCases: [
-        { input: "((1, 2, 3), (1, 2, 4))", expectedOutput: "True", isHidden: false },
-        { input: "((5, 10), (5, 5))", expectedOutput: "False", isHidden: false },
+        {
+          input: "((1, 2, 3), (1, 2, 4))",
+          expectedOutput: "True",
+          isHidden: false,
+        },
+        {
+          input: "((5, 10), (5, 5))",
+          expectedOutput: "False",
+          isHidden: false,
+        },
         { input: "((1,), (2,))", expectedOutput: "True", isHidden: true },
       ],
-      hints: ["Tuples compare element by element", "First differing element determines result", "Use <, >, == operators"],
+      hints: [
+        "Tuples compare element by element",
+        "First differing element determines result",
+        "Use <, >, == operators",
+      ],
       points: 10,
     },
     // ========== PYTHON - DICTIONARY PROBLEMS ==========
@@ -2227,11 +3007,23 @@ Output: {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}`,
     return str(result)`,
       },
       testCases: [
-        { input: "5", expectedOutput: "{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}", isHidden: false },
+        {
+          input: "5",
+          expectedOutput: "{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}",
+          isHidden: false,
+        },
         { input: "3", expectedOutput: "{1: 1, 2: 4, 3: 9}", isHidden: false },
-        { input: "10", expectedOutput: "{1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81, 10: 100}", isHidden: true },
+        {
+          input: "10",
+          expectedOutput:
+            "{1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81, 10: 100}",
+          isHidden: true,
+        },
       ],
-      hints: ["Use {x: x**2 for x in range(1, n+1)}", "Dictionary comprehension: {key: value for item in iterable}"],
+      hints: [
+        "Use {x: x**2 for x in range(1, n+1)}",
+        "Dictionary comprehension: {key: value for item in iterable}",
+      ],
       points: 10,
     },
     {
@@ -2252,11 +3044,23 @@ Output: {'a': 1, 'b': 3, 'c': 4}`,
     return str(result)`,
       },
       testCases: [
-        { input: "({'a': 1, 'b': 2}, {'b': 3, 'c': 4})", expectedOutput: "{'a': 1, 'b': 3, 'c': 4}", isHidden: false },
-        { input: "({'x': 1}, {'y': 2})", expectedOutput: "{'x': 1, 'y': 2}", isHidden: false },
+        {
+          input: "({'a': 1, 'b': 2}, {'b': 3, 'c': 4})",
+          expectedOutput: "{'a': 1, 'b': 3, 'c': 4}",
+          isHidden: false,
+        },
+        {
+          input: "({'x': 1}, {'y': 2})",
+          expectedOutput: "{'x': 1, 'y': 2}",
+          isHidden: false,
+        },
         { input: "({}, {'a': 1})", expectedOutput: "{'a': 1}", isHidden: true },
       ],
-      hints: ["Use {**dict1, **dict2}", "Or dict1.update(dict2)", "Python 3.5+ supports ** unpacking"],
+      hints: [
+        "Use {**dict1, **dict2}",
+        "Or dict1.update(dict2)",
+        "Python 3.5+ supports ** unpacking",
+      ],
       points: 10,
     },
     {
@@ -2284,7 +3088,11 @@ Output: 0`,
         { input: "{'x': 10}\ny", expectedOutput: "0", isHidden: false },
         { input: "{'a': 1}\na", expectedOutput: "1", isHidden: true },
       ],
-      hints: ["Use dict.get(key, default)", "Or from collections import defaultdict", "defaultdict(int) returns 0 for missing keys"],
+      hints: [
+        "Use dict.get(key, default)",
+        "Or from collections import defaultdict",
+        "defaultdict(int) returns 0 for missing keys",
+      ],
       points: 10,
     },
     {
@@ -2305,11 +3113,23 @@ Output: {1: ['a', 'c'], 2: ['b']} or {1: 'a', 2: 'b'} (handle duplicates)`,
     return str(result)`,
       },
       testCases: [
-        { input: "{'a': 1, 'b': 2, 'c': 1}", expectedOutput: "{1: ['a', 'c'], 2: ['b']}", isHidden: false },
-        { input: "{'x': 10, 'y': 20}", expectedOutput: "{10: ['x'], 20: ['y']}", isHidden: false },
+        {
+          input: "{'a': 1, 'b': 2, 'c': 1}",
+          expectedOutput: "{1: ['a', 'c'], 2: ['b']}",
+          isHidden: false,
+        },
+        {
+          input: "{'x': 10, 'y': 20}",
+          expectedOutput: "{10: ['x'], 20: ['y']}",
+          isHidden: false,
+        },
         { input: "{'a': 1}", expectedOutput: "{1: ['a']}", isHidden: true },
       ],
-      hints: ["Use defaultdict(list)", "Iterate through items", "Append keys to value lists"],
+      hints: [
+        "Use defaultdict(list)",
+        "Iterate through items",
+        "Append keys to value lists",
+      ],
       points: 20,
     },
     {
@@ -2330,11 +3150,23 @@ Output: [('b', 1), ('c', 2), ('a', 3)]`,
     return str(result)`,
       },
       testCases: [
-        { input: "{'a': 3, 'b': 1, 'c': 2}", expectedOutput: "[('b', 1), ('c', 2), ('a', 3)]", isHidden: false },
-        { input: "{'x': 10, 'y': 5}", expectedOutput: "[('y', 5), ('x', 10)]", isHidden: false },
+        {
+          input: "{'a': 3, 'b': 1, 'c': 2}",
+          expectedOutput: "[('b', 1), ('c', 2), ('a', 3)]",
+          isHidden: false,
+        },
+        {
+          input: "{'x': 10, 'y': 5}",
+          expectedOutput: "[('y', 5), ('x', 10)]",
+          isHidden: false,
+        },
         { input: "{'z': 0}", expectedOutput: "[('z', 0)]", isHidden: true },
       ],
-      hints: ["Use sorted(dict_data.items(), key=lambda x: x[1])", "items() returns (key, value) pairs", "key parameter specifies sort criteria"],
+      hints: [
+        "Use sorted(dict_data.items(), key=lambda x: x[1])",
+        "items() returns (key, value) pairs",
+        "key parameter specifies sort criteria",
+      ],
       points: 20,
     },
     {
@@ -2358,10 +3190,24 @@ Output: {25: [{'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 25}], 30: [{'
     return str(result)`,
       },
       testCases: [
-        { input: "[{'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 25}, {'name': 'Charlie', 'age': 30}]\nage", expectedOutput: "{25: [{'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 25}], 30: [{'name': 'Charlie', 'age': 30}]}", isHidden: false },
-        { input: "[{'x': 1}, {'x': 1}, {'x': 2}]\nx", expectedOutput: "{1: [{'x': 1}, {'x': 1}], 2: [{'x': 2}]}", isHidden: false },
+        {
+          input:
+            "[{'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 25}, {'name': 'Charlie', 'age': 30}]\nage",
+          expectedOutput:
+            "{25: [{'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 25}], 30: [{'name': 'Charlie', 'age': 30}]}",
+          isHidden: false,
+        },
+        {
+          input: "[{'x': 1}, {'x': 1}, {'x': 2}]\nx",
+          expectedOutput: "{1: [{'x': 1}, {'x': 1}], 2: [{'x': 2}]}",
+          isHidden: false,
+        },
       ],
-      hints: ["Use defaultdict(list)", "Iterate through list", "Group by dict_item[key]"],
+      hints: [
+        "Use defaultdict(list)",
+        "Iterate through list",
+        "Group by dict_item[key]",
+      ],
       points: 20,
     },
     // ========== PYTHON - LIST PROBLEMS ==========
@@ -2384,11 +3230,23 @@ Every 2nd: [1, 3, 5, 7, 9]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]", expectedOutput: "[1, 3, 5, 7, 9]", isHidden: false },
-        { input: "[1, 2, 3, 4, 5]", expectedOutput: "[1, 3, 5]", isHidden: false },
+        {
+          input: "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+          expectedOutput: "[1, 3, 5, 7, 9]",
+          isHidden: false,
+        },
+        {
+          input: "[1, 2, 3, 4, 5]",
+          expectedOutput: "[1, 3, 5]",
+          isHidden: false,
+        },
         { input: "[10, 20, 30]", expectedOutput: "[10, 30]", isHidden: true },
       ],
-      hints: ["Use slicing: arr[::2] for every 2nd", "Reverse: arr[::-1]", "Combine: arr[::-1][::2]"],
+      hints: [
+        "Use slicing: arr[::2] for every 2nd",
+        "Reverse: arr[::-1]",
+        "Combine: arr[::-1][::2]",
+      ],
       points: 10,
     },
     {
@@ -2413,11 +3271,23 @@ list2.extend([4, 5]) -> [1, 2, 3, 4, 5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3]\n[4, 5]", expectedOutput: "[1, 2, 3, 4, 5]", isHidden: false },
+        {
+          input: "[1, 2, 3]\n[4, 5]",
+          expectedOutput: "[1, 2, 3, 4, 5]",
+          isHidden: false,
+        },
         { input: "[]\n[1, 2]", expectedOutput: "[1, 2]", isHidden: false },
-        { input: "[10]\n[20, 30]", expectedOutput: "[10, 20, 30]", isHidden: true },
+        {
+          input: "[10]\n[20, 30]",
+          expectedOutput: "[10, 20, 30]",
+          isHidden: true,
+        },
       ],
-      hints: ["extend() adds elements individually", "append() adds the whole object", "Use arr.extend(items)"],
+      hints: [
+        "extend() adds elements individually",
+        "append() adds the whole object",
+        "Use arr.extend(items)",
+      ],
       points: 10,
     },
     {
@@ -2438,11 +3308,23 @@ Output: [1, 2, 3, 4, 5]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 2, 3, 3, 3, 4, 5]", expectedOutput: "[1, 2, 3, 4, 5]", isHidden: false },
+        {
+          input: "[1, 2, 2, 3, 3, 3, 4, 5]",
+          expectedOutput: "[1, 2, 3, 4, 5]",
+          isHidden: false,
+        },
         { input: "[1, 1, 1]", expectedOutput: "[1]", isHidden: false },
-        { input: "[5, 4, 3, 2, 1]", expectedOutput: "[5, 4, 3, 2, 1]", isHidden: true },
+        {
+          input: "[5, 4, 3, 2, 1]",
+          expectedOutput: "[5, 4, 3, 2, 1]",
+          isHidden: true,
+        },
       ],
-      hints: ["Use seen = set()", "Check if item in seen", "Or use dict.fromkeys(arr) which preserves order"],
+      hints: [
+        "Use seen = set()",
+        "Check if item in seen",
+        "Or use dict.fromkeys(arr) which preserves order",
+      ],
       points: 10,
     },
     {
@@ -2465,11 +3347,19 @@ Output: [4, 5, 1, 2, 3]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5]\n2", expectedOutput: "[4, 5, 1, 2, 3]", isHidden: false },
+        {
+          input: "[1, 2, 3, 4, 5]\n2",
+          expectedOutput: "[4, 5, 1, 2, 3]",
+          isHidden: false,
+        },
         { input: "[1, 2, 3]\n1", expectedOutput: "[3, 1, 2]", isHidden: false },
         { input: "[1, 2]\n1", expectedOutput: "[2, 1]", isHidden: true },
       ],
-      hints: ["Use negative indexing: arr[-k:] + arr[:-k]", "Or use collections.deque.rotate()", "Handle k > len(arr)"],
+      hints: [
+        "Use negative indexing: arr[-k:] + arr[:-k]",
+        "Or use collections.deque.rotate()",
+        "Handle k > len(arr)",
+      ],
       points: 20,
     },
     {
@@ -2491,11 +3381,27 @@ Union: [1, 2, 3, 4, 5, 6]`,
     return str((intersection, union))`,
       },
       testCases: [
-        { input: "([1, 2, 3, 4], [3, 4, 5, 6])", expectedOutput: "([3, 4], [1, 2, 3, 4, 5, 6])", isHidden: false },
-        { input: "([1, 2], [3, 4])", expectedOutput: "([], [1, 2, 3, 4])", isHidden: false },
-        { input: "([1, 2, 3], [1, 2, 3])", expectedOutput: "([1, 2, 3], [1, 2, 3])", isHidden: true },
+        {
+          input: "([1, 2, 3, 4], [3, 4, 5, 6])",
+          expectedOutput: "([3, 4], [1, 2, 3, 4, 5, 6])",
+          isHidden: false,
+        },
+        {
+          input: "([1, 2], [3, 4])",
+          expectedOutput: "([], [1, 2, 3, 4])",
+          isHidden: false,
+        },
+        {
+          input: "([1, 2, 3], [1, 2, 3])",
+          expectedOutput: "([1, 2, 3], [1, 2, 3])",
+          isHidden: true,
+        },
       ],
-      hints: ["Use set operations", "Intersection: list(set(list1) & set(list2))", "Union: list(set(list1) | set(list2))"],
+      hints: [
+        "Use set operations",
+        "Intersection: list(set(list1) & set(list2))",
+        "Union: list(set(list1) | set(list2))",
+      ],
       points: 20,
     },
     {
@@ -2516,11 +3422,27 @@ Output: ([2, 4, 6], [1, 3, 5])`,
     return str(result)`,
       },
       testCases: [
-        { input: "[1, 2, 3, 4, 5, 6]", expectedOutput: "([2, 4, 6], [1, 3, 5])", isHidden: false },
-        { input: "[10, 15, 20]", expectedOutput: "([10, 20], [15])", isHidden: false },
-        { input: "[1, 3, 5]", expectedOutput: "([], [1, 3, 5])", isHidden: true },
+        {
+          input: "[1, 2, 3, 4, 5, 6]",
+          expectedOutput: "([2, 4, 6], [1, 3, 5])",
+          isHidden: false,
+        },
+        {
+          input: "[10, 15, 20]",
+          expectedOutput: "([10, 20], [15])",
+          isHidden: false,
+        },
+        {
+          input: "[1, 3, 5]",
+          expectedOutput: "([], [1, 3, 5])",
+          isHidden: true,
+        },
       ],
-      hints: ["Use list comprehensions", "[x for x in arr if x % 2 == 0]", "[x for x in arr if x % 2 != 0]"],
+      hints: [
+        "Use list comprehensions",
+        "[x for x in arr if x % 2 == 0]",
+        "[x for x in arr if x % 2 != 0]",
+      ],
       points: 20,
     },
     // ========== PYTHON - ASYNC/AWAIT PROBLEMS ==========
@@ -2544,10 +3466,12 @@ Call and get result.`,
     
     return str(result)`,
       },
-      testCases: [
-        { input: "none", expectedOutput: "\"data\"", isHidden: false },
+      testCases: [{ input: "none", expectedOutput: '"data"', isHidden: false }],
+      hints: [
+        "Define async def fetch_data():",
+        "Use await asyncio.sleep(1)",
+        "Run with asyncio.run(fetch_data())",
       ],
-      hints: ["Define async def fetch_data():", "Use await asyncio.sleep(1)", "Run with asyncio.run(fetch_data())"],
       points: 10,
     },
     {
@@ -2576,7 +3500,12 @@ Call with n=5, should return 10.`,
         { input: "10", expectedOutput: "20", isHidden: false },
         { input: "0", expectedOutput: "0", isHidden: true },
       ],
-      hints: ["async def get_value(n):", "await asyncio.sleep(0.1)", "return n * 2", "result = asyncio.run(get_value(n))"],
+      hints: [
+        "async def get_value(n):",
+        "await asyncio.sleep(0.1)",
+        "return n * 2",
+        "result = asyncio.run(get_value(n))",
+      ],
       points: 10,
     },
     {
@@ -2602,7 +3531,11 @@ Run all concurrently and get [1, 2, 3].`,
       testCases: [
         { input: "none", expectedOutput: "[1, 2, 3]", isHidden: false },
       ],
-      hints: ["Define multiple async functions", "Use asyncio.gather(task1(), task2(), task3())", "Returns list of results"],
+      hints: [
+        "Define multiple async functions",
+        "Use asyncio.gather(task1(), task2(), task3())",
+        "Returns list of results",
+      ],
       points: 20,
     },
     {
@@ -2627,9 +3560,13 @@ Wrap with timeout of 1 second, should raise TimeoutError.`,
     return str(result)`,
       },
       testCases: [
-        { input: "none", expectedOutput: "\"timeout\"", isHidden: false },
+        { input: "none", expectedOutput: '"timeout"', isHidden: false },
       ],
-      hints: ["Use asyncio.wait_for(slow_task(), timeout=1)", "Wrap in try/except asyncio.TimeoutError", "Return 'timeout' on exception"],
+      hints: [
+        "Use asyncio.wait_for(slow_task(), timeout=1)",
+        "Wrap in try/except asyncio.TimeoutError",
+        "Return 'timeout' on exception",
+      ],
       points: 20,
     },
     {
@@ -2659,7 +3596,11 @@ Collect all values: [0, 1, 2, ..., n-1].`,
         { input: "3", expectedOutput: "[0, 1, 2]", isHidden: false },
         { input: "1", expectedOutput: "[0]", isHidden: true },
       ],
-      hints: ["Define async def async_range(n):", "Use async for to iterate", "Collect values in list: [x async for x in async_range(n)]"],
+      hints: [
+        "Define async def async_range(n):",
+        "Use async for to iterate",
+        "Collect values in list: [x async for x in async_range(n)]",
+      ],
       points: 20,
     },
     {
@@ -2683,9 +3624,13 @@ Use with async with statement.`,
     return str(result)`,
       },
       testCases: [
-        { input: "none", expectedOutput: "\"context used\"", isHidden: false },
+        { input: "none", expectedOutput: '"context used"', isHidden: false },
       ],
-      hints: ["Define class with __aenter__ and __aexit__", "Both must be async", "Use async with AsyncContext() as ctx:"],
+      hints: [
+        "Define class with __aenter__ and __aexit__",
+        "Both must be async",
+        "Use async with AsyncContext() as ctx:",
+      ],
       points: 30,
     },
   ];
@@ -2695,4 +3640,3 @@ Use with async with statement.`,
 
   return problems;
 };
-

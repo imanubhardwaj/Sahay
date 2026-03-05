@@ -15,7 +15,13 @@ import {
 } from "@/lib/email";
 import crypto from "crypto";
 import { getUserIdFromRequest, authenticateRequest } from "@/lib/auth";
-import { notifyBookingEvent } from "@/lib/notifications";
+import {
+  notifyBookingEvent,
+  getFCMTokensForUser,
+} from "@/lib/notification-service";
+import { subscribeTokenToTopics } from "@/lib/firebase-admin";
+import { addUserTopics } from "@/lib/user-notification-topics-db";
+import { getMentorTopic } from "@/lib/notification-topics";
 import { TRANSACTION_SOURCE, MENTOR_LEVEL } from "@/lib/constants";
 import {
   deductMentorshipPoints,
@@ -420,6 +426,20 @@ export async function POST(request: NextRequest) {
     } catch (notifError) {
       console.error("Error sending notifications:", notifError);
       // Don't fail the booking if notifications fail
+    }
+
+    // Subscribe student to mentor topic for meeting schedule notifications
+    try {
+      const mentorTopic = getMentorTopic(professionalId);
+      await addUserTopics(studentId, [mentorTopic]);
+      const studentTokens = await getFCMTokensForUser(studentId);
+      for (const { token } of studentTokens) {
+        if (token) {
+          await subscribeTokenToTopics(token, [mentorTopic]);
+        }
+      }
+    } catch (subError) {
+      console.error("Error subscribing student to mentor topic:", subError);
     }
 
     await booking.populate([

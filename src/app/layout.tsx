@@ -4,6 +4,9 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingContextProvider } from "@/contexts/LoadingContext";
 import { LoadingProvider } from "@/components/LoadingProvider";
+import FCMTokenInitializer from "@/config/FCMTokenInitializer";
+import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
+import { AlertWrapperClient } from "@/components/AlertWrapperClient";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,6 +14,7 @@ export const metadata: Metadata = {
   title: "Sahay - Connect, Learn, Grow",
   description:
     "A platform connecting many students and professionals for mentorship, peer learning, and career growth",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -23,7 +27,12 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthProvider>
           <LoadingContextProvider>
-            <LoadingProvider>{children}</LoadingProvider>
+            <LoadingProvider>
+              <FCMTokenInitializer />
+              <NotificationPermissionBanner />
+              <AlertWrapperClient />
+              {children}
+            </LoadingProvider>
           </LoadingContextProvider>
         </AuthProvider>
       </body>

@@ -6,16 +6,13 @@ import { quizData } from "../../../../scripts/seed/detailed-lessons-content";
 export async function POST() {
   try {
     await connectDB();
-    console.log("🌱 Starting quiz data seeding...");
 
     // Get all lessons
     const lessons = await Lesson.find({}).populate("moduleId");
-    console.log(`📚 Found ${lessons.length} lessons`);
 
     // Clear existing quizzes and questions
     await Quiz.deleteMany({});
     await Question.deleteMany({});
-    console.log("🗑️  Cleared existing quizzes and questions");
 
     const quizzesData = [];
     const questionsData = [];
@@ -30,7 +27,7 @@ export async function POST() {
       if (!moduleQuizData) continue;
 
       const lessonQuizData = moduleQuizData.find(
-        (q) => q.lessonOrder === lesson.order
+        (q) => q.lessonOrder === lesson.order,
       );
       if (!lessonQuizData) continue;
 
@@ -81,13 +78,12 @@ export async function POST() {
 
     // Insert quizzes
     const quizzes = await Quiz.insertMany(quizzesData);
-    console.log(`✅ Seeded ${quizzes.length} quizzes`);
 
     // Update questions with quiz IDs
     const questionsWithQuizIds = questionsData
       .map((questionData) => {
         const quiz = quizzes.find(
-          (q) => q.lessonId.toString() === questionData.lessonId.toString()
+          (q) => q.lessonId.toString() === questionData.lessonId.toString(),
         );
         return {
           ...questionData,
@@ -97,7 +93,6 @@ export async function POST() {
       .filter((question) => question.quizId);
 
     const questions = await Question.insertMany(questionsWithQuizIds);
-    console.log(`✅ Seeded ${questions.length} questions`);
 
     return NextResponse.json({
       success: true,
@@ -117,7 +112,7 @@ export async function POST() {
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

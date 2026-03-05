@@ -72,11 +72,11 @@ export default function MentorsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMentor, setSelectedMentor] = useState<MentorProfile | null>(
-    null
+    null,
   );
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
-    null
+    null,
   );
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingNotes, setBookingNotes] = useState("");
@@ -106,8 +106,8 @@ export default function MentorsPage() {
         typeof s === "object" && s?.name
           ? s.name.toLowerCase()
           : typeof s === "string"
-          ? s.toLowerCase()
-          : ""
+            ? s.toLowerCase()
+            : "",
       )
       .filter(Boolean);
   }, [user?.skills]);
@@ -127,12 +127,12 @@ export default function MentorsPage() {
       const matchingSkills = mentorSkills.filter((skill) =>
         userSkills.some(
           (userSkill: string) =>
-            skill.includes(userSkill) || userSkill.includes(skill)
-        )
+            skill.includes(userSkill) || userSkill.includes(skill),
+        ),
       );
       return matchingSkills.length;
     },
-    [userSkills]
+    [userSkills],
   );
 
   // Check if a skill matches user's skills
@@ -141,7 +141,7 @@ export default function MentorsPage() {
     return userSkills.some(
       (userSkill: string) =>
         normalizedSkill.includes(userSkill) ||
-        userSkill.includes(normalizedSkill)
+        userSkill.includes(normalizedSkill),
     );
   };
 
@@ -156,15 +156,10 @@ export default function MentorsPage() {
       });
       const result = await response.json();
 
-      console.log("Mentors API response:", result);
-
       if (result.success && result.data) {
         // Show all mentors - only filter by isMentor flag
         const validMentors = (result.data as MentorProfile[]).filter(
-          (mentor) => mentor.isMentor
-        );
-        console.log(
-          `Setting ${validMentors.length} mentors (from ${result.data.length} total)`
+          (mentor) => mentor.isMentor,
         );
         setMentors(validMentors);
       } else {
@@ -199,7 +194,7 @@ export default function MentorsPage() {
         {
           headers: getAuthHeaders(),
           credentials: "include",
-        }
+        },
       );
       const result = await response.json();
 
@@ -232,7 +227,7 @@ export default function MentorsPage() {
             price: slot.price,
             sessionType: slot.sessionType,
             isActive: true,
-          })
+          }),
         );
         setSchedules(availableSchedules);
       } else {
@@ -317,7 +312,7 @@ export default function MentorsPage() {
 
       if (result.success) {
         alert(
-          "✅ Booking request sent! You'll receive an email once approved."
+          "✅ Booking request sent! You'll receive an email once approved.",
         );
         const mentorId = selectedMentor?.userId?._id;
         setShowBookingModal(false);
@@ -354,7 +349,7 @@ export default function MentorsPage() {
 
       if (selectedExpertise.length > 0) {
         const hasExpertise = selectedExpertise.some((exp) =>
-          mentor.expertise?.includes(exp)
+          mentor.expertise?.includes(exp),
         );
         if (!hasExpertise) return false;
       }
@@ -519,7 +514,7 @@ export default function MentorsPage() {
                       setSelectedExpertise((prev) =>
                         prev.includes(exp)
                           ? prev.filter((e) => e !== exp)
-                          : [...prev, exp]
+                          : [...prev, exp],
                       );
                     }}
                     className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
@@ -667,7 +662,7 @@ export default function MentorsPage() {
                           selectedMentor.avatar ||
                           selectedMentor.userId?.avatar ||
                           `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            getMentorDisplayName(selectedMentor)
+                            getMentorDisplayName(selectedMentor),
                           )}&background=6366f1&color=fff&bold=true`
                         }
                         alt=""

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!authenticatedUserId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get("lessonId");
+    const quizId = searchParams.get("quizId");
     const requestedUserId = searchParams.get("userId");
 
     // Use authenticated user's ID
@@ -34,24 +35,39 @@ export async function GET(request: NextRequest) {
           success: false,
           error: "Forbidden: You can only access your own quizzes",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
-    if (!lessonId) {
+    if (!lessonId && !quizId) {
       return NextResponse.json(
-        { success: false, error: "lessonId is required" },
-        { status: 400 }
+        { success: false, error: "lessonId or quizId is required" },
+        { status: 400 },
       );
     }
 
-    // Find the lesson by lessonId
-    const lesson = await Lesson.findById(lessonId);
+    let lesson;
+    let associatedQuiz;
+
+    if (quizId) {
+      // Fetch by quizId - find Quiz first, then get lesson
+      associatedQuiz = await Quiz.findById(quizId);
+      if (!associatedQuiz) {
+        return NextResponse.json(
+          { success: false, error: "Quiz not found" },
+          { status: 404 },
+        );
+      }
+      lesson = await Lesson.findById(associatedQuiz.lessonId);
+    } else {
+      // Fetch by lessonId
+      lesson = await Lesson.findById(lessonId);
+    }
 
     if (!lesson) {
       return NextResponse.json(
         { success: false, error: "Lesson not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -64,23 +80,20 @@ export async function GET(request: NextRequest) {
       .lean()
       .exec();
 
-    // For testing purposes, allow quiz access without module progress
-    // TODO: Remove this bypass in production
     if (!moduleProgress) {
-      console.log(
-        "No module progress found, creating temporary progress for testing"
+      return NextResponse.json(
+        {
+          success: false,
+          error: "You must start the module before accessing this quiz",
+        },
+        { status: 403 }
       );
-      // Create a temporary module progress for testing
     }
 
-    console.log("[GET-QUIZ] Loading quiz for lesson:", {
-      userId,
-      lessonId: lesson._id.toString(),
-      lessonName: lesson.name,
-    });
-
-    // Check if this lesson has an associated quiz
-    const associatedQuiz = await Quiz.findOne({ lessonId: lesson._id });
+    // Check if this lesson has an associated quiz (only when not already fetched by quizId)
+    if (!associatedQuiz) {
+      associatedQuiz = await Quiz.findOne({ lessonId: lesson._id });
+    }
 
     if (!associatedQuiz) {
       return NextResponse.json(
@@ -88,7 +101,7 @@ export async function GET(request: NextRequest) {
           success: false,
           error: "This lesson does not have an associated quiz",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -97,19 +110,10 @@ export async function GET(request: NextRequest) {
       order: 1,
     });
 
-    console.log("Found quiz questions:", quizQuestions.length);
-    if (quizQuestions.length > 0) {
-      console.log("First question content:", quizQuestions[0].questionText);
-      console.log(
-        "First question fields:",
-        Object.keys(quizQuestions[0].toObject())
-      );
-    }
-
     if (quizQuestions.length === 0) {
       return NextResponse.json(
         { success: false, error: "No questions found for this quiz" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -134,6 +138,11 @@ export async function GET(request: NextRequest) {
     const response = {
       quiz: {
         _id: associatedQuiz._id,
+        lessonId:
+          associatedQuiz.lessonId?.toString?.() || lesson._id.toString(),
+        moduleId:
+          associatedQuiz.moduleId?.toString?.() ||
+          lesson.moduleId?.toString?.(),
         name: associatedQuiz.name,
         description: associatedQuiz.description,
         totalQuestions: questions.length,
@@ -156,7 +165,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to fetch quiz",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

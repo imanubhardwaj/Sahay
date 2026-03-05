@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,18 +37,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!userProgress) {
-      console.log("Creating new user progress for userId:", userId);
       userProgress = await UserCourseProgress.create({
         userId: userObjectId,
         completedCourses: [],
         totalPointsEarned: 0,
       });
-    } else {
-      console.log(
-        "Found existing user progress with",
-        userProgress.completedCourses?.length || 0,
-        "courses"
-      );
     }
 
     // Ensure completedCourses array exists
@@ -63,18 +56,18 @@ export async function GET(request: NextRequest) {
       if (
         userProgress.completedCourses.some(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c.courseId
+          (c: any) => c.courseId,
         )
       ) {
         await userProgress.populate(
           "completedCourses.courseId",
-          "name description level duration"
+          "name description level duration",
         );
       }
       await userProgress.populate("completedCourses.moduleId", "name");
       await userProgress.populate(
         "completedCourses.currentLessonId",
-        "name order"
+        "name order",
       );
     } catch (populateError) {
       console.error("Error populating user progress in GET:", populateError);
@@ -88,12 +81,12 @@ export async function GET(request: NextRequest) {
         userProgress.completedCourses.length > 0
           ? userProgress.completedCourses.find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (c: any) => c.courseId && c.courseId._id.toString() === courseId
+              (c: any) => c.courseId && c.courseId._id.toString() === courseId,
             )
           : null;
       return NextResponse.json(
         { courseProgress: courseProgress || null },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -104,12 +97,12 @@ export async function GET(request: NextRequest) {
         userProgress.completedCourses.length > 0
           ? userProgress.completedCourses.find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (c: any) => c.moduleId && c.moduleId._id.toString() === moduleId
+              (c: any) => c.moduleId && c.moduleId._id.toString() === moduleId,
             )
           : null;
       return NextResponse.json(
         { moduleProgress: moduleProgress || null },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -121,14 +114,14 @@ export async function GET(request: NextRequest) {
         totalPoints: userProgress.totalPointsEarned,
         runningCourses: userProgress.completedCourses.filter(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c.status === "in_progress"
+          (c: any) => c.status === "in_progress",
         ),
         completedCourses: userProgress.completedCourses.filter(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c.status === "completed"
+          (c: any) => c.status === "completed",
         ),
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error fetching user course progress:", error);
@@ -149,7 +142,7 @@ export async function POST(request: NextRequest) {
     if (!userId || !moduleId) {
       return NextResponse.json(
         { error: "User ID and Module ID are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -167,7 +160,7 @@ export async function POST(request: NextRequest) {
     if (lessons.length === 0) {
       return NextResponse.json(
         { error: "No lessons found for this module" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -181,20 +174,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!userProgress) {
-      console.log(
-        "Creating new user progress for POST request, userId:",
-        userId
-      );
       userProgress = new UserCourseProgress({
         userId: userObjectId,
         completedCourses: [],
         totalPointsEarned: 0,
       });
-    } else {
-      console.log(
-        "Found existing user progress for POST, courses:",
-        userProgress.completedCourses?.length || 0
-      );
     }
 
     // Ensure completedCourses array exists
@@ -208,7 +192,7 @@ export async function POST(request: NextRequest) {
       userProgress.completedCourses && userProgress.completedCourses.length > 0
         ? userProgress.completedCourses.find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (c: any) => c.moduleId.toString() === moduleId
+            (c: any) => c.moduleId.toString() === moduleId,
           )
         : null;
 
@@ -238,7 +222,7 @@ export async function POST(request: NextRequest) {
       if (!isFirstCourse) {
         const validation = await validateWalletBalance(
           userId,
-          COURSE_START_COST
+          COURSE_START_COST,
         );
 
         if (!validation.isValid) {
@@ -249,7 +233,7 @@ export async function POST(request: NextRequest) {
               currentBalance: validation.currentBalance,
               shortfall: validation.shortfall,
             },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -259,7 +243,7 @@ export async function POST(request: NextRequest) {
         userId,
         moduleId,
         courseName,
-        isFirstCourse
+        isFirstCourse,
       );
 
       if (!deductResult.success) {
@@ -267,7 +251,7 @@ export async function POST(request: NextRequest) {
           {
             error: deductResult.error || "Failed to process course enrollment",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -314,7 +298,6 @@ export async function POST(request: NextRequest) {
 
     try {
       await userProgress.save();
-      console.log("User progress saved successfully");
     } catch (saveError) {
       console.error("Error saving user progress:", saveError);
       return NextResponse.json(
@@ -323,7 +306,7 @@ export async function POST(request: NextRequest) {
           details:
             saveError instanceof Error ? saveError.message : "Unknown error",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -333,18 +316,18 @@ export async function POST(request: NextRequest) {
       if (
         userProgress.completedCourses.some(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c.courseId
+          (c: any) => c.courseId,
         )
       ) {
         await userProgress.populate(
           "completedCourses.courseId",
-          "name description level duration"
+          "name description level duration",
         );
       }
       await userProgress.populate("completedCourses.moduleId", "name level");
       await userProgress.populate(
         "completedCourses.currentLessonId",
-        "name order"
+        "name order",
       );
     } catch (populateError) {
       console.error("Error populating user progress:", populateError);
@@ -358,7 +341,7 @@ export async function POST(request: NextRequest) {
         isNewCourse,
         pointsInfo,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error creating/updating user course progress:", error);
@@ -379,7 +362,7 @@ export async function PUT(request: NextRequest) {
     if (!userId || !moduleId || !lessonId) {
       return NextResponse.json(
         { error: "User ID, Module ID, and Lesson ID are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -395,7 +378,7 @@ export async function PUT(request: NextRequest) {
     if (!userProgress) {
       return NextResponse.json(
         { error: "User progress not found. Please start the module first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -404,14 +387,14 @@ export async function PUT(request: NextRequest) {
       userProgress.completedCourses && userProgress.completedCourses.length > 0
         ? userProgress.completedCourses.find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (c: any) => c.moduleId.toString() === moduleId
+            (c: any) => c.moduleId.toString() === moduleId,
           )
         : null;
 
     if (!courseProgress) {
       return NextResponse.json(
         { error: "Module progress not found. Please start the module first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -431,7 +414,7 @@ export async function PUT(request: NextRequest) {
     // Check if lesson was already completed
     const lessonAlreadyCompleted = courseProgress.completedLessonIds.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (l: any) => l.toString() === lessonId
+      (l: any) => l.toString() === lessonId,
     );
 
     // Add to completed lessons if not already there
@@ -441,7 +424,7 @@ export async function PUT(request: NextRequest) {
 
     // Calculate new progress percentage
     const newProgress = Math.round(
-      (courseProgress.completedLessonIds.length / lessons.length) * 100
+      (courseProgress.completedLessonIds.length / lessons.length) * 100,
     );
     courseProgress.progress = newProgress;
 
@@ -454,7 +437,7 @@ export async function PUT(request: NextRequest) {
         courseName,
         courseLevel,
         newProgress,
-        previousProgress
+        previousProgress,
       );
       progressPointsEarned = progressResult.points;
       courseProgress.pointsEarned += progressPointsEarned;
@@ -463,7 +446,7 @@ export async function PUT(request: NextRequest) {
 
     // Find next lesson
     const currentLessonIndex = lessons.findIndex(
-      (l) => l._id.toString() === lessonId
+      (l) => l._id.toString() === lessonId,
     );
     const nextLesson = lessons[currentLessonIndex + 1];
 
@@ -485,7 +468,7 @@ export async function PUT(request: NextRequest) {
           userId,
           moduleId,
           courseName,
-          courseLevel
+          courseLevel,
         );
 
         if (completionResult.success && !completionResult.alreadyAwarded) {
@@ -506,18 +489,18 @@ export async function PUT(request: NextRequest) {
       if (
         userProgress.completedCourses.some(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c.courseId
+          (c: any) => c.courseId,
         )
       ) {
         await userProgress.populate(
           "completedCourses.courseId",
-          "name description level duration"
+          "name description level duration",
         );
       }
       await userProgress.populate("completedCourses.moduleId", "name level");
       await userProgress.populate(
         "completedCourses.currentLessonId",
-        "name order"
+        "name order",
       );
     } catch (populateError) {
       console.error("Error populating user progress:", populateError);
@@ -561,7 +544,7 @@ export async function PUT(request: NextRequest) {
         },
         message,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error updating user course progress:", error);

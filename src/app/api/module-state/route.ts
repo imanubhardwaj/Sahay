@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (!authenticatedUserId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!moduleId) {
       return NextResponse.json(
         { success: false, error: "moduleId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           success: false,
           error: "Forbidden: You can only access your own module state",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -49,21 +49,13 @@ export async function GET(request: NextRequest) {
       .read("primary")
       .exec();
 
-    console.log("[MODULE-STATE] Fetched progress:", {
-      userId,
-      moduleId,
-      nextLessonOrder: moduleProgress?.nextLessonOrder,
-      completedLessonCount: moduleProgress?.completedLessonCount,
-      status: moduleProgress?.status,
-    });
-
     if (!moduleProgress) {
       // Create new progress if doesn't exist
       const moduleDoc = await Module.findById(moduleId);
       if (!moduleDoc) {
         return NextResponse.json(
           { success: false, error: "Module not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -91,13 +83,13 @@ export async function GET(request: NextRequest) {
     // Get the module details
     const moduleDoc = await Module.findById(moduleId).populate(
       "skillId",
-      "name"
+      "name",
     );
 
     if (!moduleDoc) {
       return NextResponse.json(
         { success: false, error: "Module not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -111,7 +103,7 @@ export async function GET(request: NextRequest) {
     const completionPercentage =
       validTotalLessons > 0
         ? Math.round(
-            (moduleProgress.completedLessonCount / validTotalLessons) * 100
+            (moduleProgress.completedLessonCount / validTotalLessons) * 100,
           )
         : 0;
 
@@ -146,18 +138,6 @@ export async function GET(request: NextRequest) {
       await moduleProgress.save();
     }
 
-    // Debug logging
-    console.log("Module State Debug:", {
-      moduleId,
-      nextLessonOrder: moduleProgress.nextLessonOrder,
-      completedLessonCount: moduleProgress.completedLessonCount,
-      completedLessons: moduleProgress.completedLessons?.length || 0,
-      totalLessons: validTotalLessons,
-      completionPercentage: validCompletionPercentage,
-      isModuleCompleted,
-      status: moduleProgress.status,
-    });
-
     // Get the current lesson - find the next uncompleted lesson
     let currentLesson = null;
     if (!isModuleCompleted) {
@@ -168,11 +148,6 @@ export async function GET(request: NextRequest) {
       if (lessonOrderToFetch > validTotalLessons) {
         lessonOrderToFetch = 1;
       }
-
-      console.log(
-        "Looking for next uncompleted lesson starting from order:",
-        lessonOrderToFetch
-      );
 
       // Find the next uncompleted lesson
       for (
@@ -190,16 +165,12 @@ export async function GET(request: NextRequest) {
           !(moduleProgress.completedLessons?.includes(lesson._id) || false)
         ) {
           currentLesson = lesson;
-          console.log("Found next uncompleted lesson at order:", order);
           break;
         }
       }
 
       // If no uncompleted lesson found from nextLessonOrder, check from lesson 1
       if (!currentLesson) {
-        console.log(
-          "No uncompleted lesson found from nextLessonOrder, checking from lesson 1"
-        );
         for (let order = 1; order < lessonOrderToFetch; order++) {
           const lesson = await Lesson.findOne({
             moduleId,
@@ -211,13 +182,10 @@ export async function GET(request: NextRequest) {
             !(moduleProgress.completedLessons?.includes(lesson._id) || false)
           ) {
             currentLesson = lesson;
-            console.log("Found uncompleted lesson at order:", order);
             break;
           }
         }
       }
-
-      console.log("Final current lesson:", currentLesson);
     }
 
     // Prepare response with progress data
@@ -270,7 +238,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to fetch module state",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

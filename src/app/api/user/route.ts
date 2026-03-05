@@ -12,7 +12,7 @@ import { getUserIdFromRequest } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    
+
     // Ensure models are registered before populate
     if (!mongoose.models.Skill) {
       await import("@/models/Skill");
@@ -31,13 +31,13 @@ export async function GET(req: NextRequest) {
       if (!userId) {
         return NextResponse.json(
           { error: "Not authenticated" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
       const user = await User.findById(userId)
-        .populate('skills', 'name')
-        .populate('walletId')
+        .populate("skills", "name")
+        .populate("walletId")
         .lean();
 
       if (!user) {
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
     console.error("Get users error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     if (!userType) {
       return NextResponse.json(
         { error: "User type is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     console.error("Create user error:", error);
     return NextResponse.json(
       { error: "Failed to create user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -151,7 +151,7 @@ export async function PUT(req: NextRequest) {
     const updates = await req.json();
 
     await connectDB();
-    
+
     // Ensure models are registered before populate
     if (!mongoose.models.Skill) {
       await import("@/models/Skill");
@@ -173,7 +173,7 @@ export async function PUT(req: NextRequest) {
     // Update fields manually to trigger pre-save hooks
     // Use set method for proper Mongoose handling
     for (const [key, value] of Object.entries(updates)) {
-      if (key !== '_id' && key !== '__v' && value !== undefined) {
+      if (key !== "_id" && key !== "__v" && value !== undefined) {
         user.set(key, value);
       }
     }
@@ -183,33 +183,24 @@ export async function PUT(req: NextRequest) {
 
     // Fetch fresh user data with populated fields
     const updatedUser = await User.findById(userId)
-      .populate('skills', 'name')
-      .populate('walletId')
+      .populate("skills", "name")
+      .populate("walletId")
       .lean();
 
     if (!updatedUser) {
       const userObj = user.toObject();
-      console.log("User updated (no fresh fetch):", {
-        _id: userObj._id,
-        profileCompletionPercentage: userObj.profileCompletionPercentage,
-        isOnboardingComplete: userObj.isOnboardingComplete
-      });
       return NextResponse.json({ user: userObj });
     }
-
-    console.log("User updated successfully:", {
-      _id: updatedUser._id,
-      profileCompletionPercentage: updatedUser.profileCompletionPercentage,
-      isOnboardingComplete: updatedUser.isOnboardingComplete,
-      skillsCount: updatedUser.skills?.length || 0
-    });
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("Update user error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
     );
   }
 }
@@ -229,13 +220,13 @@ export async function DELETE(req: NextRequest) {
     let user = await User.findByIdAndUpdate(
       userId,
       { deletedAt: new Date() },
-      { new: true }
+      { new: true },
     );
     if (!user) {
       user = await WorkingProfessional.findByIdAndUpdate(
         userId,
         { deletedAt: new Date() },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -248,7 +239,7 @@ export async function DELETE(req: NextRequest) {
     console.error("Delete user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

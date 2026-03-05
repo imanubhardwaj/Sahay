@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { getAuthHeaders } from "@/lib/token-storage";
 import { usePolling } from "@/hooks/usePolling";
 import { Button, Input, IconButton, Arrow } from "../../../../packages/ui";
-import { CompleteProfileModal, useProfileGating } from "@/components/CompleteProfileModal";
+import {
+  CompleteProfileModal,
+  useProfileGating,
+} from "@/components/CompleteProfileModal";
 
 interface Question {
   _id: string;
@@ -47,8 +49,7 @@ interface Answer {
 }
 
 export default function CommunityPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const { user, isLoading: authLoading } = useRequireAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
@@ -61,14 +62,28 @@ export default function CommunityPage() {
   const [filterTag, setFilterTag] = useState("All");
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
-  
+
   // Profile gating for posting/commenting
-  const { isProfileComplete, showModal, setShowModal, blockedAction, checkAndGate } = useProfileGating();
-  
+  const {
+    isProfileComplete,
+    showModal,
+    setShowModal,
+    blockedAction,
+    checkAndGate,
+  } = useProfileGating();
+
   // Helper to check if a user profile is verified
-  const isUserVerified = (userData: { isOnboardingComplete?: boolean; profileCompletionPercentage?: number } | null | undefined): boolean => {
+  const isUserVerified = (
+    userData:
+      | { isOnboardingComplete?: boolean; profileCompletionPercentage?: number }
+      | null
+      | undefined,
+  ): boolean => {
     if (!userData) return false;
-    return userData.isOnboardingComplete === true || (userData.profileCompletionPercentage ?? 0) >= 100;
+    return (
+      userData.isOnboardingComplete === true ||
+      (userData.profileCompletionPercentage ?? 0) >= 100
+    );
   };
 
   const availableTags = [
@@ -134,12 +149,9 @@ export default function CommunityPage() {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+    if (authLoading || !user) return;
     loadQuestions();
-  }, [user, router, loadQuestions]);
+  }, [user, authLoading, loadQuestions]);
 
   // Auto-refetch every 30 seconds (reduced frequency to avoid unnecessary calls)
   usePolling(loadQuestions, {
@@ -196,8 +208,8 @@ export default function CommunityPage() {
               upvotes: (q.upvotes || 0) + 1,
               upvotedBy: [...(q.upvotedBy || []), user._id],
             }
-          : q
-      )
+          : q,
+      ),
     );
 
     try {
@@ -207,7 +219,7 @@ export default function CommunityPage() {
           method: "POST",
           headers: getAuthHeaders(),
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -221,11 +233,11 @@ export default function CommunityPage() {
                   ...q,
                   upvotes: Math.max(0, (q.upvotes || 0) - 1),
                   upvotedBy: (q.upvotedBy || []).filter(
-                    (id) => id !== user._id
+                    (id) => id !== user._id,
                   ),
                 }
-              : q
-          )
+              : q,
+          ),
         );
 
         if (errorData.error?.includes("already upvoted")) {
@@ -240,7 +252,7 @@ export default function CommunityPage() {
       const data = await response.json();
       if (data.success && data.question) {
         setQuestions((prevQuestions) =>
-          prevQuestions.map((q) => (q._id === questionId ? data.question : q))
+          prevQuestions.map((q) => (q._id === questionId ? data.question : q)),
         );
       }
     } catch (error) {
@@ -257,10 +269,9 @@ export default function CommunityPage() {
   const handleComment = async (questionId: string) => {
     const content = commentText[questionId]?.trim();
     if (!content || !user) {
-      console.log("Comment validation failed:", { content, user });
       return;
     }
-    
+
     // Gate commenting action - require complete profile
     if (!checkAndGate("post a comment")) {
       return;
@@ -287,8 +298,8 @@ export default function CommunityPage() {
               ...q,
               answers: [...(q.answers || []), optimisticComment],
             }
-          : q
-      )
+          : q,
+      ),
     );
 
     // Clear the comment input immediately
@@ -305,7 +316,7 @@ export default function CommunityPage() {
             content,
             userId: user._id,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -320,11 +331,11 @@ export default function CommunityPage() {
                   ...q,
                   answers: q.answers.filter(
                     (a, idx) =>
-                      idx !== q.answers.length - 1 || a.content !== content
+                      idx !== q.answers.length - 1 || a.content !== content,
                   ),
                 }
-              : q
-          )
+              : q,
+          ),
         );
 
         // Restore comment text
@@ -337,7 +348,7 @@ export default function CommunityPage() {
       const data = await response.json();
       if (data.success && data.question) {
         setQuestions((prevQuestions) =>
-          prevQuestions.map((q) => (q._id === questionId ? data.question : q))
+          prevQuestions.map((q) => (q._id === questionId ? data.question : q)),
         );
       }
     } catch (error) {
@@ -346,20 +357,18 @@ export default function CommunityPage() {
     }
   };
 
-  const handleCommentUpvote = async (questionId: string, answerId: string) => {
-    console.log("Upvoting comment:", { questionId, answerId });
+  const handleCommentUpvote = async () => {
     // Placeholder for comment upvote - you can implement this later
     alert("Comment upvote feature coming soon!");
   };
 
   const toggleComments = (questionId: string) => {
-    console.log("Toggling comments for question:", questionId);
     setExpandedQuestion(expandedQuestion === questionId ? null : questionId);
   };
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
@@ -367,7 +376,7 @@ export default function CommunityPage() {
     userData:
       | { firstName?: string; lastName?: string; email?: string }
       | null
-      | undefined
+      | undefined,
   ) => {
     if (!userData) return "Unknown User";
     if (userData.firstName && userData.lastName) {
@@ -377,7 +386,7 @@ export default function CommunityPage() {
   };
 
   const getUserInitial = (
-    userData: { firstName?: string; email?: string } | null | undefined
+    userData: { firstName?: string; email?: string } | null | undefined,
   ) => {
     if (!userData) return "U";
     if (userData.firstName) return userData.firstName.charAt(0).toUpperCase();
@@ -404,7 +413,15 @@ export default function CommunityPage() {
     return true;
   });
 
-  if (!user) return null;
+  if (authLoading || !user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-700 border-t-white" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -414,7 +431,7 @@ export default function CommunityPage() {
         onClose={() => setShowModal(false)}
         blockedAction={blockedAction}
       />
-      
+
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -461,10 +478,12 @@ export default function CommunityPage() {
             {!isProfileComplete && (
               <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-700">
                 <span>⚠️</span>
-                <span>Complete your profile to post questions and comments</span>
+                <span>
+                  Complete your profile to post questions and comments
+                </span>
               </div>
             )}
-            
+
             {!showPostForm ? (
               <Button
                 variant="text"
@@ -582,14 +601,6 @@ export default function CommunityPage() {
           ) : (
             <div className="space-y-4">
               {filteredQuestions.map((question) => {
-                const isExpanded = expandedQuestion === question._id;
-                console.log("Rendering question:", {
-                  id: question._id,
-                  title: question.title,
-                  isExpanded,
-                  expandedQuestion,
-                });
-
                 return (
                   <div
                     key={question._id}
@@ -776,12 +787,7 @@ export default function CommunityPage() {
                                   </p>
                                   <div className="flex items-center gap-4">
                                     <IconButton
-                                      onClick={() =>
-                                        handleCommentUpvote(
-                                          question._id,
-                                          answer._id || ""
-                                        )
-                                      }
+                                      onClick={() => handleCommentUpvote()}
                                       className="!flex !items-center !gap-1 !text-gray-500 !hover:!text-blue-600 !transition-colors !text-xs !font-medium !group"
                                     >
                                       <svg

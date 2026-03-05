@@ -122,7 +122,7 @@ const getSectionsForUserType = (userType: string): Section[] => {
         type: "text",
         placeholder: "Computer Science, Engineering, etc.",
         required: true,
-      }
+      },
     );
   } else if (userType === "working_professional") {
     baseSections[0].questions.push(
@@ -152,7 +152,7 @@ const getSectionsForUserType = (userType: string): Section[] => {
           "9+ years",
         ],
         required: true,
-      }
+      },
     );
   }
 
@@ -313,14 +313,14 @@ const getSectionsForUserType = (userType: string): Section[] => {
           required: true,
         },
       ],
-    }
+    },
   );
 
   return baseSections;
 };
 
 export default function OnboardingPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState<"userType" | "onboarding">("userType");
   const [selectedUserType, setSelectedUserType] = useState<string>("");
@@ -330,10 +330,11 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const sections = selectedUserType
     ? getSectionsForUserType(selectedUserType)
@@ -342,7 +343,7 @@ export default function OnboardingPage() {
   const currentQuestionData = currentSectionData?.questions[currentQuestion];
   const totalQuestions = sections.reduce(
     (sum, section) => sum + section.questions.length,
-    0
+    0,
   );
   const currentQuestionIndex =
     sections
@@ -440,11 +441,9 @@ export default function OnboardingPage() {
         completionRate: 0,
       };
 
-      console.log("Updating user with data:", updateData);
       const result = await updateUser(updateData);
 
       if (result) {
-        console.log("Onboarding completed successfully");
         router.push("/dashboard");
       } else {
         throw new Error("Failed to update user data");
@@ -464,8 +463,8 @@ export default function OnboardingPage() {
   const canProceed =
     formData[currentQuestionData?.id as keyof OnboardingData] !== undefined;
 
-  if (!user) {
-    return <Loader message="Loading onboarding data..." />;
+  if (authLoading || !user) {
+    return <Loader message={authLoading ? "Checking authentication..." : "Loading onboarding data..."} />;
   }
 
   // User Type Selection Step
@@ -531,8 +530,8 @@ export default function OnboardingPage() {
                   index < currentSection
                     ? "bg-green-500"
                     : index === currentSection
-                    ? "bg-blue-500"
-                    : "bg-gray-300"
+                      ? "bg-blue-500"
+                      : "bg-gray-300"
                 }`}
               />
             ))}
@@ -670,8 +669,8 @@ export default function OnboardingPage() {
                   index === currentSection
                     ? "bg-blue-100 text-blue-700"
                     : index < currentSection
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-500"
+                      ? "bg-green-100 text-green-700"
+                      : "text-gray-500"
                 }`}
               >
                 <span>{section.icon}</span>

@@ -3,8 +3,6 @@ import { seedJavaScriptIntermediateModule } from "../../../../scripts/seed/javas
 
 export async function POST() {
   try {
-    console.log("🌱 Starting JavaScript Intermediate module seeding...");
-
     const result = await seedJavaScriptIntermediateModule();
 
     return NextResponse.json({
@@ -25,7 +23,7 @@ export async function POST() {
             ? error.message
             : "Failed to seed JavaScript Intermediate module",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

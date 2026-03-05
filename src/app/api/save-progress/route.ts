@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!authenticatedUserId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Forbidden: You can only save your own progress",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "moduleId and lessonId are required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (!lesson) {
       return NextResponse.json(
         { success: false, error: "Lesson not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (lesson.moduleId.toString() !== moduleId) {
       return NextResponse.json(
         { success: false, error: "Lesson does not belong to this module" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,17 +79,9 @@ export async function POST(request: NextRequest) {
     if (!moduleProgress) {
       return NextResponse.json(
         { success: false, error: "Module progress not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
-
-    console.log("[SAVE-PROGRESS] Processing:", {
-      userId,
-      moduleId,
-      lessonId: lesson._id.toString(),
-      lessonOrder: lesson.order,
-      currentNextLessonOrder: moduleProgress.nextLessonOrder,
-    });
 
     // Verify that this lesson is the current lesson (security check)
     const currentLesson = await Lesson.findOne({
@@ -107,7 +99,7 @@ export async function POST(request: NextRequest) {
             providedLessonOrder: lesson.order,
           },
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -118,14 +110,8 @@ export async function POST(request: NextRequest) {
 
     // Check if lesson is already completed
     const isLessonAlreadyCompleted = moduleProgress.completedLessons.some(
-      (id: string) => id.toString() === lesson._id.toString()
+      (id: string) => id.toString() === lesson._id.toString(),
     );
-
-    console.log("[SAVE-PROGRESS] Completion status:", {
-      isLessonAlreadyCompleted,
-      lessonId: lesson._id.toString(),
-      completedLessonsCount: moduleProgress.completedLessons.length,
-    });
 
     const pointsAwarded = 0;
 
@@ -234,32 +220,8 @@ export async function POST(request: NextRequest) {
 
     moduleProgress.lastAccessedAt = new Date();
 
-    // Save with write concern to ensure it's committed
-    const savedProgress = await moduleProgress.save({
-      writeConcern: { w: "majority", j: true },
-    });
-
-    console.log("[SAVE-PROGRESS] Progress saved:", {
-      userId,
-      moduleId,
-      nextLessonOrder: savedProgress.nextLessonOrder,
-      completedLessonCount: savedProgress.completedLessonCount,
-      completionPercentage: savedProgress.completionPercentage,
-      pointsAwarded,
-    });
-
     // Wait a bit for replication
     await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Verify the save
-    const verifyProgress = await ModuleProgress.findOne({ userId, moduleId })
-      .read("primary")
-      .exec();
-
-    console.log("[SAVE-PROGRESS] Verification:", {
-      nextLessonOrder: verifyProgress?.nextLessonOrder,
-      completedLessonCount: verifyProgress?.completedLessonCount,
-    });
 
     // Prepare response (without exposing order)
     const response = {
@@ -276,8 +238,8 @@ export async function POST(request: NextRequest) {
         moduleProgress.status === "completed"
           ? "🎉 Congratulations! You have completed this module!"
           : isLessonAlreadyCompleted
-          ? "Lesson already completed. Moving to next lesson."
-          : `✅ Lesson completed! ${pointsAwarded} points earned.`,
+            ? "Lesson already completed. Moving to next lesson."
+            : `✅ Lesson completed! ${pointsAwarded} points earned.`,
     };
 
     return NextResponse.json({
@@ -292,7 +254,7 @@ export async function POST(request: NextRequest) {
         error: "Failed to save progress",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

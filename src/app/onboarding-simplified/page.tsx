@@ -44,7 +44,7 @@ const LEARNING_GOALS = [
 type UserType = "student_fresher" | "working_professional";
 
 export default function SimplifiedOnboardingPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,14 +56,14 @@ export default function SimplifiedOnboardingPage() {
     learningGoals: [] as string[],
     careerGoals: "",
   });
-
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push("/login");
     } else if (user.isOnboardingComplete) {
       router.push("/dashboard");
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleUserTypeSelect = (userType: string) => {
     setFormData((prev) => ({ ...prev, userType }));
@@ -121,8 +121,8 @@ export default function SimplifiedOnboardingPage() {
     }
   };
 
-  if (!user) {
-    return <Loader message="Loading onboarding data..." />;
+  if (authLoading || !user) {
+    return <Loader message={authLoading ? "Checking authentication..." : "Loading onboarding data..."} />;
   }
 
   return (

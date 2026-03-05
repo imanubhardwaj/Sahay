@@ -1,26 +1,24 @@
-import { NextResponse } from 'next/server';
-import { seedDatabase } from '../../../../scripts/seed';
+import { NextResponse } from "next/server";
+import { seedDatabase } from "../../../../scripts/seed";
 
 export async function POST() {
   try {
-    console.log('🌱 Starting database seeding via API...');
-    
     await seedDatabase();
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Database seeded successfully!',
-      timestamp: new Date().toISOString()
+      message: "Database seeded successfully!",
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error("❌ Error seeding database:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

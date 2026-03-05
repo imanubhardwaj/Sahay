@@ -7,7 +7,6 @@ import {
   FaInfoCircle,
   FaCheck,
 } from "react-icons/fa";
-import { useSocket } from "@/hooks/useSocket";
 import { getAuthHeaders } from "@/lib/token-storage";
 
 interface Notification {
@@ -21,7 +20,6 @@ interface Notification {
 }
 
 export function NotificationsTab() {
-  const { socket, isConnected } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -52,26 +50,10 @@ export function NotificationsTab() {
     }
   }, [filter]);
 
+  // Fetch only on mount and when filter changes - no polling
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
-
-  // Listen for real-time notifications via Socket.io
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleNotification = (notification: Notification) => {
-      console.log("📬 New notification received:", notification);
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    };
-
-    socket.on("notification", handleNotification);
-
-    return () => {
-      socket.off("notification", handleNotification);
-    };
-  }, [socket, isConnected]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -200,26 +182,6 @@ export function NotificationsTab() {
             </button>
           )}
         </div>
-      </div>
-
-      {/* Connection Status */}
-      <div
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-          isConnected
-            ? "bg-green-500/20 text-green-400"
-            : "bg-yellow-500/20 text-yellow-400"
-        }`}
-      >
-        <div
-          className={`w-2 h-2 rounded-full ${
-            isConnected ? "bg-green-500" : "bg-yellow-500"
-          }`}
-        />
-        <span className="text-sm">
-          {isConnected
-            ? "Real-time notifications active"
-            : "Using polling - notifications may be delayed"}
-        </span>
       </div>
 
       {/* Notifications List */}

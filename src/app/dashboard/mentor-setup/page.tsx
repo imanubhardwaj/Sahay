@@ -9,10 +9,8 @@ import {
   FaTwitter,
   FaGithub,
   FaGlobe,
-  FaCheck,
   FaTimes,
 } from "react-icons/fa";
-import { SiZoom } from "react-icons/si";
 
 interface MentorProfile {
   _id: string;
@@ -35,7 +33,6 @@ interface MentorProfile {
   twitter: string;
   github: string;
   website: string;
-  zoomConnected: boolean;
   totalSessions: number;
   completedSessions: number;
   averageRating: number;
@@ -204,42 +201,6 @@ export default function MentorSetupPage() {
     }));
   };
 
-  const handleConnectZoom = async () => {
-    try {
-      const response = await fetch(
-        `/api/mentor-profile/zoom?userId=${user?._id}`
-      );
-      const result = await response.json();
-
-      if (result.success && result.data.authUrl) {
-        window.location.href = result.data.authUrl;
-      }
-    } catch (error) {
-      console.error("Error connecting Zoom:", error);
-      alert("Failed to connect Zoom. Please try again.");
-    }
-  };
-
-  const handleDisconnectZoom = async () => {
-    try {
-      const response = await fetch(
-        `/api/mentor-profile/zoom?userId=${user?._id}`,
-        {
-          method: "DELETE",
-        }
-      );
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Zoom disconnected successfully");
-        fetchMentorProfile();
-      }
-    } catch (error) {
-      console.error("Error disconnecting Zoom:", error);
-      alert("Failed to disconnect Zoom. Please try again.");
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -277,59 +238,20 @@ export default function MentorSetupPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               🎓 Become a Mentor
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               Share your knowledge and earn points by mentoring students
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Zoom Integration */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <SiZoom className="text-blue-600" size={24} />
-                Zoom Integration
-              </h3>
-              {mentorProfile?.zoomConnected ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FaCheck className="text-green-500" />
-                    <span className="text-green-700 font-medium">
-                      Zoom Connected
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleDisconnectZoom}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg border border-gray-300"
-                  >
-                    Disconnect
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-700 mb-3">
-                    Connect your Zoom account to automatically create meeting
-                    links for your sessions
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleConnectZoom}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Connect Zoom
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* Basic Info */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Professional Headline
               </label>
               <Input
@@ -338,18 +260,19 @@ export default function MentorSetupPage() {
                 onChange={handleInputChange}
                 placeholder="e.g., Senior Software Engineer at Google"
                 maxLength={200}
+                className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Bio
               </label>
               <textarea
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
                 rows={5}
                 placeholder="Tell students about yourself, your experience, and how you can help them..."
                 maxLength={1000}
@@ -362,7 +285,7 @@ export default function MentorSetupPage() {
             {/* Experience */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Current Role
                 </label>
                 <Input
@@ -370,10 +293,11 @@ export default function MentorSetupPage() {
                   value={formData.currentRole}
                   onChange={handleInputChange}
                   placeholder="e.g., Senior Software Engineer"
+                  className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Current Company
                 </label>
                 <Input
@@ -381,12 +305,13 @@ export default function MentorSetupPage() {
                   value={formData.currentCompany}
                   onChange={handleInputChange}
                   placeholder="e.g., Google"
+                  className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Years of Experience
               </label>
               <Input
@@ -396,12 +321,13 @@ export default function MentorSetupPage() {
                 onChange={handleInputChange}
                 min="0"
                 max="50"
+                className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
               />
             </div>
 
             {/* Past Companies */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Past Companies (Work Experience)
               </label>
               <p className="text-sm text-gray-500 mb-4">
@@ -409,7 +335,7 @@ export default function MentorSetupPage() {
               </p>
 
               {/* Add Past Company Form */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 space-y-3">
+              <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 mb-4 space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input
                     placeholder="Company Name"
@@ -420,6 +346,7 @@ export default function MentorSetupPage() {
                         company: e.target.value,
                       })
                     }
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                   <Input
                     placeholder="Role/Position"
@@ -430,6 +357,7 @@ export default function MentorSetupPage() {
                         role: e.target.value,
                       })
                     }
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -443,6 +371,7 @@ export default function MentorSetupPage() {
                         startDate: e.target.value,
                       })
                     }
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                   <Input
                     type="month"
@@ -455,6 +384,7 @@ export default function MentorSetupPage() {
                       })
                     }
                     disabled={newPastCompany.isCurrent}
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -471,7 +401,7 @@ export default function MentorSetupPage() {
                     }
                     className="w-4 h-4"
                   />
-                  <label htmlFor="isCurrent" className="text-sm text-gray-700">
+                  <label htmlFor="isCurrent" className="text-sm text-gray-400">
                     Current Position
                   </label>
                 </div>
@@ -484,7 +414,7 @@ export default function MentorSetupPage() {
                       description: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
                   rows={2}
                 />
                 <button
@@ -508,7 +438,7 @@ export default function MentorSetupPage() {
                       });
                     }
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg"
                 >
                   Add Experience
                 </button>
@@ -520,13 +450,13 @@ export default function MentorSetupPage() {
                   {formData.pastCompanies.map((exp, index) => (
                     <div
                       key={index}
-                      className="flex items-start justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                      className="flex items-start justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg"
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-white">
                           {exp.role}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-400">
                           {exp.company}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -536,7 +466,7 @@ export default function MentorSetupPage() {
                             : exp.endDate}
                         </div>
                         {exp.description && (
-                          <div className="text-sm text-gray-600 mt-1">
+                          <div className="text-sm text-gray-400 mt-1">
                             {exp.description}
                           </div>
                         )}
@@ -563,7 +493,7 @@ export default function MentorSetupPage() {
 
             {/* Expertise */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Areas of Expertise
               </label>
               <div className="flex gap-2 mb-3">
@@ -574,6 +504,7 @@ export default function MentorSetupPage() {
                   onKeyPress={(e) =>
                     e.key === "Enter" && (e.preventDefault(), addExpertise())
                   }
+                  className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                 />
                 <button type="button" onClick={addExpertise}>
                   Add
@@ -583,7 +514,7 @@ export default function MentorSetupPage() {
                 {formData.expertise.map((skill, index) => (
                   <span
                     key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                    className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                   >
                     {skill}
                     <button
@@ -600,7 +531,7 @@ export default function MentorSetupPage() {
 
             {/* Languages */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Languages
               </label>
               <div className="flex gap-2 mb-3">
@@ -611,6 +542,7 @@ export default function MentorSetupPage() {
                   onKeyPress={(e) =>
                     e.key === "Enter" && (e.preventDefault(), addLanguage())
                   }
+                  className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                 />
                 <button type="button" onClick={addLanguage}>
                   Add
@@ -620,7 +552,7 @@ export default function MentorSetupPage() {
                 {formData.languages.map((lang, index) => (
                   <span
                     key={index}
-                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                    className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                   >
                     {lang}
                     <button
@@ -638,13 +570,13 @@ export default function MentorSetupPage() {
             {/* Session Types & Pricing */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold text-gray-700">
+                <label className="block text-sm font-semibold text-gray-300">
                   Session Types & Pricing
                 </label>
                 <button
                   type="button"
                   onClick={addSessionType}
-                  className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                  className="bg-emerald-600 cursor-pointer hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg"
                 >
                   + Add Session Type
                 </button>
@@ -653,11 +585,11 @@ export default function MentorSetupPage() {
                 {formData.sessionTypes.map((session, index) => (
                   <div
                     key={index}
-                    className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                    className="bg-gray-800/50 p-4 rounded-lg border border-gray-700"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">
                           Session Name
                         </label>
                         <Input
@@ -666,10 +598,11 @@ export default function MentorSetupPage() {
                           onChange={(e) =>
                             updateSessionType(index, "name", e.target.value)
                           }
+                          className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">
                           Duration (min)
                         </label>
                         <Input
@@ -683,10 +616,11 @@ export default function MentorSetupPage() {
                               Number(e.target.value)
                             )
                           }
+                          className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">
                           Price (₹)
                         </label>
                         <Input
@@ -700,6 +634,7 @@ export default function MentorSetupPage() {
                               Number(e.target.value)
                             )
                           }
+                          className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                         />
                       </div>
                       <button
@@ -716,6 +651,7 @@ export default function MentorSetupPage() {
                       onChange={(e) =>
                         updateSessionType(index, "description", e.target.value)
                       }
+                      className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                     />
                   </div>
                 ))}
@@ -724,7 +660,7 @@ export default function MentorSetupPage() {
 
             {/* Social Links */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-white mb-3">
                 Social Links
               </h3>
               <div className="space-y-3">
@@ -735,6 +671,7 @@ export default function MentorSetupPage() {
                     value={formData.linkedIn}
                     onChange={handleInputChange}
                     placeholder="LinkedIn URL"
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
                 <div className="flex items-center gap-3">
@@ -744,6 +681,7 @@ export default function MentorSetupPage() {
                     value={formData.twitter}
                     onChange={handleInputChange}
                     placeholder="Twitter URL"
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
                 <div className="flex items-center gap-3">
@@ -753,6 +691,7 @@ export default function MentorSetupPage() {
                     value={formData.github}
                     onChange={handleInputChange}
                     placeholder="GitHub URL"
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
                 <div className="flex items-center gap-3">
@@ -762,6 +701,7 @@ export default function MentorSetupPage() {
                     value={formData.website}
                     onChange={handleInputChange}
                     placeholder="Personal Website"
+                    className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
                   />
                 </div>
               </div>
@@ -769,34 +709,34 @@ export default function MentorSetupPage() {
 
             {/* Stats */}
             {mentorProfile && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   📊 Your Stats
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-bold text-emerald-400">
                       {mentorProfile.totalSessions}
                     </div>
-                    <div className="text-sm text-gray-600">Total Sessions</div>
+                    <div className="text-sm text-gray-400">Total Sessions</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-emerald-400">
                       {mentorProfile.completedSessions}
                     </div>
-                    <div className="text-sm text-gray-600">Completed</div>
+                    <div className="text-sm text-gray-400">Completed</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">
+                    <div className="text-2xl font-bold text-amber-400">
                       {mentorProfile.averageRating.toFixed(1)} ⭐
                     </div>
-                    <div className="text-sm text-gray-600">Rating</div>
+                    <div className="text-sm text-gray-400">Rating</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-emerald-400">
                       {mentorProfile.totalEarnings}
                     </div>
-                    <div className="text-sm text-gray-600">Points Earned</div>
+                    <div className="text-sm text-gray-400">Points Earned</div>
                   </div>
                 </div>
               </div>
@@ -805,7 +745,7 @@ export default function MentorSetupPage() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg"
               disabled={loading}
             >
               {loading ? "Saving..." : "Save Profile"}

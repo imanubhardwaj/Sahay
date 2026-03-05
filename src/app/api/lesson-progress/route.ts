@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     if (!moduleId) {
       return NextResponse.json(
         { error: "Module ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -78,20 +78,21 @@ export async function GET(req: NextRequest) {
     const lessons = await Lesson.find({ moduleId: moduleObjectId }).sort({
       order: 1,
     });
-    console.log(`Found ${lessons.length} lessons for module ${moduleId}`);
 
     // Get user's progress for these lessons
     const progress = await UserLessonProgress.find({
       userId: userObjectId,
       moduleId: moduleObjectId,
     });
-    console.log(`Found ${progress.length} progress records for user ${userId}`);
 
     // Create a map of lessonId to progress
-    const progressMap = progress.reduce((map, p) => {
-      map[p.lessonId.toString()] = p;
-      return map;
-    }, {} as Record<string, unknown>);
+    const progressMap = progress.reduce(
+      (map, p) => {
+        map[p.lessonId.toString()] = p;
+        return map;
+      },
+      {} as Record<string, unknown>,
+    );
 
     // Combine lessons with progress
     const lessonsWithProgress = lessons.map((lesson, index) => {
@@ -104,12 +105,6 @@ export async function GET(req: NextRequest) {
         const previousLesson = lessons[index - 1];
         const previousProgress = progressMap[previousLesson._id.toString()];
         isLocked = !(previousProgress?.status === "completed");
-
-        console.log(`Lesson ${index + 1} (${lesson.name}) locking check:`, {
-          previousLesson: previousLesson.name,
-          previousStatus: previousProgress?.status,
-          isLocked,
-        });
       }
 
       return {
@@ -119,22 +114,15 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    console.log(
-      `Returning ${lessonsWithProgress.length} lessons with progress`
-    );
     return NextResponse.json({ lessonsWithProgress });
   } catch (error) {
     console.error("Get lesson progress error:", error);
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
     return NextResponse.json(
       {
         error: "Internal server error",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -150,14 +138,14 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!lessonId || !moduleId) {
       return NextResponse.json(
         { error: "Lesson ID and Module ID are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -192,7 +180,7 @@ export async function POST(req: NextRequest) {
     console.error("Update lesson progress error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -208,14 +196,14 @@ export async function PUT(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!lessonId || score === undefined) {
       return NextResponse.json(
         { error: "Lesson ID and score are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -229,7 +217,7 @@ export async function PUT(req: NextRequest) {
           passed: false,
           canProceed: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -246,7 +234,7 @@ export async function PUT(req: NextRequest) {
     if (!progress) {
       return NextResponse.json(
         { error: "Lesson progress not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -258,13 +246,6 @@ export async function PUT(req: NextRequest) {
 
     // Check if this is the first completion (to avoid duplicate points)
     const isFirstCompletion = progress.status !== "completed";
-    console.log("Lesson completion check:", {
-      lessonId: lessonObjectId.toString(),
-      currentStatus: progress.status,
-      isFirstCompletion,
-      score,
-      passedThreshold: score >= QUIZ_PASSING_PERCENTAGE,
-    });
 
     // Update quiz score and status - ONLY if score >= 80%
     progress.quizScore = score;
@@ -279,19 +260,11 @@ export async function PUT(req: NextRequest) {
     let transaction = null;
     let wallet = null;
 
-    console.log(
-      "isFirstCompletion:",
-      isFirstCompletion,
-      "lesson.points:",
-      lesson.points
-    );
-
     if (isFirstCompletion && lesson.points > 0) {
       try {
         // Find or create user's wallet
         wallet = await Wallet.findOne({ userId: userObjectId });
         if (!wallet) {
-          console.log("Creating new wallet for user:", userObjectId.toString());
           wallet = await Wallet.create({
             userId: userObjectId,
             balance: 0,
@@ -301,10 +274,6 @@ export async function PUT(req: NextRequest) {
         }
 
         // Create transaction for points
-        console.log(
-          "Creating transaction with walletId:",
-          wallet._id.toString()
-        );
         transaction = await Transaction.create({
           userId: userObjectId,
           walletId: wallet._id,
@@ -327,8 +296,6 @@ export async function PUT(req: NextRequest) {
           wallet.totalSpent = 0;
         }
         await wallet.save();
-
-        console.log("Successfully awarded points:", lesson.points);
       } catch (pointsError) {
         console.error("Error awarding points:", pointsError);
         // Don't fail the entire request if points awarding fails
@@ -358,7 +325,7 @@ export async function PUT(req: NextRequest) {
           moduleId: lesson.moduleId,
         });
         moduleProgress.completionPercentage = Math.round(
-          (moduleProgress.completedLessons.length / totalLessons) * 100
+          (moduleProgress.completedLessons.length / totalLessons) * 100,
         );
 
         // Update points earned
@@ -396,7 +363,7 @@ export async function PUT(req: NextRequest) {
     console.error("Submit quiz score error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

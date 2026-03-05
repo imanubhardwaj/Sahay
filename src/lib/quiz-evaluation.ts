@@ -27,20 +27,22 @@ export function evaluateMCQ(
   correctOptionId: string,
   options: Array<{ id: string; content: string }>,
   lessonTopics: string[] = [],
-  points: number = 10
+  points: number = 10,
 ): MCQEvaluationResult {
   const isCorrect = userOptionId === correctOptionId;
-  const correctOption = options.find(opt => opt.id === correctOptionId);
-  const userOption = options.find(opt => opt.id === userOptionId);
+  const correctOption = options.find((opt) => opt.id === correctOptionId);
+  const userOption = options.find((opt) => opt.id === userOptionId);
 
   // Map question to relevant topics for wrong answers
-  const suggestedTopics = isCorrect ? [] : mapQuestionToTopics(questionText, lessonTopics);
+  const suggestedTopics = isCorrect
+    ? []
+    : mapQuestionToTopics(questionText, lessonTopics);
 
   return {
     isCorrect,
     earnedPoints: isCorrect ? points : 0,
-    correctAnswer: correctOption?.content || '',
-    userAnswer: userOption?.content || '',
+    correctAnswer: correctOption?.content || "",
+    userAnswer: userOption?.content || "",
     suggestedTopics,
   };
 }
@@ -48,7 +50,10 @@ export function evaluateMCQ(
 /**
  * Map question text to relevant topics from lesson
  */
-function mapQuestionToTopics(questionText: string, lessonTopics: string[]): string[] {
+function mapQuestionToTopics(
+  questionText: string,
+  lessonTopics: string[],
+): string[] {
   if (!lessonTopics || lessonTopics.length === 0) {
     return [];
   }
@@ -60,10 +65,10 @@ function mapQuestionToTopics(questionText: string, lessonTopics: string[]): stri
   for (const topic of lessonTopics) {
     const topicLower = topic.toLowerCase();
     const topicKeywords = topicLower.split(/[\s,]+/);
-    
+
     // Check if any keyword from the topic appears in the question
-    const hasMatch = topicKeywords.some(keyword => 
-      keyword.length > 3 && questionLower.includes(keyword)
+    const hasMatch = topicKeywords.some(
+      (keyword) => keyword.length > 3 && questionLower.includes(keyword),
     );
 
     if (hasMatch) {
@@ -80,272 +85,396 @@ function mapQuestionToTopics(questionText: string, lessonTopics: string[]): stri
 }
 
 /**
+ * Discover available Gemini models by calling ListModels API
+ */
+async function discoverAvailableModels(
+  apiKey: string,
+): Promise<{ model: string; version: string } | null> {
+  const apiVersions = ["v1beta", "v1"];
+
+  for (const version of apiVersions) {
+    try {
+      const listUrl = `https://generativelanguage.googleapis.com/${version}/models?key=${apiKey}`;
+
+      const response = await fetch(listUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const models = data.models || [];
+
+        // Find first model that supports generateContent
+        for (const model of models) {
+          const modelName = model.name?.replace(`models/`, "") || "";
+          const supportedMethods = model.supportedGenerationMethods || [];
+
+          if (supportedMethods.includes("generateContent") && modelName) {
+            return { model: modelName, version };
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `[GEMINI] ⚠️ Failed to list models with ${version}:`,
+        (error as Error).message,
+      );
+      // Continue to next version
+    }
+  }
+
+  return null;
+}
+
+/**
  * Evaluate subjective or code question using Google Gemini API
- * Returns only yes/no (true/false) response - no explanations
+ * Returns isCorrect (true/false) and points (0 to maxPoints) from Gemini
  */
 export async function evaluateSubjectiveOrCode(
   questionText: string,
   userAnswer: string,
   correctAnswer: string,
-  questionType: 'subjective' | 'code',
-  points: number = 10
+  questionType: "subjective" | "code",
+  points: number = 10,
 ): Promise<SubjectiveEvaluationResult> {
+  // IMMEDIATE LOG - This should show up FIRST to confirm function is called
+
   // Log to both console (server) and stderr for visibility
   // Use process.stdout.write for immediate output
-  process.stdout.write('\n');
-  process.stdout.write('========================================\n');
-  process.stdout.write('[GEMINI] 🚀🚀🚀 STARTING EVALUATION 🚀🚀🚀\n');
+  process.stdout.write("\n\n");
+  process.stdout.write("========================================\n");
+  process.stdout.write("[GEMINI] 🚀🚀🚀 STARTING EVALUATION 🚀🚀🚀\n");
   process.stdout.write(`[GEMINI] Type: ${questionType}\n`);
   process.stdout.write(`[GEMINI] Points: ${points}\n`);
-  process.stdout.write(`[GEMINI] Question text length: ${questionText.length}\n`);
-  process.stdout.write(`[GEMINI] User answer length: ${userAnswer.length}\n`);
-  process.stdout.write(`[GEMINI] Question preview: ${questionText.substring(0, 150)}\n`);
-  process.stdout.write(`[GEMINI] User answer preview: ${userAnswer.substring(0, 150)}\n`);
-  process.stdout.write('========================================\n');
-  
-  console.log('========================================');
-  console.log('[GEMINI] 🚀 STARTING EVALUATION');
-  console.log('[GEMINI] Type:', questionType);
-  console.log('[GEMINI] Points:', points);
-  console.log('[GEMINI] Question text length:', questionText.length);
-  console.log('[GEMINI] User answer length:', userAnswer.length);
-  console.log('[GEMINI] Question preview:', questionText.substring(0, 150));
-  console.log('[GEMINI] User answer preview:', userAnswer.substring(0, 150));
-  console.error('[GEMINI] 🚀 STARTING EVALUATION - Type:', questionType); // Also to stderr
+  process.stdout.write(
+    `[GEMINI] Question text length: ${questionText?.length || 0}\n`,
+  );
+  process.stdout.write(
+    `[GEMINI] User answer length: ${userAnswer?.length || 0}\n`,
+  );
+  process.stdout.write(
+    `[GEMINI] Question preview: ${questionText?.substring(0, 150) || "EMPTY"}\n`,
+  );
+  process.stdout.write(
+    `[GEMINI] User answer preview: ${userAnswer?.substring(0, 150) || "EMPTY"}\n`,
+  );
+  process.stdout.write("========================================\n");
 
   // Check for API key - try multiple possible env var names
-  const apiKey = process.env.GEMINI_API_KEY 
-    || process.env.NEXT_PUBLIC_GEMINI_API_KEY 
-    || process.env.GOOGLE_GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    process.env.GOOGLE_GEMINI_API_KEY;
 
   if (!apiKey) {
-    const errorMsg = '[GEMINI] ❌❌❌ API KEY NOT FOUND!';
+    const errorMsg = "[GEMINI] ❌❌❌ API KEY NOT FOUND!";
     process.stdout.write(`\n${errorMsg}\n`);
-    process.stdout.write('========================================\n');
+    process.stdout.write("========================================\n");
     console.error(errorMsg);
-    console.error('[GEMINI] Environment check:', {
+    console.error("[GEMINI] Environment check:", {
       hasGeminiKey: !!process.env.GEMINI_API_KEY,
       hasNextPublicGeminiKey: !!process.env.NEXT_PUBLIC_GEMINI_API_KEY,
       hasGoogleGeminiKey: !!process.env.GOOGLE_GEMINI_API_KEY,
       hasOpenAIKey: !!process.env.OPENAI_API_KEY,
       nodeEnv: process.env.NODE_ENV,
       allEnvKeys: Object.keys(process.env)
-        .filter(k => k.includes('API') || k.includes('KEY') || k.includes('GEMINI'))
+        .filter(
+          (k) => k.includes("API") || k.includes("KEY") || k.includes("GEMINI"),
+        )
         .slice(0, 10), // Limit to first 10 to avoid spam
     });
-    console.error('[GEMINI] ❌ Make sure GEMINI_API_KEY is in .env.local (not .env)');
+    console.error(
+      "[GEMINI] ❌ Make sure GEMINI_API_KEY is in .env.local (not .env)",
+    );
     return {
       isCorrect: null,
       earnedPoints: 0,
       correctAnswer,
       userAnswer,
-      feedback: 'Automatic evaluation unavailable. Please review manually.',
-      improvements: ['Gemini API key not configured - check server logs'],
+      feedback: "Automatic evaluation unavailable. Please review manually.",
+      improvements: ["Gemini API key not configured - check server logs"],
     };
   }
 
   process.stdout.write(`[GEMINI] ✅ API key found!\n`);
   process.stdout.write(`[GEMINI] ✅ API key length: ${apiKey.length}\n`);
-  process.stdout.write(`[GEMINI] ✅ API key preview: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}\n`);
-  
-  console.log('[GEMINI] ✅ API key found!');
-  console.log('[GEMINI] ✅ API key length:', apiKey.length);
-  console.log('[GEMINI] ✅ API key preview:', apiKey.substring(0, 10) + '...' + apiKey.substring(apiKey.length - 4));
-  console.error('[GEMINI] ✅ API key found, length:', apiKey.length); // Also log to stderr
+  process.stdout.write(
+    `[GEMINI] ✅ API key preview: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}\n`,
+  );
 
   try {
-    // Simplified prompt - only asking for correct/incorrect (yes/no)
-    const prompt = questionType === 'code' 
-      ? `Evaluate if the following coding answer is correct.
+    // Validate inputs
+    if (!questionText || questionText.trim().length === 0) {
+      console.error("[GEMINI] ❌ Empty question text");
+      throw new Error("Question text is required");
+    }
 
-Question: ${questionText}
+    if (!userAnswer || userAnswer.trim().length === 0) {
+      console.error("[GEMINI] ❌ Empty user answer");
+      throw new Error("User answer is required");
+    }
 
-Expected Answer: ${correctAnswer}
+    // Short prompt asking for isCorrect (true/false) and points (0 to maxPoints)
+    const prompt =
+      questionType === "code"
+        ? `Q: ${questionText}\nA: ${userAnswer}\nMax: ${points}\nEvaluate code correctness. Return JSON only: {"isCorrect": true/false, "points": 0-${points}}`
+        : `Q: ${questionText}\nA: ${userAnswer}\nMax: ${points}\nEvaluate answer. Return JSON only: {"isCorrect": true/false, "points": 0-${points}}`;
 
-User's Code Answer: ${userAnswer}
+    console.error("[GEMINI] 📝 Making API request to Gemini..."); // Log to stderr for visibility
 
-Check if the user's code is functionally correct and produces the expected result. Consider:
-- Does it solve the problem correctly?
-- Is the logic sound?
-- Does it handle edge cases?
+    // First, try to discover available models
+    const discoveredModel = await discoverAvailableModels(apiKey);
 
-Respond ONLY with a JSON object in this exact format:
-{"isCorrect": true}
+    // Build list of models to try: discovered model first, then fallbacks
+    const modelConfigs: Array<{ model: string; version: string }> = [];
 
-or
+    if (discoveredModel) {
+      modelConfigs.push(discoveredModel);
+    }
 
-{"isCorrect": false}
-
-Use true if the answer is correct, false if incorrect. Do not provide any explanation, only the JSON response.`
-      : `Evaluate if the following answer is correct.
-
-Question: ${questionText}
-
-Expected Answer: ${correctAnswer}
-
-User's Answer: ${userAnswer}
-
-Respond ONLY with a JSON object in this exact format:
-{"isCorrect": true}
-
-or
-
-{"isCorrect": false}
-
-Use true if the answer is correct, false if incorrect. Do not provide any explanation, only the JSON response.`;
-
-    console.log('[GEMINI] 📝 Prompt created, length:', prompt.length);
-    console.log('[GEMINI] 📝 Prompt preview:', prompt.substring(0, 200) + '...');
-    console.error('[GEMINI] 📝 Making API request to Gemini...'); // Log to stderr for visibility
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-    // Log masked URL for security
-    const maskedUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`;
-    console.log('[GEMINI] 🌐 API URL (masked for logs):', maskedUrl);
-    console.log('[GEMINI] 🌐 Full API URL length:', apiUrl.length);
+    // Add fallback models
+    modelConfigs.push(
+      { model: "gemini-1.5-flash", version: "v1beta" },
+      { model: "gemini-1.5-flash", version: "v1" },
+      { model: "gemini-pro", version: "v1beta" },
+      { model: "gemini-pro", version: "v1" },
+    );
 
     const requestBody = {
       contents: [
         {
           parts: [
             {
-              text: `You are a code evaluator. Respond only with JSON containing isCorrect (true/false). No explanations.
-
-${prompt}`
-            }
-          ]
-        }
+              text: prompt,
+            },
+          ],
+        },
       ],
       generationConfig: {
-        temperature: 0.1, // Very low temperature for consistent yes/no responses
+        temperature: 0.1,
         topK: 1,
         topP: 0.1,
-        maxOutputTokens: 20, // Minimal tokens - just need true/false JSON
-        responseMimeType: 'application/json', // Force JSON response
+        maxOutputTokens: 500, // Increased from 100 to ensure full JSON response
       },
     };
 
-    console.log('[GEMINI] Request body:', JSON.stringify(requestBody, null, 2));
+    let response;
+    let lastError: Error | null = null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Try each model/API combination
+    for (const config of modelConfigs) {
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/${config.version}/models/${config.model}:generateContent?key=${apiKey}`;
 
-    console.log('[GEMINI] Response status:', response.status, response.statusText);
-    console.error(`[GEMINI] Response status: ${response.status} ${response.statusText}`); // Also to stderr
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      const errorDetails = {
-        status: response.status,
-        statusText: response.statusText,
-        errorText,
-      };
-      console.error('[GEMINI] ❌ API ERROR:', errorDetails);
-      console.error('[GEMINI] ❌ API ERROR:', JSON.stringify(errorDetails, null, 2)); // Also to stderr
-      throw new Error(`Gemini API error: ${response.statusText} - ${errorText.substring(0, 200)}`);
+        if (response.ok) {
+          clearTimeout(timeoutId);
+          break; // Success! Exit loop
+        } else {
+          const errorText = await response.text();
+          console.warn(
+            `[GEMINI] ⚠️ ${config.model}/${config.version} failed: ${response.status} - ${errorText.substring(0, 100)}`,
+          );
+          lastError = new Error(
+            `Gemini API error: ${response.statusText} - ${errorText.substring(0, 200)}`,
+          );
+          // Continue to next config
+        }
+      } catch (fetchError: unknown) {
+        const error = fetchError as Error;
+        if (error.name === "AbortError") {
+          clearTimeout(timeoutId);
+          console.error("[GEMINI] ❌ Request timeout after 30 seconds");
+          throw new Error("Gemini API request timed out. Please try again.");
+        }
+        console.warn(
+          `[GEMINI] ⚠️ ${config.model}/${config.version} fetch error:`,
+          error.message,
+        );
+        lastError = error as Error;
+        // Continue to next config
+      }
+    }
+
+    clearTimeout(timeoutId);
+
+    if (!response || !response.ok) {
+      const errorDetails = lastError
+        ? { error: lastError.message }
+        : { error: "All model/API combinations failed" };
+      console.error("[GEMINI] ❌ All API attempts failed:", errorDetails);
+      throw (
+        lastError ||
+        new Error(
+          "All Gemini API model/version combinations failed. Please check your API key and model availability.",
+        )
+      );
     }
 
     const data = await response.json();
-    console.log('[GEMINI] ✅ Response received from Gemini API');
-    console.log('[GEMINI] Response structure:', {
-      hasCandidates: !!data.candidates,
-      candidatesLength: data.candidates?.length || 0,
-      firstCandidate: data.candidates?.[0] ? 'exists' : 'missing',
-    });
-    console.error('[GEMINI] ✅ Response received'); // Also to stderr
-    
+    console.error("[GEMINI] ✅ Response received"); // Also to stderr
+
+    // Check if response was truncated
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === "MAX_TOKENS" || finishReason === "LENGTH") {
+      console.warn(
+        "[GEMINI] ⚠️ Response was truncated! finishReason:",
+        finishReason,
+      );
+    }
+
     // Extract content from Gemini response
-    let content = '';
+    let content = "";
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       const parts = data.candidates[0].content.parts;
-      if (parts && parts[0] && parts[0].text) {
-        content = parts[0].text.trim();
-        console.log('[GEMINI] Extracted content:', content);
+      if (parts && Array.isArray(parts)) {
+        // Combine all text parts (in case response is split)
+        content = parts
+          .map((part: { text?: string }) => part?.text || "")
+          .join("")
+          .trim();
       } else {
-        console.warn('[GEMINI] No text in parts:', parts);
+        console.warn("[GEMINI] No text in parts:", parts);
       }
     } else {
-      console.warn('[GEMINI] Unexpected response structure:', Object.keys(data));
+      console.warn(
+        "[GEMINI] Unexpected response structure:",
+        Object.keys(data),
+      );
     }
 
     if (!content) {
-      console.error('[GEMINI] No content received:', data);
-      throw new Error('No content received from Gemini API');
+      console.error("[GEMINI] No content received:", data);
+      throw new Error("No content received from Gemini API");
+    }
+
+    // Clean content: remove markdown code blocks if present
+    // Gemini sometimes returns JSON wrapped in ```json ... ```
+    let cleanedContent = content.trim();
+    if (cleanedContent.startsWith("```")) {
+      // Remove opening ```json or ```
+      cleanedContent = cleanedContent.replace(/^```(?:json)?\s*/i, "");
+      // Remove closing ```
+      cleanedContent = cleanedContent.replace(/\s*```\s*$/, "");
+      cleanedContent = cleanedContent.trim();
     }
 
     // Parse JSON response
     let evaluation;
     try {
-      evaluation = JSON.parse(content);
-      console.log('[GEMINI] ✅ Parsed evaluation:', evaluation);
-      console.error('[GEMINI] ✅ Parsed evaluation:', JSON.stringify(evaluation)); // Also to stderr
+      evaluation = JSON.parse(cleanedContent);
+      console.error(
+        "[GEMINI] ✅ Parsed evaluation:",
+        JSON.stringify(evaluation),
+      ); // Also to stderr
     } catch (parseError) {
-      console.error('[GEMINI] ❌ Failed to parse JSON response:', {
-        content,
+      console.error("[GEMINI] ❌ Failed to parse JSON response:", {
+        content: cleanedContent,
         error: parseError,
       });
-      console.error('[GEMINI] ❌ Parse error details:', JSON.stringify({ content, error: String(parseError) })); // Also to stderr
-      // Fallback: try to extract true/false from text
-      const contentLower = content.toLowerCase();
-      if (contentLower.includes('true') || contentLower.includes('"isCorrect":true')) {
-        evaluation = { isCorrect: true };
-        console.log('[GEMINI] Fallback: extracted true');
-        console.error('[GEMINI] Fallback: extracted true'); // Also to stderr
-      } else if (contentLower.includes('false') || contentLower.includes('"isCorrect":false')) {
-        evaluation = { isCorrect: false };
-        console.log('[GEMINI] Fallback: extracted false');
-        console.error('[GEMINI] Fallback: extracted false'); // Also to stderr
-      } else {
-        evaluation = { isCorrect: null };
-        console.warn('[GEMINI] ⚠️ Fallback: could not extract boolean');
-        console.error('[GEMINI] ⚠️ Fallback: could not extract boolean'); // Also to stderr
+      console.error(
+        "[GEMINI] ❌ Parse error details:",
+        JSON.stringify({ content: cleanedContent, error: String(parseError) }),
+      ); // Also to stderr
+      // Fallback: try to extract isCorrect and points from text
+      const contentLower = cleanedContent.toLowerCase();
+      let extractedIsCorrect = null;
+      let extractedPoints = 0;
+
+      if (
+        contentLower.includes("true") ||
+        contentLower.includes('"isCorrect":true')
+      ) {
+        extractedIsCorrect = true;
+      } else if (
+        contentLower.includes("false") ||
+        contentLower.includes('"isCorrect":false')
+      ) {
+        extractedIsCorrect = false;
       }
+
+      // Try to extract points number
+      const pointsMatch = cleanedContent.match(/"points"\s*:\s*(\d+)/i);
+      if (pointsMatch) {
+        extractedPoints = parseInt(pointsMatch[1], 10);
+      } else if (extractedIsCorrect === true) {
+        extractedPoints = points; // If correct but no points specified, give full points
+      }
+
+      evaluation = {
+        isCorrect: extractedIsCorrect,
+        points: extractedPoints,
+      };
+      console.error("[GEMINI] Fallback: extracted", JSON.stringify(evaluation)); // Also to stderr
     }
 
     // Ensure isCorrect is boolean or null
-    const isCorrect = evaluation.isCorrect === true ? true : 
-                     evaluation.isCorrect === false ? false : null;
+    const isCorrect =
+      evaluation.isCorrect === true
+        ? true
+        : evaluation.isCorrect === false
+          ? false
+          : null;
 
-    console.log('[GEMINI] ✅✅✅ FINAL RESULT:', {
-      isCorrect,
-      earnedPoints: isCorrect === true ? points : 0,
-      points,
-    });
-    console.error(`[GEMINI] ✅✅✅ FINAL RESULT: isCorrect=${isCorrect}, earnedPoints=${isCorrect === true ? points : 0}`); // Also to stderr
-    console.log('========================================');
-
-    // Calculate points based on correctness
+    // Get points from Gemini response, validate it's within 0 to maxPoints range
     let earnedPoints = 0;
-    if (isCorrect === true) {
+    if (
+      evaluation.points !== undefined &&
+      typeof evaluation.points === "number"
+    ) {
+      // Clamp points between 0 and maxPoints
+      earnedPoints = Math.max(
+        0,
+        Math.min(points, Math.round(evaluation.points)),
+      );
+    } else if (isCorrect === true) {
+      // Fallback: if correct but no points specified, give full points
       earnedPoints = points;
-    } else if (isCorrect === null) {
-      earnedPoints = 0; // No partial credit for unclear answers
+    } else {
+      // Fallback: if incorrect or unclear, give 0 points
+      earnedPoints = 0;
     }
 
-    console.log('[GEMINI] Evaluation complete:', {
-      isCorrect,
-      earnedPoints,
-      points,
-    });
+    // Ensure minimum 1 point for code/subjective questions (attempt credit)
+    // Only if user provided an answer (which we already validated earlier)
+    if (earnedPoints === 0 && userAnswer && userAnswer.trim().length > 0) {
+      earnedPoints = Math.min(1, points); // At least 1 point, but not more than max
+    }
+    console.error(
+      `[GEMINI] ✅✅✅ FINAL RESULT: isCorrect=${isCorrect}, earnedPoints=${earnedPoints}, maxPoints=${points}`,
+    ); // Also to stderr
 
     return {
       isCorrect,
       earnedPoints,
       correctAnswer,
       userAnswer,
-      feedback: isCorrect === true 
-        ? 'Your answer is correct!' 
-        : isCorrect === false 
-        ? 'Your answer is incorrect. Please review the solution.'
-        : 'Unable to evaluate answer. Please review manually.',
-      improvements: isCorrect === false 
-        ? ['Review the question requirements', 'Compare your answer with the expected solution']
-        : [],
+      feedback:
+        isCorrect === true
+          ? "Your answer is correct!"
+          : isCorrect === false
+            ? "Your answer is incorrect. Please review the solution."
+            : "Unable to evaluate answer. Please review manually.",
+      improvements:
+        isCorrect === false
+          ? [
+              "Review the question requirements",
+              "Compare your answer with the expected solution",
+            ]
+          : [],
     };
   } catch (error) {
     const errorDetails = {
@@ -353,16 +482,24 @@ ${prompt}`
       errorMessage: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     };
-    console.error('[GEMINI] ❌❌❌ ERROR EVALUATING:', errorDetails);
-    console.error('[GEMINI] ❌❌❌ ERROR:', JSON.stringify(errorDetails, null, 2)); // Also to stderr with full details
+    console.error("[GEMINI] ❌❌❌ ERROR EVALUATING:", errorDetails);
+    console.error(
+      "[GEMINI] ❌❌❌ ERROR:",
+      JSON.stringify(errorDetails, null, 2),
+    ); // Also to stderr with full details
+
+    // Give at least 1 point for attempt if user provided an answer
+    const errorEarnedPoints =
+      userAnswer && userAnswer.trim().length > 0 ? Math.min(1, points) : 0;
+
     return {
       isCorrect: null,
-      earnedPoints: 0,
+      earnedPoints: errorEarnedPoints,
       correctAnswer,
       userAnswer,
-      feedback: 'Evaluation service temporarily unavailable. Please review manually.',
-      improvements: ['Check your answer against the lesson content'],
+      feedback:
+        "Evaluation service temporarily unavailable. Please review manually.",
+      improvements: ["Check your answer against the lesson content"],
     };
   }
 }
-

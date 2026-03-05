@@ -1,0 +1,11 @@
+.MuiAlert-root {
+  @apply flex items-center !top-6;
+}
+
+.MuiAlert-action {
+  @apply !mr-0 !pt-0;
+}
+
+.MuiAlert-message {
+  @apply text-inherit;
+}

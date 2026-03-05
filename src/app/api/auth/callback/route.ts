@@ -13,27 +13,18 @@ export async function GET(req: Request) {
     // Parse state to get redirect URL
     let redirectTo = "/dashboard";
     if (stateParam) {
-      try {
-        const state = JSON.parse(decodeURIComponent(stateParam));
-        if (state.redirectTo) {
-          redirectTo = state.redirectTo;
-        }
-      } catch {
-        console.log("Failed to parse state parameter");
+      const state = JSON.parse(decodeURIComponent(stateParam));
+      if (state.redirectTo) {
+        redirectTo = state.redirectTo;
       }
     }
 
-    console.log("Callback received with code:", code ? "present" : "missing");
-    console.log("Redirect to:", redirectTo);
-
     if (!code) {
-      console.log("No code provided, redirecting to login");
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/login?error=no_code`
+        `${process.env.NEXT_PUBLIC_APP_URL}/login?error=no_code`,
       );
     }
 
-    console.log("Authenticating with WorkOS...");
     // Authenticate with WorkOS - try both OAuth and Magic Auth
     let user;
     try {
@@ -44,7 +35,6 @@ export async function GET(req: Request) {
       });
       user = authResponse.user;
     } catch {
-      console.log("OAuth failed, trying Magic Auth...");
       // If OAuth fails, try Magic Auth
       const authResponse =
         await workos.userManagement.authenticateWithMagicAuth({
@@ -55,10 +45,7 @@ export async function GET(req: Request) {
       user = authResponse.user;
     }
 
-    console.log("WorkOS user authenticated:", user.email);
-
     // Connect to MongoDB
-    console.log("Connecting to MongoDB...");
     await connectDB();
 
     // Check if user exists
@@ -66,7 +53,6 @@ export async function GET(req: Request) {
     let isNewUser = false;
 
     if (!dbUser) {
-      console.log("Creating new user...");
       try {
         // Create new user with proper schema
         dbUser = await User.create({
@@ -98,7 +84,6 @@ export async function GET(req: Request) {
           selectedModules: [],
         });
         isNewUser = true;
-        console.log("New user created:", dbUser._id);
       } catch (createError) {
         console.error("Error creating user:", createError);
         // If username conflict, try with different random suffix
@@ -109,7 +94,6 @@ export async function GET(req: Request) {
           "keyPattern" in createError &&
           (createError.keyPattern as Record<string, unknown>)?.username
         ) {
-          console.log("Username conflict, retrying with different username...");
           dbUser = await User.create({
             firstName: user.firstName || user.email.split("@")[0],
             lastName: user.lastName || "",
@@ -140,13 +124,10 @@ export async function GET(req: Request) {
           });
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           isNewUser = true;
-          console.log("New user created with retry:", dbUser._id);
         } else {
           throw createError;
         }
       }
-    } else {
-      console.log("Existing user found:", dbUser._id);
     }
 
     // Generate JWT token
@@ -159,9 +140,8 @@ export async function GET(req: Request) {
     // Create response and set session cookie
     // All users go to dashboard or their intended destination
     const finalRedirectUrl = redirectTo || "/dashboard";
-    console.log("Redirecting to:", finalRedirectUrl);
     const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}${finalRedirectUrl}`
+      `${process.env.NEXT_PUBLIC_APP_URL}${finalRedirectUrl}`,
     );
 
     // Set secure session cookie (for backward compatibility)
@@ -180,12 +160,11 @@ export async function GET(req: Request) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log("Session cookie and token set for user:", dbUser._id);
     return response;
   } catch (error) {
     console.error("Auth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login?error=auth_failed`
+      `${process.env.NEXT_PUBLIC_APP_URL}/login?error=auth_failed`,
     );
   }
 }

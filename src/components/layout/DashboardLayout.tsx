@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 // Button component removed - using native button elements
 import Image from "next/image";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { FaHome, FaSearch, FaPeopleArrows, FaCode } from "react-icons/fa";
 import { RiUserCommunityFill, RiAccountCircleFill } from "react-icons/ri";
 import { BsFillPassportFill } from "react-icons/bs";
@@ -21,8 +20,13 @@ import {
 import { SiSession } from "react-icons/si";
 import { GiTeacher } from "react-icons/gi";
 import { SidebarNotifications } from "@/components/SidebarNotifications";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import { getAuthHeader } from "@/lib/token-storage";
-import { Button } from "../../../packages/ui";
+import {
+  Button,
+  SideBarCloseIcon,
+  SideBarOpenIcon,
+} from "../../../packages/ui";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -40,7 +44,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
     return false;
   });
-  const [isHovering, setIsHovering] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Save sidebar state to localStorage when it changes
@@ -78,26 +81,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     await logout();
     // logout() already redirects, but if it fails, redirect here as fallback
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login';
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
     }
-  };
-
-  const handleSidebarMouseEnter = () => {
-    if (sidebarCollapsed) {
-      setIsHovering(true);
-    }
-  };
-
-  const handleSidebarMouseLeave = () => {
-    setIsHovering(false);
   };
 
   // NON-INTRUSIVE: Users can browse without completing onboarding
   // Action gating will handle restrictions for critical actions (booking, posting)
   // No forced redirect to onboarding anymore
 
-  const isSidebarExpanded = !sidebarCollapsed || isHovering;
+  const isSidebarExpanded = !sidebarCollapsed;
 
   const navigation = useMemo(() => {
     // Check if user is a working professional (any type that includes "professional")
@@ -204,6 +197,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [user?.userType]);
 
   return (
+    <LayoutProvider
+      value={{
+        sidebarCollapsed,
+        isSidebarExpanded,
+      }}
+    >
     <div className="min-h-screen bg-black">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
@@ -222,32 +221,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         } transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isSidebarExpanded ? "w-52" : "w-20"
         } h-screen`}
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100">
+          <div className="flex items-center px-3 py-2 border-b border-gray-100">
             {isSidebarExpanded && (
               <div className="flex items-center space-x-3">
                 <div>
                   <h1 className="text-xl font-bold text-white">Sahay</h1>
-                  {/* <p className="text-xs text-white">Learning Platform</p> */}
                 </div>
               </div>
             )}
             {/* Notifications */}
-            <div className="mt-2">
-              <SidebarNotifications />
-            </div>
+            <SidebarNotifications />
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-xl hover:bg-white transition-all duration-200 group"
+              className="p-2 rounded-xl hover:bg-white transition-all duration-200 group cursor-pointer"
             >
-              {sidebarCollapsed || isHovering ? (
-                <ChevronsRight className="w-5 h-5 text-white group-hover:text-gray-900 transition-colors" />
+              {sidebarCollapsed ? (
+                <SideBarOpenIcon className="w-5 h-5 text-white group-hover:text-gray-900 transition-colors" />
               ) : (
-                <ChevronsLeft className="w-5 h-5 text-white group-hover:text-gray-900 transition-colors" />
+                <SideBarCloseIcon className="w-5 h-5 text-white group-hover:text-gray-900 transition-colors" />
               )}
             </button>
           </div>
@@ -255,7 +249,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Navigation */}
           <nav className="flex-1 w-full flex flex-col gap-2 px-4 mt-1.5">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                pathname === item.href ||
+                (item.href === "/dashboard/explore" &&
+                  pathname.startsWith("/dashboard/modules/"));
               return (
                 <Link
                   key={item.name}
@@ -386,7 +383,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             <div className="px-3">
               {isSidebarExpanded && (
-                  <Button
+                <Button
                   onClick={handleLogout}
                   variant="text"
                   className="!w-full !mt-3 !p-2 !text-xs !border !border-gray-200 !text-white !rounded-xl !hover:bg-gray-50 !transition-all !duration-300 !flex !items-center !justify-center"
@@ -460,10 +457,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             {/* Page Content */}
-            <main className="min-h-screen px-4 py-4 bg-black">{children}</main>
+            <main className="min-h-screen  sm:px-4  py-4 bg-black">
+              {children}
+            </main>
           </div>
         </div>
       </div>
     </div>
+    </LayoutProvider>
   );
 }

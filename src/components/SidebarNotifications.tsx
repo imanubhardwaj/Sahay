@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FaBell, FaTimes, FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaChevronRight } from "react-icons/fa";
+import { useState, useEffect, useCallback } from "react";
+import {
+  FaBell,
+  FaTimes,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaInfoCircle,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSocket } from "@/hooks/useSocket";
 import { useRouter } from "next/navigation";
 import { getAuthHeaders } from "@/lib/token-storage";
 
@@ -20,40 +26,19 @@ interface Notification {
 export function SidebarNotifications() {
   const { user } = useAuth();
   const router = useRouter();
-  const { socket, isConnected } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPanel, setShowPanel] = useState(false);
 
-  useEffect(() => {
-    if (user?._id) {
-      fetchNotifications();
-    }
-  }, [user]);
-
-  // Listen for real-time notifications via Socket.io
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleNotification = (notification: Notification) => {
-      console.log("📬 New notification received:", notification);
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    };
-
-    socket.on("notification", handleNotification);
-
-    return () => {
-      socket.off("notification", handleNotification);
-    };
-  }, [socket, isConnected]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
-      const response = await fetch("/api/notifications?unreadOnly=false&limit=5", {
-        headers: getAuthHeaders(),
-        credentials: "include",
-      });
+      const response = await fetch(
+        "/api/notifications?unreadOnly=false&limit=5",
+        {
+          headers: getAuthHeaders(),
+          credentials: "include",
+        },
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -63,7 +48,14 @@ export function SidebarNotifications() {
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  };
+  }, []);
+
+  // Fetch on mount, when user changes, and when panel is opened (no polling)
+  useEffect(() => {
+    if (user?._id) {
+      fetchNotifications();
+    }
+  }, [user?._id, showPanel, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -77,8 +69,8 @@ export function SidebarNotifications() {
       if (response.ok) {
         setNotifications((prev) =>
           prev.map((n) =>
-            n._id === notificationId ? { ...n, read: true } : n
-          )
+            n._id === notificationId ? { ...n, read: true } : n,
+          ),
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
@@ -127,24 +119,18 @@ export function SidebarNotifications() {
     <>
       <button
         onClick={() => setShowPanel(!showPanel)}
-        className={`relative flex items-center mx-auto w-full rounded-xl justify-center p-3 text-white hover:bg-green-50 hover:text-gray-900 transition-all duration-300 cursor-pointer ${
-          showPanel ? "bg-green-50 text-gray-900" : ""
+        className={`relative flex items-center mx-auto w-fit rounded-xl justify-center p-0 text-white hover:scale-105 transition-all duration-300 cursor-pointer ${
+          showPanel ? "scale-105" : ""
         }`}
         title="Notifications"
       >
         <div className="relative">
-          <FaBell className="text-xl" />
+          <FaBell className="text-xl !p-0" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
-          {/* Connection status indicator */}
-          <span
-            className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ${
-              isConnected ? "bg-green-500" : "bg-yellow-500"
-            }`}
-          />
         </div>
       </button>
 
@@ -156,7 +142,7 @@ export function SidebarNotifications() {
             className="fixed inset-0 bg-black/50 lg:hidden"
             onClick={() => setShowPanel(false)}
           />
-          
+
           {/* Panel */}
           <div className="fixed left-10 top-0 h-full w-96 bg-white shadow-2xl lg:absolute lg:right-0 lg:top-auto lg:h-auto lg:max-h-[600px] lg:rounded-lg lg:border lg:border-gray-200 flex flex-col z-50">
             {/* Header */}
@@ -190,7 +176,9 @@ export function SidebarNotifications() {
                     <div
                       key={notification._id}
                       className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        !notification.read ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                        !notification.read
+                          ? "bg-blue-50 border-l-4 border-blue-500"
+                          : ""
                       }`}
                       onClick={() => {
                         if (!notification.read) {
@@ -245,5 +233,3 @@ export function SidebarNotifications() {
     </>
   );
 }
-
-

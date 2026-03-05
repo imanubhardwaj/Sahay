@@ -12,13 +12,10 @@ type ModuleDocument = Document & {
 };
 
 export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
-  console.log("🌱 Seeding lessons with detailed content and quizzes...");
-
   // Clear existing data
   await Lesson.deleteMany({});
   await Quiz.deleteMany({});
   await Question.deleteMany({});
-  console.log("🗑️  Cleared existing lessons, quizzes, and questions.");
 
   const lessonsData: Array<{
     name: string;
@@ -60,7 +57,6 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
       detailedLessonsContent[moduleName as keyof typeof detailedLessonsContent];
 
     if (!moduleContent) {
-      console.log(`⚠️  No detailed content found for module: ${moduleName}`);
       // Create basic lessons for modules without detailed content
       for (let i = 1; i <= 15; i++) {
         const lesson = {
@@ -78,10 +74,6 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
       }
       continue;
     }
-
-    console.log(
-      `📚 Processing module: ${moduleName} with ${moduleContent.length} lessons`
-    );
 
     // Create lessons for this module
     for (const lessonContent of moduleContent) {
@@ -107,7 +99,7 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
         const lesson = lessonsData.find(
           (l) =>
             l.moduleId.toString() === moduleData._id.toString() &&
-            l.order === quizInfo.lessonOrder
+            l.order === quizInfo.lessonOrder,
         );
 
         if (lesson) {
@@ -152,7 +144,6 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
 
   // Insert lessons first
   const lessons = await Lesson.insertMany(lessonsData);
-  console.log(`✅ Seeded ${lessons.length} lessons with detailed content`);
 
   // Update quizzes with actual lesson IDs and insert them
   const quizzesWithLessonIds = quizzesData
@@ -160,7 +151,7 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
       const lesson = lessons.find(
         (l) =>
           l.moduleId.toString() === quizData.moduleId.toString() &&
-          l.order === quizData.lessonOrder
+          l.order === quizData.lessonOrder,
       );
       return {
         ...quizData,
@@ -169,18 +160,13 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
     })
     .filter((quiz) => quiz.lessonId); // Only include quizzes with valid lesson IDs
 
-  console.log(
-    `📊 Found ${quizzesWithLessonIds.length} valid quizzes out of ${quizzesData.length} quiz data entries`
-  );
-
   const quizzes = await Quiz.insertMany(quizzesWithLessonIds);
-  console.log(`✅ Seeded ${quizzes.length} quizzes`);
 
   // Update questions with actual quiz IDs and insert them
   const questionsWithQuizIds = questionsData
     .map((questionData) => {
       const quiz = quizzes.find(
-        (q) => q.lessonOrder === questionData.quizLessonOrder
+        (q) => q.lessonOrder === questionData.quizLessonOrder,
       );
       return {
         ...questionData,
@@ -189,23 +175,16 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
     })
     .filter((question) => question.quizId); // Only include questions with valid quiz IDs
 
-  console.log(
-    `📊 Found ${questionsWithQuizIds.length} valid questions out of ${questionsData.length} question data entries`
-  );
-
   const questions = await Question.insertMany(questionsWithQuizIds);
-  console.log(`✅ Seeded ${questions.length} questions`);
 
   // Update modules with lessonsCount
   for (const moduleData of modules) {
     const lessonCount = lessons.filter(
-      (l) => l.moduleId.toString() === moduleData._id.toString()
+      (l) => l.moduleId.toString() === moduleData._id.toString(),
     ).length;
     moduleData.lessonsCount = lessonCount;
     await moduleData.save();
   }
-
-  console.log("✅ Updated modules with lesson counts");
 
   return {
     lessons,

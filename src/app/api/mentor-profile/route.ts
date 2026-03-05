@@ -15,13 +15,16 @@ export async function GET(request: NextRequest) {
 
     // Public access: Get specific mentor profile by mentorId (no auth required)
     if (mentorId) {
-      const mentorProfile = await MentorProfile.findOne({ _id: mentorId, isMentor: true, isApproved: true })
-        .populate("userId", "firstName lastName email avatar bio title yoe");
+      const mentorProfile = await MentorProfile.findOne({
+        _id: mentorId,
+        isMentor: true,
+        isApproved: true,
+      }).populate("userId", "firstName lastName email avatar bio title yoe");
 
       if (!mentorProfile) {
         return NextResponse.json(
           { success: false, error: "Mentor profile not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -45,15 +48,11 @@ export async function GET(request: NextRequest) {
       // Simple query: get all mentors, no level filter, no approval filter
       const query: Record<string, unknown> = { isMentor: true };
 
-      console.log("Fetching all mentors with query:", query);
-
       const mentors = await MentorProfile.find(query)
-        .select('+level') // Include level field if needed
+        .select("+level") // Include level field if needed
         .populate("userId", "firstName lastName email avatar bio")
         .sort({ averageRating: -1, totalSessions: -1 })
         .limit(100); // Increased limit to show more mentors
-
-      console.log(`Found ${mentors.length} mentors in database`);
 
       return NextResponse.json({
         success: true,
@@ -62,13 +61,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get specific mentor profile by userId (requires auth)
-    const mentorProfile = await MentorProfile.findOne({ userId: requestedUserId })
-      .populate("userId", "firstName lastName email avatar bio title yoe");
+    const mentorProfile = await MentorProfile.findOne({
+      userId: requestedUserId,
+    }).populate("userId", "firstName lastName email avatar bio title yoe");
 
     if (!mentorProfile) {
       return NextResponse.json(
         { success: false, error: "Mentor profile not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching mentor profile:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch mentor profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -91,11 +91,7 @@ export async function POST(request: NextRequest) {
     // Require authentication
     await authenticateRequest(request);
 
-    console.log("Starting mentor profile creation...");
-    console.log("MONGODB_URI exists:", !!process.env.MONGODB_URI);
-
     await connectDB();
-    console.log("Database connection established");
 
     const body = await request.json();
     const { userId, ...profileData } = body;
@@ -103,8 +99,8 @@ export async function POST(request: NextRequest) {
     // Filter out any undefined or null values
     const cleanProfileData = Object.fromEntries(
       Object.entries(profileData).filter(
-        ([, value]) => value !== undefined && value !== null
-      )
+        ([, value]) => value !== undefined && value !== null,
+      ),
     );
 
     // Ensure sessionTypes is properly formatted
@@ -114,16 +110,14 @@ export async function POST(request: NextRequest) {
     ) {
       cleanProfileData.sessionTypes = cleanProfileData.sessionTypes.filter(
         (session) =>
-          session && session.name && session.duration && session.price
+          session && session.name && session.duration && session.price,
       );
     }
-
-    console.log("Received profile data:", cleanProfileData);
 
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -132,7 +126,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -141,13 +135,10 @@ export async function POST(request: NextRequest) {
 
     if (mentorProfile) {
       // Update existing profile
-      console.log("Updating existing mentor profile:", mentorProfile._id);
       Object.assign(mentorProfile, cleanProfileData);
       await mentorProfile.save();
     } else {
       // Create new profile
-      console.log("Creating new mentor profile for user:", userId);
-      console.log("Profile data:", profileData);
 
       try {
         mentorProfile = await MentorProfile.create({
@@ -155,7 +146,6 @@ export async function POST(request: NextRequest) {
           isMentor: true,
           ...cleanProfileData,
         });
-        console.log("Mentor profile created successfully:", mentorProfile._id);
       } catch (createError) {
         console.error("Error creating mentor profile:", createError);
         throw createError;
@@ -164,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     await mentorProfile.populate(
       "userId",
-      "firstName lastName email avatar bio"
+      "firstName lastName email avatar bio",
     );
 
     return NextResponse.json({
@@ -182,7 +172,7 @@ export async function POST(request: NextRequest) {
         error: "Failed to save mentor profile",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -201,7 +191,7 @@ export async function PATCH(request: NextRequest) {
     if (!userId && !mentorId) {
       return NextResponse.json(
         { success: false, error: "User ID or Mentor ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -209,13 +199,13 @@ export async function PATCH(request: NextRequest) {
     const mentorProfile = await MentorProfile.findOneAndUpdate(
       query,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).populate("userId", "firstName lastName email avatar bio");
 
     if (!mentorProfile) {
       return NextResponse.json(
         { success: false, error: "Mentor profile not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -228,7 +218,7 @@ export async function PATCH(request: NextRequest) {
     console.error("Error updating mentor profile:", error);
     return NextResponse.json(
       { success: false, error: "Failed to update mentor profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -247,20 +237,20 @@ export async function DELETE(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const mentorProfile = await MentorProfile.findOneAndUpdate(
       { userId },
       { $set: { isMentor: false, isApproved: false } },
-      { new: true }
+      { new: true },
     );
 
     if (!mentorProfile) {
       return NextResponse.json(
         { success: false, error: "Mentor profile not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -272,7 +262,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Error deactivating mentor profile:", error);
     return NextResponse.json(
       { success: false, error: "Failed to deactivate mentor profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

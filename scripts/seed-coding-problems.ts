@@ -1,33 +1,29 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables
-dotenv.config({ path: path.join(process.cwd(), '.env') });
+dotenv.config({ path: path.join(process.cwd(), ".env") });
 
-import CodingProblem from '../src/models/CodingProblem';
+import CodingProblem from "../src/models/CodingProblem";
 
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI;
     if (!mongoUri) {
-      throw new Error('MONGODB_URI environment variable is not set');
+      throw new Error("MONGODB_URI environment variable is not set");
     }
-    
+
     await mongoose.connect(mongoUri);
-    console.log('✅ Connected to MongoDB');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error("❌ MongoDB connection error:", error);
     process.exit(1);
   }
 };
 
 const seedCodingProblems = async () => {
-  console.log('🌱 Seeding coding problems...');
-
   // Clear existing problems
   await CodingProblem.deleteMany({});
-  console.log('🗑️ Cleared existing coding problems.');
 
   const problems = [
     // Easy Problems
@@ -69,7 +65,10 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].`,
         { input: "[3,2,4]\n6", expectedOutput: "[1,2]", isHidden: false },
         { input: "[3,3]\n6", expectedOutput: "[0,1]", isHidden: true },
       ],
-      hints: ["Use a hash map to store seen numbers", "For each number, check if target - num exists in map"],
+      hints: [
+        "Use a hash map to store seen numbers",
+        "For each number, check if target - num exists in map",
+      ],
       points: 10,
     },
     {
@@ -102,7 +101,10 @@ Output: "olleh"`,
         { input: "world", expectedOutput: "dlrow", isHidden: false },
         { input: "a", expectedOutput: "a", isHidden: true },
       ],
-      hints: ["Use two pointers, one at start and one at end", "Swap characters until pointers meet"],
+      hints: [
+        "Use two pointers, one at start and one at end",
+        "Swap characters until pointers meet",
+      ],
       points: 10,
     },
     {
@@ -135,7 +137,10 @@ Output: "true"`,
         { input: "hello", expectedOutput: "false", isHidden: false },
         { input: "a", expectedOutput: "true", isHidden: true },
       ],
-      hints: ["Compare string with its reverse", "Or use two pointers from both ends"],
+      hints: [
+        "Compare string with its reverse",
+        "Or use two pointers from both ends",
+      ],
       points: 10,
     },
     {
@@ -166,10 +171,22 @@ Output: ["1","2","Fizz","4","Buzz"]`,
     return str(result)`,
       },
       testCases: [
-        { input: "5", expectedOutput: '["1","2","Fizz","4","Buzz"]', isHidden: false },
-        { input: "15", expectedOutput: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]', isHidden: false },
+        {
+          input: "5",
+          expectedOutput: '["1","2","Fizz","4","Buzz"]',
+          isHidden: false,
+        },
+        {
+          input: "15",
+          expectedOutput:
+            '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]',
+          isHidden: false,
+        },
       ],
-      hints: ["Check divisibility by 15 first (3 and 5)", "Use modulo operator %"],
+      hints: [
+        "Check divisibility by 15 first (3 and 5)",
+        "Use modulo operator %",
+      ],
       points: 10,
     },
     // Medium Problems
@@ -207,7 +224,11 @@ Output: "true"`,
         { input: "([)]", expectedOutput: "false", isHidden: true },
         { input: "{[]}", expectedOutput: "true", isHidden: true },
       ],
-      hints: ["Use a stack data structure", "Push opening brackets, pop for closing", "Check if popped bracket matches"],
+      hints: [
+        "Use a stack data structure",
+        "Push opening brackets, pop for closing",
+        "Check if popped bracket matches",
+      ],
       points: 20,
     },
     {
@@ -235,11 +256,19 @@ Explanation: The subarray [4,-1,2,1] has the largest sum 6.`,
     return str(result)`,
       },
       testCases: [
-        { input: "[-2,1,-3,4,-1,2,1,-5,4]", expectedOutput: "6", isHidden: false },
+        {
+          input: "[-2,1,-3,4,-1,2,1,-5,4]",
+          expectedOutput: "6",
+          isHidden: false,
+        },
         { input: "[1]", expectedOutput: "1", isHidden: false },
         { input: "[5,4,-1,7,8]", expectedOutput: "23", isHidden: true },
       ],
-      hints: ["Kadane's algorithm is optimal", "Track current sum and max sum", "Reset current sum when it goes negative"],
+      hints: [
+        "Kadane's algorithm is optimal",
+        "Track current sum and max sum",
+        "Reset current sum when it goes negative",
+      ],
       points: 20,
     },
     {
@@ -278,7 +307,11 @@ Output: 4`,
         { input: "[-1,0,3,5,9,12]\n2", expectedOutput: "-1", isHidden: false },
         { input: "[5]\n5", expectedOutput: "0", isHidden: true },
       ],
-      hints: ["Use two pointers: left and right", "Calculate mid = (left + right) / 2", "Adjust pointers based on comparison"],
+      hints: [
+        "Use two pointers: left and right",
+        "Calculate mid = (left + right) / 2",
+        "Adjust pointers based on comparison",
+      ],
       points: 20,
     },
     // Hard Problems
@@ -308,7 +341,11 @@ Output: "bab" (or "aba" is also acceptable)`,
         { input: "cbbd", expectedOutput: "bb", isHidden: false },
         { input: "a", expectedOutput: "a", isHidden: true },
       ],
-      hints: ["Expand around center approach", "Consider both odd and even length palindromes", "Track the start and max length"],
+      hints: [
+        "Expand around center approach",
+        "Consider both odd and even length palindromes",
+        "Track the start and max length",
+      ],
       points: 30,
     },
     {
@@ -339,11 +376,19 @@ Output: [1,1,2,3,4,4,5,6]`,
     return str(result)`,
       },
       testCases: [
-        { input: "[[1,4,5],[1,3,4],[2,6]]", expectedOutput: "[1,1,2,3,4,4,5,6]", isHidden: false },
+        {
+          input: "[[1,4,5],[1,3,4],[2,6]]",
+          expectedOutput: "[1,1,2,3,4,4,5,6]",
+          isHidden: false,
+        },
         { input: "[]", expectedOutput: "[]", isHidden: false },
         { input: "[[]]", expectedOutput: "[]", isHidden: true },
       ],
-      hints: ["Use a min-heap/priority queue", "Or use divide and conquer to merge pairs", "Flatten all lists and sort is O(N log N)"],
+      hints: [
+        "Use a min-heap/priority queue",
+        "Or use divide and conquer to merge pairs",
+        "Flatten all lists and sort is O(N log N)",
+      ],
       points: 30,
     },
     {
@@ -370,17 +415,24 @@ Output: 6`,
     return str(result)`,
       },
       testCases: [
-        { input: "[0,1,0,2,1,0,1,3,2,1,2,1]", expectedOutput: "6", isHidden: false },
+        {
+          input: "[0,1,0,2,1,0,1,3,2,1,2,1]",
+          expectedOutput: "6",
+          isHidden: false,
+        },
         { input: "[4,2,0,3,2,5]", expectedOutput: "9", isHidden: false },
         { input: "[1,2,3,4,5]", expectedOutput: "0", isHidden: true },
       ],
-      hints: ["Two pointer approach is O(n) space O(1)", "Water at position i = min(maxLeft, maxRight) - height[i]", "Track max from left and right as you go"],
+      hints: [
+        "Two pointer approach is O(n) space O(1)",
+        "Water at position i = min(maxLeft, maxRight) - height[i]",
+        "Track max from left and right as you go",
+      ],
       points: 30,
     },
   ];
 
   await CodingProblem.insertMany(problems);
-  console.log(`✅ Seeded ${problems.length} coding problems`);
 
   return problems;
 };
@@ -389,13 +441,11 @@ const main = async () => {
   try {
     await connectDB();
     await seedCodingProblems();
-    console.log('🎉 Coding problems seeded successfully!');
     process.exit(0);
   } catch (error) {
-    console.error('💥 Fatal error:', error);
+    console.error("💥 Fatal error:", error);
     process.exit(1);
   }
 };
 
 main();
-

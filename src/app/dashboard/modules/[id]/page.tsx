@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
 import LessonContentRenderer from "@/components/ui/LessonContentRenderer";
-import { Button } from "../../../../../packages/ui";
+import { Button, notify, AlertVariant } from "../../../../../packages/ui";
 import { extractCodingChallenge, getModuleLanguage } from "@/lib/lesson-utils";
+import ModuleProgressBar from "../ModuleProgressBar";
 
 interface QuestionResult {
   questionId: string;
@@ -95,7 +96,7 @@ interface ExtendedQuestionResult extends QuestionResult {
 }
 
 export default function SecureModulePage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const params = useParams();
   const moduleId = params.id as string;
@@ -115,6 +116,7 @@ export default function SecureModulePage() {
   // Results state
   const [showResults, setShowResults] = useState(false);
   const [quizResults, setQuizResults] = useState<QuizResult | null>(null);
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
 
   const loadCurrentLesson = useCallback(async () => {
     if (!user) return;
@@ -134,7 +136,7 @@ export default function SecureModulePage() {
         {
           headers,
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -144,7 +146,6 @@ export default function SecureModulePage() {
       }
 
       const data = await response.json();
-      console.log("Loaded lesson data:", data.data);
 
       setModuleData(data.data.module);
       setCurrentLesson(data.data.lesson);
@@ -178,17 +179,22 @@ export default function SecureModulePage() {
         {
           headers,
           credentials: "include",
-        }
+        },
       );
 
       const data = await response.json();
 
       if (data.success && data.data) {
-        setQuizData(data.data);
-        setShowQuiz(true);
-        setCurrentQuestionIndex(0);
-        setUserAnswers([]);
-        setShowResults(false);
+        const quizId = data.data.quiz?._id;
+        if (quizId) {
+          router.push(`/dashboard/modules/${moduleId}/quiz/${quizId}`);
+        } else {
+          setQuizData(data.data);
+          setShowQuiz(true);
+          setCurrentQuestionIndex(0);
+          setUserAnswers([]);
+          setShowResults(false);
+        }
       } else {
         console.error("Failed to load quiz:", data.error);
         alert(`Failed to load quiz: ${data.error}`);
@@ -197,29 +203,21 @@ export default function SecureModulePage() {
       console.error("Error loading quiz:", error);
       alert("Error loading quiz. Please try again.");
     }
-  }, [user, currentLesson]);
+  }, [user, currentLesson, moduleId, router]);
 
   useEffect(() => {
-    if (!user) {
-      router.push(
-        `/login?redirect=${encodeURIComponent(
-          `/dashboard/modules/${moduleId}`
-        )}`
-      );
-      return;
-    }
-
+    if (authLoading || !user) return;
     loadCurrentLesson();
-  }, [user, router, moduleId, loadCurrentLesson]);
+  }, [user, authLoading, moduleId, loadCurrentLesson]);
 
   const handleAnswerSelect = (
     questionId: string,
     optionId?: string,
-    content?: string
+    content?: string,
   ) => {
     const newAnswers = [...userAnswers];
     const existingIndex = newAnswers.findIndex(
-      (a) => a.questionId === questionId
+      (a) => a.questionId === questionId,
     );
 
     const answer: UserAnswer = {
@@ -238,9 +236,25 @@ export default function SecureModulePage() {
   };
 
   const handleSubmitQuiz = useCallback(async () => {
-    if (!user || !currentLesson) return;
+    if (!user || !currentLesson || isSubmittingQuiz) return;
+
+    if (!quizData?.questions?.length) return;
+
+    const allAnswered = userAnswers.length === quizData.questions.length;
+    const everyQuestionAnswered = quizData.questions.every((q) =>
+      userAnswers.some((a) => a.questionId === q._id),
+    );
+    if (!allAnswered || !everyQuestionAnswered) {
+      notify({
+        message: "Please answer all questions before submitting.",
+        variant: AlertVariant.WARNING,
+      });
+      return;
+    }
 
     try {
+      setIsSubmittingQuiz(true);
+
       const { getAuthHeader } = await import("@/lib/token-storage");
       const authHeader = getAuthHeader();
       const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -263,19 +277,21 @@ export default function SecureModulePage() {
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.error || "Failed to submit quiz");
+        setIsSubmittingQuiz(false);
         return;
       }
 
       const result = await response.json();
-      console.log("Quiz results:", result.data);
       setQuizResults(result.data);
       setShowQuiz(false);
       setShowResults(true);
+      setIsSubmittingQuiz(false);
     } catch (error) {
-      console.error("Error submitting quiz:", error);
+      console.error("[QUIZ] ❌ Error submitting quiz:", error);
       alert("An error occurred while submitting the quiz");
+      setIsSubmittingQuiz(false);
     }
-  }, [user, currentLesson, moduleId, userAnswers]);
+  }, [user, currentLesson, moduleId, userAnswers, quizData, isSubmittingQuiz]);
 
   const handleCompleteLesson = useCallback(async () => {
     if (!user || !currentLesson) return;
@@ -303,8 +319,6 @@ export default function SecureModulePage() {
     if (!user || !currentLesson) return;
 
     try {
-      console.log("[NEXT] Saving progress and moving to next lesson");
-
       const { getAuthHeader } = await import("@/lib/token-storage");
       const authHeader = getAuthHeader();
       const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -329,9 +343,6 @@ export default function SecureModulePage() {
         return;
       }
 
-      const result = await response.json();
-      console.log("[NEXT] Progress saved:", result.data);
-
       // Hide results
       setShowResults(false);
       setQuizResults(null);
@@ -350,13 +361,17 @@ export default function SecureModulePage() {
     }
   }, [user, currentLesson, moduleId, refreshUser, loadCurrentLesson]);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border border-gray-700 border-t-white mx-auto mb-3"></div>
-            <p className="text-sm text-gray-500">Loading lesson data...</p>
+            <p className="text-sm text-gray-500">
+              {authLoading
+                ? "Checking authentication..."
+                : "Loading lesson data..."}
+            </p>
           </div>
         </div>
       </DashboardLayout>
@@ -404,7 +419,7 @@ export default function SecureModulePage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 py-6 pb-32 relative">
+      <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-6 pb-32 relative">
         {/* Navigation */}
         <Button
           variant="outlined"
@@ -537,8 +552,8 @@ export default function SecureModulePage() {
                           result.isCorrect === true
                             ? "border-emerald-500/20 bg-emerald-500/5"
                             : result.isCorrect === false
-                            ? "border-rose-500/20 bg-rose-500/5"
-                            : "border-amber-500/20 bg-amber-500/5"
+                              ? "border-rose-500/20 bg-rose-500/5"
+                              : "border-amber-500/20 bg-amber-500/5"
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -547,8 +562,8 @@ export default function SecureModulePage() {
                               result.isCorrect === true
                                 ? "bg-emerald-500/20 text-emerald-400"
                                 : result.isCorrect === false
-                                ? "bg-rose-500/20 text-rose-400"
-                                : "bg-amber-500/20 text-amber-400"
+                                  ? "bg-rose-500/20 text-rose-400"
+                                  : "bg-amber-500/20 text-amber-400"
                             }`}
                           >
                             {index + 1}
@@ -568,14 +583,14 @@ export default function SecureModulePage() {
                                         option.isCorrect
                                           ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
                                           : option.isSelected &&
-                                            !option.isCorrect
-                                          ? "bg-rose-500/10 border border-rose-500/20 text-rose-400"
-                                          : "bg-gray-800 border border-gray-700 text-gray-400"
+                                              !option.isCorrect
+                                            ? "bg-rose-500/10 border border-rose-500/20 text-rose-400"
+                                            : "bg-gray-800 border border-gray-700 text-gray-400"
                                       }`}
                                     >
                                       {option.text}
                                     </div>
-                                  )
+                                  ),
                                 )}
                               </div>
                             )}
@@ -607,7 +622,7 @@ export default function SecureModulePage() {
                           </div>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               )}
@@ -628,7 +643,7 @@ export default function SecureModulePage() {
                 <Button
                   variant="text"
                   onClick={handleStartQuiz}
-                  className={`px-5 py-2.5 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors ${
+                  className={`!px-5 !py-2.5 !border !border-gray-700 !text-gray-300 !rounded-lg !text-sm !font-medium !hover:bg-gray-800 ! transition-colors ${
                     quizResults.quizResults.isPassed ? "" : "!flex-1"
                   }`}
                 >
@@ -641,7 +656,7 @@ export default function SecureModulePage() {
           /* Quiz View */
           <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
             {/* Quiz Header */}
-            <div className="p-5 border-b border-gray-800">
+            <div className="sm:p-5 p-3 border-b border-gray-800">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-white">Quiz</h2>
@@ -670,15 +685,42 @@ export default function SecureModulePage() {
                     }}
                   />
                 </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {quizData.questions.map((q, index) => {
+                    const isAnswered = userAnswers.some(
+                      (a) => a.questionId === q._id
+                    );
+                    const isCurrent = index === currentQuestionIndex;
+                    return (
+                      <button
+                        key={q._id}
+                        type="button"
+                        onClick={() => setCurrentQuestionIndex(index)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
+                          isCurrent
+                            ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
+                            : ""
+                        } ${
+                          isAnswered
+                            ? "bg-emerald-500/80 text-white hover:bg-emerald-500"
+                            : "bg-rose-500/80 text-white hover:bg-rose-500"
+                        }`}
+                        title={`Question ${index + 1}${isAnswered ? " (answered)" : " (not answered)"}`}
+                      >
+                        {index + 1}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Quiz Content */}
-            <div className="p-5">
+            <div className="sm:p-5 p-3">
               {(() => {
                 const question = quizData.questions[currentQuestionIndex];
                 const currentAnswer = userAnswers.find(
-                  (a) => a.questionId === question._id
+                  (a) => a.questionId === question._id,
                 );
 
                 return (
@@ -690,29 +732,24 @@ export default function SecureModulePage() {
                           {currentQuestionIndex + 1}
                         </div>
                         <div className="flex-1">
-                          <div className="mb-3">
-                            <h3 className="text-sm font-medium text-white leading-relaxed mb-2">
-                              {question.questionText || question.question}
-                            </h3>
-                            {question.points && (
-                              <p className="text-[10px] text-gray-500">
-                                {question.points} points
-                              </p>
-                            )}
-                          </div>
                           {/* Show full question content in a formatted box for better readability */}
-                          {(question.questionText || question.question) &&
-                            (question.type === "code" ||
-                              question.type === "subjective") && (
-                              <div className="mt-3 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                                <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">
-                                  Question Details:
-                                </p>
-                                <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                  {question.questionText || question.question}
-                                </div>
+                          {(question.questionText || question.question) && (
+                            <div className="mt-3 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                              <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">
+                                Question Details:
+                              </p>
+                              <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                {question.questionText || question.question}
                               </div>
-                            )}
+                              <div className="mb-3">
+                                {question.points && (
+                                  <p className="text-[10px] text-gray-500">
+                                    {question.points} points
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -729,7 +766,7 @@ export default function SecureModulePage() {
                                   onClick={() =>
                                     handleAnswerSelect(
                                       question._id,
-                                      option._id || option.id
+                                      option._id || option.id,
                                     )
                                   }
                                   className={`!w-full !text-left !p-3 !flex !items-start !gap-3 !rounded-lg !border !transition-all ${
@@ -754,7 +791,7 @@ export default function SecureModulePage() {
                                   </div>
                                 </button>
                               );
-                            }
+                            },
                           )}
                         </div>
                       ) : (
@@ -777,7 +814,7 @@ export default function SecureModulePage() {
                                 handleAnswerSelect(
                                   question._id,
                                   undefined,
-                                  value
+                                  value,
                                 )
                               }
                               language="javascript"
@@ -817,11 +854,35 @@ export default function SecureModulePage() {
                           variant="text"
                           onClick={handleSubmitQuiz}
                           className="!ml-auto !px-5 !py-2 !bg-emerald-500 !text-white !rounded-lg !text-sm !font-medium !hover:bg-emerald-600 !transition-colors !disabled:opacity-50 !disabled:cursor-not-allowed"
-                          disabled={
-                            userAnswers.length !== quizData.questions.length
-                          }
+                          disabled={isSubmittingQuiz}
                         >
-                          Submit
+                          {isSubmittingQuiz ? (
+                            <span className="flex items-center gap-2">
+                              <svg
+                                className="animate-spin h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Submitting...
+                            </span>
+                          ) : (
+                            "Submit"
+                          )}
                         </Button>
                       )}
                     </div>
@@ -832,7 +893,7 @@ export default function SecureModulePage() {
           </div>
         ) : currentLesson ? (
           /* Lesson Content View */
-          <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+          <div className="bg-gray-900 rounded-xl border border-gray-800 pb-28 overflow-hidden">
             {/* Lesson Header */}
             <div className="p-5 border-b border-gray-800">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -938,7 +999,7 @@ export default function SecureModulePage() {
                     router.push(
                       `/dashboard/practice${
                         params.toString() ? `?${params.toString()}` : ""
-                      }`
+                      }`,
                     );
                   }}
                   className="!px-4 !py-2 !bg-gray-800 !text-white !rounded-lg !text-sm !font-medium !hover:bg-gray-700 !transition-colors !inline-flex !items-center !gap-2 !border !border-gray-700"
@@ -1036,63 +1097,8 @@ export default function SecureModulePage() {
             </Button>
           </div>
         )}
-        {/* Module Header - Fixed at Bottom */}
-        {moduleData && (
-          <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 shadow-lg w-full">
-            <div className="w-full mx-auto px-10 py-4 max-w-6xl">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ml-36">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <h1 className="text-sm font-semibold text-white truncate">
-                      {moduleData.name}
-                    </h1>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider flex-shrink-0 ${
-                        moduleData.level === "Beginner"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                          : moduleData.level === "Intermediate"
-                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                          : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                      }`}
-                    >
-                      {moduleData.level}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">
-                    {moduleData.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-3 pt-3 border-t border-gray-800 ml-36">
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-gray-500">Module Progress</span>
-                  <span className="text-white font-medium">
-                    {progress?.completionPercentage || 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-1.5">
-                  <div
-                    className="bg-white h-1.5 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${progress?.completionPercentage || 0}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
-                  <span>
-                    {progress?.completedLessonCount || 0}/
-                    {moduleData.totalLessons} lessons
-                  </span>
-                  <span className="text-amber-400">
-                    {progress?.pointsEarned || 0} pts earned
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Module Footer - Fixed at Bottom, respects sidebar width (left offset matches sidebar) */}
+        <ModuleProgressBar moduleData={moduleData} progress={progress} />
       </div>
     </DashboardLayout>
   );

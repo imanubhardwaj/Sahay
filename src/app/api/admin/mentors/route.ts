@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       .select("+level +customPointRate")
       .populate(
         "userId",
-        "firstName lastName email avatar bio title yoe currentCompany"
+        "firstName lastName email avatar bio title yoe currentCompany",
       )
       .sort({ createdAt: -1 });
 
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
         // Check if any field contains the search term
         return searchFields.some((field) =>
-          field.toLowerCase().includes(searchLower)
+          field.toLowerCase().includes(searchLower),
         );
       });
     }
@@ -98,20 +98,20 @@ export async function GET(request: NextRequest) {
     if (error instanceof Error && error.message === "Admin access required") {
       return NextResponse.json(
         { success: false, error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (error instanceof Error && error.message === "Not authenticated") {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     return NextResponse.json(
       { success: false, error: "Failed to fetch mentors" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -211,7 +211,6 @@ export async function POST(request: NextRequest) {
       });
 
       isNewUser = true;
-      console.log(`Admin created new user: ${user.email} with ID: ${user._id}`);
     }
 
     if (!user) {
@@ -221,7 +220,7 @@ export async function POST(request: NextRequest) {
           error:
             "User not found and could not be created. Please provide a valid email.",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -291,7 +290,7 @@ export async function POST(request: NextRequest) {
     // Populate and return the mentor profile
     await mentorProfile.populate(
       "userId",
-      "firstName lastName email avatar bio title yoe currentCompany"
+      "firstName lastName email avatar bio title yoe currentCompany",
     );
 
     const mentorObj = mentorProfile.toObject();
@@ -317,20 +316,20 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === "Admin access required") {
       return NextResponse.json(
         { success: false, error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (error instanceof Error && error.message === "Not authenticated") {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     return NextResponse.json(
       { success: false, error: "Failed to add mentor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

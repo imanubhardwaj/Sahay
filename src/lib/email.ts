@@ -1,13 +1,13 @@
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
 // Email configuration
-const EMAIL_SENDER = process.env.EMAIL_USER || 'bhardwaj93karriekey@gmail.com';
+const EMAIL_SENDER = process.env.EMAIL_USER || "bhardwaj93karriekey@gmail.com";
 
 const transporter: Transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: process.env.EMAIL_SECURE === 'true',
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.EMAIL_PORT || "587"),
+  secure: process.env.EMAIL_SECURE === "true",
   auth: {
     user: EMAIL_SENDER,
     pass: process.env.EMAIL_PASSWORD,
@@ -68,7 +68,7 @@ interface ReminderEmailData {
   sessionTime: string;
   zoomJoinUrl: string;
   duration: number;
-  role: 'student' | 'mentor';
+  role: "student" | "mentor";
 }
 
 interface BookingCreatedEmailData {
@@ -319,7 +319,7 @@ const cancellationTemplate = (data: CancellationEmailData) => `
         <strong>📅 Session Date:</strong> ${data.sessionDate}<br>
         <strong>🕐 Session Time:</strong> ${data.sessionTime}<br>
         <strong>🔄 Cancelled by:</strong> ${data.cancelledBy}
-        ${data.reason ? `<br><strong>📝 Reason:</strong> ${data.reason}` : ''}
+        ${data.reason ? `<br><strong>📝 Reason:</strong> ${data.reason}` : ""}
       </div>
       
       <p>If applicable, your points have been refunded to your wallet.</p>
@@ -395,19 +395,23 @@ const approvalRequestTemplate = (data: ApprovalRequestEmailData) => `
         </div>
       </div>
       
-      ${data.studentNotes ? `
+      ${
+        data.studentNotes
+          ? `
         <div class="alert">
           <strong>📝 Student's Message:</strong><br>
           ${data.studentNotes}
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       
       <div class="button-container">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/bookings/approve?bookingId=${data.bookingId}&token=${data.approvalToken}&action=approve" class="button button-approve">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/bookings/approve?bookingId=${data.bookingId}&token=${data.approvalToken}&action=approve" class="button button-approve">
           ✓ Approve Session
         </a>
         <br>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/bookings/approve?bookingId=${data.bookingId}&token=${data.approvalToken}&action=reject" class="button button-reject">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/bookings/approve?bookingId=${data.bookingId}&token=${data.approvalToken}&action=reject" class="button button-reject">
           ✗ Decline Session
         </a>
       </div>
@@ -428,13 +432,15 @@ const approvalRequestTemplate = (data: ApprovalRequestEmailData) => `
 `;
 
 // Email sending functions
-export async function sendBookingConfirmation(data: BookingEmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendBookingConfirmation(
+  data: BookingEmailData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Send to student
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
-      subject: '🎉 Your Mentorship Session is Confirmed!',
+      subject: "🎉 Your Mentorship Session is Confirmed!",
       html: bookingConfirmationStudentTemplate(data),
     });
 
@@ -442,50 +448,56 @@ export async function sendBookingConfirmation(data: BookingEmailData): Promise<{
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
-      subject: '💼 New Session Booked!',
+      subject: "💼 New Session Booked!",
       html: bookingConfirmationMentorTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending booking confirmation:', error);
+    console.error("Error sending booking confirmation:", error);
     return { success: false, error: (error as Error).message };
   }
 }
 
-export async function sendSessionReminder(data: ReminderEmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendSessionReminder(
+  data: ReminderEmailData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
-      subject: '⏰ Your Session Starts Soon!',
+      subject: "⏰ Your Session Starts Soon!",
       html: reminderTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending reminder:', error);
+    console.error("Error sending reminder:", error);
     return { success: false, error: (error as Error).message };
   }
 }
 
-export async function sendCancellationEmail(data: CancellationEmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendCancellationEmail(
+  data: CancellationEmailData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
-      subject: '❌ Session Cancelled',
+      subject: "❌ Session Cancelled",
       html: cancellationTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending cancellation email:', error);
+    console.error("Error sending cancellation email:", error);
     return { success: false, error: (error as Error).message };
   }
 }
 
-const bookingRequestConfirmationTemplate = (data: BookingRequestConfirmationData) => `
+const bookingRequestConfirmationTemplate = (
+  data: BookingRequestConfirmationData,
+) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -562,34 +574,38 @@ const bookingRequestConfirmationTemplate = (data: BookingRequestConfirmationData
 </html>
 `;
 
-export async function sendApprovalRequest(data: ApprovalRequestEmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendApprovalRequest(
+  data: ApprovalRequestEmailData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
-      subject: '📬 New Session Request - Action Required',
+      subject: "📬 New Session Request - Action Required",
       html: approvalRequestTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending approval request:', error);
+    console.error("Error sending approval request:", error);
     return { success: false, error: (error as Error).message };
   }
 }
 
-export async function sendBookingRequestConfirmation(data: BookingRequestConfirmationData): Promise<{ success: boolean; error?: string }> {
+export async function sendBookingRequestConfirmation(
+  data: BookingRequestConfirmationData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
-      subject: '✅ Session Request Sent - Pending Approval',
+      subject: "✅ Session Request Sent - Pending Approval",
       html: bookingRequestConfirmationTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending booking request confirmation:', error);
+    console.error("Error sending booking request confirmation:", error);
     return { success: false, error: (error as Error).message };
   }
 }
@@ -718,13 +734,15 @@ const bookingCreatedMentorTemplate = (data: BookingCreatedEmailData) => `
 </html>
 `;
 
-export async function sendBookingCreatedEmail(data: BookingCreatedEmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendBookingCreatedEmail(
+  data: BookingCreatedEmailData,
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Send to student
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
-      subject: '🎉 Your Session is Booked!',
+      subject: "🎉 Your Session is Booked!",
       html: bookingCreatedStudentTemplate(data),
     });
 
@@ -732,13 +750,13 @@ export async function sendBookingCreatedEmail(data: BookingCreatedEmailData): Pr
     await transporter.sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
-      subject: '💼 New Session Booked!',
+      subject: "💼 New Session Booked!",
       html: bookingCreatedMentorTemplate(data),
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending booking created email:', error);
+    console.error("Error sending booking created email:", error);
     return { success: false, error: (error as Error).message };
   }
 }
@@ -747,11 +765,9 @@ export async function sendBookingCreatedEmail(data: BookingCreatedEmailData): Pr
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
     await transporter.verify();
-    console.log('Email server is ready to send messages');
     return true;
   } catch (error) {
-    console.error('Email server verification failed:', error);
+    console.error("Email server verification failed:", error);
     return false;
   }
 }
-

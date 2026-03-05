@@ -42,7 +42,7 @@ export function CompleteProfileModal({
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
-  
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -60,13 +60,18 @@ export function CompleteProfileModal({
   useEffect(() => {
     if (user) {
       // Normalize skills to array of IDs (handle both ObjectIds and populated objects)
-      const normalizedSkills = (user.skills || []).map((skill: string | { _id?: string; toString?: () => string }) => {
-        return typeof skill === 'string' ? skill : (skill._id || skill.toString?.() || String(skill));
-      });
+      const normalizedSkills = (user.skills || []).map(
+        (skill: string | { _id?: string; toString?: () => string }) => {
+          return typeof skill === "string"
+            ? skill
+            : skill._id || skill.toString?.() || String(skill);
+        },
+      );
 
       setFormData({
         firstName: user.firstName || user.name?.split(" ")[0] || "",
-        lastName: user.lastName || user.name?.split(" ").slice(1).join(" ") || "",
+        lastName:
+          user.lastName || user.name?.split(" ").slice(1).join(" ") || "",
         userType: user.userType || "",
         bio: user.bio || "",
         title: user.title || "",
@@ -130,7 +135,10 @@ export function CompleteProfileModal({
     },
   ];
 
-  const handleInputChange = (field: string, value: string | number | string[]) => {
+  const handleInputChange = (
+    field: string,
+    value: string | number | string[],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -160,16 +168,13 @@ export function CompleteProfileModal({
       case 0:
         return formData.userType !== "";
       case 1:
-        return formData.firstName.trim() !== "" && formData.lastName.trim() !== "";
+        return (
+          formData.firstName.trim() !== "" && formData.lastName.trim() !== ""
+        );
       case 2:
         return formData.title.trim() !== "" && formData.bio.trim() !== "";
       case 3:
         const canProceedSkills = formData.skills.length >= 1;
-        console.log("Skills step validation:", {
-          skillsCount: formData.skills.length,
-          skills: formData.skills,
-          canProceed: canProceedSkills
-        });
         return canProceedSkills;
       default:
         return true;
@@ -193,7 +198,9 @@ export function CompleteProfileModal({
       const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        userType: formData.userType as "student_fresher" | "working_professional",
+        userType: formData.userType as
+          | "student_fresher"
+          | "working_professional",
         bio: formData.bio,
         title: formData.title,
         location: formData.location,
@@ -202,11 +209,9 @@ export function CompleteProfileModal({
         isOnboardingComplete: true,
       };
 
-      console.log("Submitting profile update:", updateData);
       const result = await updateUser(updateData);
 
       if (result) {
-        console.log("Profile updated successfully");
         // Call onComplete callback - parent component will handle refresh
         onComplete?.();
         // Close modal after a short delay
@@ -245,7 +250,7 @@ export function CompleteProfileModal({
           <p className="text-blue-100 text-sm">
             To {blockedAction}, you need to complete your profile first.
           </p>
-          
+
           {/* Progress bar */}
           <div className="mt-4">
             <div className="flex justify-between text-xs mb-1">
@@ -273,8 +278,8 @@ export function CompleteProfileModal({
                   index < currentStep
                     ? "bg-green-500 text-white"
                     : index === currentStep
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-500"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-500"
                 }`}
               >
                 {index < currentStep ? "✓" : index + 1}
@@ -293,8 +298,12 @@ export function CompleteProfileModal({
         {/* Step content */}
         <div className="p-6 overflow-y-auto" style={{ maxHeight: "400px" }}>
           <div className="text-center mb-6">
-            <h3 className="text-lg font-bold text-gray-900">{steps[currentStep].title}</h3>
-            <p className="text-sm text-gray-500">{steps[currentStep].description}</p>
+            <h3 className="text-lg font-bold text-gray-900">
+              {steps[currentStep].title}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {steps[currentStep].description}
+            </p>
           </div>
 
           {/* Step 0: User Type */}
@@ -329,7 +338,9 @@ export function CompleteProfileModal({
                   <input
                     type="text"
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="John"
                   />
@@ -341,7 +352,9 @@ export function CompleteProfileModal({
                   <input
                     type="text"
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Doe"
                   />
@@ -354,7 +367,9 @@ export function CompleteProfileModal({
                 <input
                   type="text"
                   value={formData.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("location", e.target.value)
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="City, Country"
                 />
@@ -367,7 +382,9 @@ export function CompleteProfileModal({
                   <input
                     type="text"
                     value={formData.college}
-                    onChange={(e) => handleInputChange("college", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("college", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Your institution"
                   />
@@ -382,7 +399,9 @@ export function CompleteProfileModal({
                     <input
                       type="text"
                       value={formData.company}
-                      onChange={(e) => handleInputChange("company", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company", e.target.value)
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Your company name"
                     />
@@ -393,7 +412,9 @@ export function CompleteProfileModal({
                     </label>
                     <select
                       value={formData.yoe}
-                      onChange={(e) => handleInputChange("yoe", parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange("yoe", parseInt(e.target.value))
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value={0}>0-1 years</option>
@@ -465,7 +486,9 @@ export function CompleteProfileModal({
                 ) : (
                   <div className="w-full text-center py-4 text-gray-500">
                     <p>Loading skills...</p>
-                    <p className="text-xs mt-2">If skills don&apos;t load, please refresh the page.</p>
+                    <p className="text-xs mt-2">
+                      If skills don&apos;t load, please refresh the page.
+                    </p>
                   </div>
                 )}
               </div>
@@ -509,9 +532,7 @@ export function CompleteProfileModal({
                   Saving...
                 </>
               ) : (
-                <>
-                  Complete Profile ✓
-                </>
+                <>Complete Profile ✓</>
               )}
             </Button>
           )}
@@ -527,7 +548,8 @@ export function useProfileGating() {
   const [showModal, setShowModal] = useState(false);
   const [blockedAction, setBlockedAction] = useState("");
 
-  const isProfileComplete = user?.isOnboardingComplete && 
+  const isProfileComplete =
+    user?.isOnboardingComplete &&
     (user?.profileCompletionPercentage ?? 0) >= 100;
 
   const checkAndGate = (action: string): boolean => {
@@ -549,4 +571,3 @@ export function useProfileGating() {
 }
 
 export default CompleteProfileModal;
-

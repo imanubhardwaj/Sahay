@@ -2,20 +2,24 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 export default function ModulesPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    // Redirect to explore page
+    if (isLoading || !user) return;
     router.replace("/dashboard/explore");
-  }, [user, router]);
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-300 border-t-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen">

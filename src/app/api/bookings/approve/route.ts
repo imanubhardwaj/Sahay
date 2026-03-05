@@ -6,7 +6,7 @@ import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
 import { createZoomMeeting } from '@/lib/zoom';
 import { sendBookingConfirmation, sendCancellationEmail } from '@/lib/email';
-import { notifyBookingEvent } from '@/lib/notifications';
+import { notifyBookingEvent } from '@/lib/notification-service';
 import { TRANSACTION_TYPE, TRANSACTION_SOURCE } from '@/lib/constants';
 
 // GET - Handle approval/rejection from email link

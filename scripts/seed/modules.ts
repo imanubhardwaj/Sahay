@@ -1,10 +1,8 @@
 import { Module } from "../../src/models";
 
 export const seedModules = async (
-  skills: Array<{ _id: unknown; name: string }>
+  skills: Array<{ _id: unknown; name: string }>,
 ) => {
-  console.log("🌱 Seeding modules...");
-
   const modulesData = [
     {
       name: "JavaScript Fundamentals",
@@ -438,7 +436,6 @@ export const seedModules = async (
   ];
 
   const modules = await Module.insertMany(modulesData);
-  console.log(`✅ Seeded ${modules.length} modules`);
 
   return modules;
 };

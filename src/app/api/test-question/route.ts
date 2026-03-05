@@ -38,8 +38,6 @@ export async function POST() {
       },
     });
 
-    console.log("Test question created:", testQuestion.content);
-
     return NextResponse.json({
       success: true,
       message: "Test question created successfully",
@@ -57,7 +55,7 @@ export async function POST() {
         error: "Failed to create test question",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

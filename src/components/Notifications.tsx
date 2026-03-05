@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FaBell, FaTimes, FaCheckCircle, FaExclamationCircle, FaInfoCircle } from "react-icons/fa";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSocket } from "@/hooks/useSocket";
 import { getAuthHeaders } from "@/lib/token-storage";
 
 interface Notification {
@@ -18,57 +17,16 @@ interface Notification {
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const { socket, isConnected } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Platform notifications only - no browser notifications
-
+  // Fetch only on mount and when user changes - no polling
   useEffect(() => {
     if (user?._id) {
       fetchNotifications();
-      
-      // Fallback polling if Socket.io is not connected (every 10 seconds)
-      if (!isConnected) {
-        pollingIntervalRef.current = setInterval(() => {
-          fetchNotifications();
-        }, 10000);
-      } else {
-        // Clear polling when Socket.io is connected
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      }
     }
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [user, isConnected]);
-
-  // Listen for real-time notifications via Socket.io
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleNotification = (notification: Notification) => {
-      console.log("📬 New notification received:", notification);
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-      
-      // Platform notifications only - no browser notifications
-    };
-
-    socket.on("notification", handleNotification);
-
-    return () => {
-      socket.off("notification", handleNotification);
-    };
-  }, [socket, isConnected]);
+  }, [user?._id]);
 
   const fetchNotifications = async () => {
     try {
@@ -163,7 +121,7 @@ export function NotificationBell() {
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative p-2 text-gray-300 hover:text-white transition-colors"
-        title={isConnected ? "Real-time notifications active" : "Using polling"}
+        title="Notifications"
       >
         <FaBell className="text-xl" />
         {unreadCount > 0 && (
@@ -171,13 +129,6 @@ export function NotificationBell() {
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
-        {/* Connection status indicator */}
-        <span
-          className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ${
-            isConnected ? "bg-green-500" : "bg-yellow-500"
-          }`}
-          title={isConnected ? "Connected" : "Disconnected - using polling"}
-        />
       </button>
 
       {showDropdown && (

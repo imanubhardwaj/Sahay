@@ -13,25 +13,21 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Simple query: get all mentors, no level filter, no approval filter
     const query: Record<string, unknown> = { isMentor: true };
 
-    console.log("Fetching all mentors with query:", query);
-
     const mentors = await MentorProfile.find(query)
       .select("+level") // Include level field if needed
       .populate(
         "userId",
-        "firstName lastName email avatar bio title yoe currentCompany"
+        "firstName lastName email avatar bio title yoe currentCompany",
       )
       .sort({ averageRating: -1, totalSessions: -1 })
       .limit(100); // Increased limit to show more mentors
-
-    console.log(`Found ${mentors.length} mentors in database`);
 
     // Transform mentors to ensure firstName/lastName are available
     const mentorsWithNames = mentors.map((mentor) => {
@@ -62,7 +58,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching mentors:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch mentors" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

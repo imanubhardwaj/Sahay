@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!authenticatedUserId) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -34,14 +34,14 @@ export async function GET(request: NextRequest) {
           success: false,
           error: "Forbidden: You can only access your own lessons",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (!moduleId) {
       return NextResponse.json(
         { success: false, error: "moduleId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (!moduleDoc) {
       return NextResponse.json(
         { success: false, error: "Module not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -75,13 +75,6 @@ export async function GET(request: NextRequest) {
         lastAccessedAt: new Date(),
       });
     }
-
-    console.log("[GET-LESSON] Loading lesson for user:", {
-      userId,
-      moduleId,
-      nextLessonOrder: moduleProgress.nextLessonOrder,
-      completedLessonCount: moduleProgress.completedLessonCount,
-    });
 
     // Find the lesson by moduleId and nextLessonOrder (determined by backend)
     const lesson = await Lesson.findOne({
@@ -174,7 +167,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to fetch lesson",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

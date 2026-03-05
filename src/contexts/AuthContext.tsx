@@ -10,7 +10,6 @@ import React, {
   ReactNode,
 } from "react";
 import { setToken, getAuthHeader } from "@/lib/token-storage";
-import { usePolling } from "@/hooks/usePolling";
 
 interface User {
   _id: string;
@@ -72,7 +71,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const lastPointsRef = useRef<number | null>(null);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -124,18 +122,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               {
                 headers: pointsHeaders,
                 credentials: "include",
-              }
+              },
             );
             if (pointsResponse.ok) {
               const pointsData = await pointsResponse.json();
-              const newPoints = pointsData.points || 0;
-              data.user.points = newPoints;
-
-              // Only update user if points changed (to prevent unnecessary re-renders)
-
-              lastPointsRef.current = newPoints;
-
-              // Always set user, but we track points changes for polling
+              data.user.points = pointsData.points || 0;
               setUser(data.user);
             } else {
               data.user.points = 0;
@@ -186,51 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, [fetchUser]);
 
-  // Auto-refresh wallet points every 30 seconds (only when points actually change)
-  // This ensures mentor sees updated points when student marks session as complete
-  const refreshWalletPoints = useCallback(async () => {
-    if (user?._id) {
-      try {
-        const pointsHeaders: HeadersInit = {};
-        const authHeader = getAuthHeader();
-        if (authHeader) {
-          pointsHeaders["Authorization"] = authHeader;
-        }
-
-        const pointsResponse = await fetch(
-          `/api/user/points?userId=${user._id}`,
-          {
-            headers: pointsHeaders,
-            credentials: "include",
-          }
-        );
-
-        if (pointsResponse.ok) {
-          const pointsData = await pointsResponse.json();
-          const newPoints = pointsData.points || 0;
-
-          // Only update if points actually changed
-          if (
-            lastPointsRef.current !== null &&
-            lastPointsRef.current !== newPoints
-          ) {
-            // Points changed, refresh full user data
-            await fetchUser();
-          } else if (lastPointsRef.current === null) {
-            // First time, just set the reference
-            lastPointsRef.current = newPoints;
-          }
-        }
-      } catch (error) {
-        console.error("Failed to refresh wallet points:", error);
-      }
-    }
-  }, [user?._id, fetchUser]);
-
-  usePolling(refreshWalletPoints, {
-    enabled: !!user?._id && !isLoading,
-    interval: 30000, // 30 seconds
-  });
+  // No polling - points/notifications refresh only when user triggers refreshUser()
+  // or when returning from an action (quiz, booking, etc.)
 
   const logout = async () => {
     try {
@@ -278,8 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
 
     try {
-      console.log("AuthContext: Updating user with:", updates);
-
       // Make API call to update user in database
       const headers: HeadersInit = { "Content-Type": "application/json" };
       const authHeader = getAuthHeader();
@@ -294,11 +240,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(updates),
       });
 
-      console.log("AuthContext: API response status:", response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log("AuthContext: Updated user data from server:", data.user);
         // Construct name from firstName and lastName if not present
         if (
           data.user &&
@@ -326,7 +269,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    // Bypass refresh for development - just call fetchUser
     await fetchUser();
   };
 

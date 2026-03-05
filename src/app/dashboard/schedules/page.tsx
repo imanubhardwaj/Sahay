@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 interface Schedule {
@@ -40,7 +40,7 @@ interface Schedule {
 }
 
 export default function SchedulesPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,18 +116,13 @@ export default function SchedulesPage() {
   }, [user, filterDate, filterStatus]);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
+    if (authLoading || !user) return;
     if (user.role !== "mentor") {
       router.push("/dashboard");
       return;
     }
-
     loadSchedules();
-  }, [user, router, loadSchedules]);
+  }, [user, authLoading, router, loadSchedules]);
 
   const handleCreateSchedule = useCallback(async () => {
     if (
@@ -263,7 +258,7 @@ export default function SchedulesPage() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  if (!user || user.role !== "mentor") {
+  if (authLoading || !user || user.role !== "mentor") {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

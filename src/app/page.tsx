@@ -2,6 +2,7 @@
 
 import { Button } from "../../packages/ui/components/Button/Button";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowRight,
   CheckCircle2,
@@ -58,6 +59,7 @@ const getCompanyLogo = (companyName: string): string => {
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -104,20 +106,32 @@ export default function LandingPage() {
 
           {/* Desktop Buttons */}
           <div className="hidden sm:flex gap-2 sm:gap-3">
-            <Button
-              variant="outlined"
-              className="!px-3 sm:!px-5 !py-2 sm:!py-2.5 !text-gray-700 !font-semibold !text-xs sm:!text-sm !rounded-lg !border-gray-300 !hover:bg-gray-50 !hover:border-gray-400 !transition-all !duration-300"
-              onClick={() => router.push("/login")}
-            >
-              Sign In
-            </Button>
-            <Button
-              variant="contained"
-              className="!px-4 sm:!px-6 !py-2 sm:!py-2.5 !bg-black !font-semibold !text-xs sm:!text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !hover:scale-105 !transition-all !duration-300 !border-0"
-              onClick={() => router.push("/login")}
-            >
-              Get Started
-            </Button>
+            {user ? (
+              <Button
+                variant="contained"
+                className="!px-4 sm:!px-6 !py-2 sm:!py-2.5 !bg-black !font-semibold !text-xs sm:!text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !hover:scale-105 !transition-all !duration-300 !border-0"
+                onClick={() => router.push("/dashboard")}
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outlined"
+                  className="!px-3 sm:!px-5 !py-2 sm:!py-2.5 !text-gray-700 !font-semibold !text-xs sm:!text-sm !rounded-lg !border-gray-300 !hover:bg-gray-50 !hover:border-gray-400 !transition-all !duration-300"
+                  onClick={() => router.push("/login")}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="contained"
+                  className="!px-4 sm:!px-6 !py-2 sm:!py-2.5 !bg-black !font-semibold !text-xs sm:!text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !hover:scale-105 !transition-all !duration-300 !border-0"
+                  onClick={() => router.push("/login")}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -166,26 +180,41 @@ export default function LandingPage() {
                 How It Works
               </a>
               <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outlined"
-                  className="!w-full !px-4 !py-3 !text-gray-700 !font-semibold !text-sm !rounded-lg !border-gray-300 !hover:bg-gray-50 !hover:border-gray-400 !transition-all !duration-300"
-                  onClick={() => {
-                    router.push("/login");
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  variant="contained"
-                  className="!w-full !px-4 !py-3 !bg-black !font-semibold !text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !transition-all !duration-300 !border-0"
-                  onClick={() => {
-                    router.push("/login");
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Get Started
-                </Button>
+                {user ? (
+                  <Button
+                    variant="contained"
+                    className="!w-full !px-4 !py-3 !bg-black !font-semibold !text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !transition-all !duration-300 !border-0"
+                    onClick={() => {
+                      router.push("/dashboard");
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    Go to Dashboard
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outlined"
+                      className="!w-full !px-4 !py-3 !text-gray-700 !font-semibold !text-sm !rounded-lg !border-gray-300 !hover:bg-gray-50 !hover:border-gray-400 !transition-all !duration-300"
+                      onClick={() => {
+                        router.push("/login");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      variant="contained"
+                      className="!w-full !px-4 !py-3 !bg-black !font-semibold !text-sm !text-white !rounded-lg !hover:bg-gray-800 !hover:shadow-lg !transition-all !duration-300 !border-0"
+                      onClick={() => {
+                        router.push("/login");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Get Started
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -300,17 +329,21 @@ export default function LandingPage() {
               <Button
                 variant="contained"
                 className="!group !relative !w-full sm:!w-auto !px-6 sm:!px-8 !py-3 sm:!py-4 !bg-black !text-white !text-base sm:!text-lg !font-bold !rounded-xl !overflow-hidden !transition-all !duration-300 !hover:scale-105 !hover:shadow-2xl !border-0 !hover:bg-gray-800"
-                onClick={() => router.push("/login")}
+                onClick={() =>
+                  router.push(user ? "/dashboard" : "/login")
+                }
                 startIcon={<Rocket className="w-4 h-4 sm:w-5 sm:h-5" />}
               >
-                Start Learning Journey
+                {user ? "Go to Dashboard" : "Start Learning Journey"}
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
 
               <Button
                 variant="outlined"
                 className="!w-full sm:!w-auto !px-6 sm:!px-8 !py-3 sm:!py-4 !text-gray-900 !text-base sm:!text-lg !font-bold !rounded-xl !border-2 !border-gray-900 !hover:bg-gray-900 !hover:text-white !hover:border-gray-900 !transition-all !duration-300 !hover:scale-105"
-                onClick={() => router.push("/login")}
+                onClick={() =>
+                  router.push(user ? "/dashboard/mentors" : "/login")
+                }
                 startIcon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}
               >
                 Become a Mentor
@@ -628,9 +661,11 @@ export default function LandingPage() {
             <Button
               variant="contained"
               className="!w-full sm:!w-auto !px-6 sm:!px-8 !py-3 sm:!py-4 !bg-white !text-black !text-base sm:!text-lg !font-bold !rounded-xl !hover:bg-gray-100 !hover:scale-105 !transition-all !duration-300"
-              onClick={() => router.push("/login")}
+              onClick={() =>
+                router.push(user ? "/dashboard" : "/login")
+              }
             >
-              Start Earning Points Now
+              {user ? "Go to Dashboard" : "Start Earning Points Now"}
             </Button>
           </div>
         </div>
@@ -720,15 +755,19 @@ export default function LandingPage() {
             <Button
               variant="contained"
               className="!w-full sm:!w-auto !px-8 sm:!px-10 !py-4 sm:!py-5 !bg-white !text-black !text-lg sm:!text-xl !font-bold !rounded-xl !hover:bg-gray-100 !hover:shadow-2xl !hover:scale-105 !transition-all !duration-300 !border-0"
-              onClick={() => router.push("/login")}
+              onClick={() =>
+                router.push(user ? "/dashboard" : "/login")
+              }
               startIcon={<Rocket className="w-5 h-5 sm:w-6 sm:h-6" />}
             >
-              Join Sahay Today
+              {user ? "Go to Dashboard" : "Join Sahay Today"}
             </Button>
             <Button
               variant="outlined"
               className="!w-full sm:!w-auto !px-8 sm:!px-10 !py-4 sm:!py-5 !text-white !text-lg sm:!text-xl !font-bold !rounded-xl !border-2 !border-white !hover:bg-white !hover:text-black !transition-all !duration-300"
-              onClick={() => router.push("/login")}
+              onClick={() =>
+                router.push(user ? "/dashboard/mentors" : "/login")
+              }
               startIcon={<Users className="w-5 h-5 sm:w-6 sm:h-6" />}
             >
               Become a Mentor

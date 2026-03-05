@@ -3,13 +3,11 @@ import connectDB from "@/lib/mongodb";
 import Module from "@/models/Module";
 import Lesson from "@/models/Lesson";
 import Quiz from "@/models/Quiz";
-import Question from "@/models/Question";
 import Skill from "@/models/Skill";
 
 export async function POST() {
   try {
     await connectDB();
-    console.log("🌱 Starting TypeScript module seeding...");
 
     // Find or create TypeScript skill
     let typescriptSkill = await Skill.findOne({ name: "TypeScript" });
@@ -24,7 +22,6 @@ export async function POST() {
         estimatedTime: 40,
         tags: ["typescript", "javascript", "programming", "web-development"],
       });
-      console.log("✅ Created TypeScript skill");
     }
 
     // Check if TypeScript module already exists
@@ -34,7 +31,6 @@ export async function POST() {
     });
 
     if (typescriptModule) {
-      console.log("⚠️  TypeScript module already exists, skipping creation");
       return NextResponse.json({
         message: "TypeScript module already exists",
         module: typescriptModule,
@@ -52,7 +48,6 @@ export async function POST() {
       points: 500,
       lessonsCount: 5,
     });
-    console.log("✅ Created TypeScript module");
 
     // Create lessons
     const lessons = [
@@ -393,7 +388,6 @@ const numbers: number[] = [1, 2, 3, 4, 5];
     for (const lessonData of lessons) {
       const lesson = await Lesson.create(lessonData);
       createdLessons.push(lesson);
-      console.log(`✅ Created lesson: ${lesson.name}`);
     }
 
     // Create quizzes for lessons 2, 3, 4, and 5 (skip lesson 1)
@@ -530,7 +524,7 @@ Write your code in the editor below. The language is set to TypeScript.`,
               "Should include 'interface User' declaration with proper property types and optional isActive property",
             explanation:
               "The interface should define the structure with correct TypeScript syntax including optional properties using the '?' operator.",
-          }
+          },
         );
       } else if (lesson.order === 3) {
         // Functions and Classes
@@ -647,7 +641,7 @@ Write your code in the editor below. The language is set to TypeScript.`,
               "Should include class declaration, constructor, properties, and getInfo method",
             explanation:
               "The class should demonstrate proper TypeScript class syntax with typed properties and methods.",
-          }
+          },
         );
       } else if (lesson.order === 4) {
         // Generics and Advanced Types
@@ -760,7 +754,7 @@ Write your code in the editor below. The language is set to TypeScript.`,
               "Should include generic interface declaration with proper syntax",
             explanation:
               "The interface should demonstrate generic type usage with proper TypeScript syntax.",
-          }
+          },
         );
       } else if (lesson.order === 5) {
         // Best Practices
@@ -878,23 +872,10 @@ Write your code in the editor below. The language is set to TypeScript.`,
               "Should include function declaration, parameter types, return type, and logic to filter and sum even numbers",
             explanation:
               "The function should demonstrate proper TypeScript syntax with array methods and type safety.",
-          }
+          },
         );
       }
-
-      // Create questions in database
-      for (const questionData of questions) {
-        console.log("Creating question:", questionData.questionText);
-        const createdQuestion = await Question.create(questionData);
-        console.log("Created question with ID:", createdQuestion._id);
-      }
-
-      console.log(
-        `✅ Created quiz with ${questions.length} questions for lesson: ${lesson.name}`
-      );
     }
-
-    console.log("🎉 TypeScript module seeding completed successfully!");
 
     return NextResponse.json({
       success: true,
@@ -910,7 +891,7 @@ Write your code in the editor below. The language is set to TypeScript.`,
     console.error("❌ Error seeding TypeScript module:", error);
     return NextResponse.json(
       { success: false, error: "Failed to seed TypeScript module" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

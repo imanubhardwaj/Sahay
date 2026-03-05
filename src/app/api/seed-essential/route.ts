@@ -4,8 +4,6 @@ import { Skill, Module, Lesson } from "@/models";
 
 export async function POST() {
   try {
-    console.log("🌱 Starting essential database seeding...");
-
     await connectDB();
 
     // Clear existing data
@@ -65,7 +63,6 @@ export async function POST() {
     ];
 
     const skills = await Skill.insertMany(skillsData);
-    console.log(`✅ Seeded ${skills.length} skills`);
 
     // Seed modules
     const modulesData = [
@@ -96,7 +93,6 @@ export async function POST() {
     ];
 
     const modules = await Module.insertMany(modulesData);
-    console.log(`✅ Seeded ${modules.length} modules`);
 
     // Seed lessons for each module
     const allLessons = [];
@@ -155,18 +151,15 @@ export async function POST() {
     }
 
     const lessons = await Lesson.insertMany(allLessons);
-    console.log(`✅ Seeded ${lessons.length} lessons`);
 
     // Update modules with lesson counts
     for (const moduleItem of modules) {
       const lessonCount = lessons.filter(
-        (l) => l.moduleId.toString() === moduleItem._id.toString()
+        (l) => l.moduleId.toString() === moduleItem._id.toString(),
       ).length;
       moduleItem.lessonsCount = lessonCount;
       await moduleItem.save();
     }
-
-    console.log("✅ Essential seeding completed!");
 
     return NextResponse.json({
       success: true,
@@ -186,7 +179,7 @@ export async function POST() {
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
