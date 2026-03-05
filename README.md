@@ -39,6 +39,12 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
 - Points system for all activities
 - Progress visualization
 
+### 🔔 Push Notifications
+- Firebase Cloud Messaging (FCM)
+- Role-based topic subscriptions
+- Notification preferences
+- PWA service worker support
+
 ### 📊 Analytics Dashboard
 - Learning progress tracking
 - Activity summaries
@@ -53,20 +59,21 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
 - **Authentication**: WorkOS Magic Links, JWT 9.0.2
 - **Real-time**: Socket.io 4.8.1
 - **Code Editor**: Monaco Editor 4.7.0
-- **Email**: Nodemailer 7.0.10
-- **Integrations**: Zoom API, OpenAI API
-- **UI Components**: Custom component library, Material-UI 7.3.6
+- **Email**: Resend 4.0.0
+- **Integrations**: Zoom API, OpenAI API, Firebase (FCM)
+- **UI Components**: Custom component library (`packages/ui`)
 - **Icons**: Lucide React 0.544.0, React Icons 5.5.0
 - **Deployment**: Vercel (recommended)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (recommended) or npm/yarn
 - MongoDB database (MongoDB Atlas recommended)
 - WorkOS account (for authentication)
-- Gmail account (for email notifications)
+- Resend account (for email notifications)
+- Firebase project (for push notifications)
 - Zoom account (for mentor sessions)
 
 ### Installation
@@ -86,7 +93,8 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
    - Copy `.env.example` to `.env.local`
    - Configure MongoDB connection string
    - Add WorkOS API keys
-   - Set up Gmail SMTP credentials
+   - Set up Resend API key for email
+   - Add Firebase config for push notifications
    - Configure Zoom API credentials (optional)
    - See `DOCUMENTATION.md` for detailed setup
 
@@ -99,8 +107,9 @@ A comprehensive learning platform built with Next.js, TypeScript, and Tailwind C
    ```bash
    pnpm dev
    ```
+   (Runs `predev` script to inject Firebase config into service worker)
 
-5. **Open your browser**
+6. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
@@ -121,10 +130,13 @@ src/
 │   ├── layout/           # Layout components
 │   └── ui/               # UI components
 ├── contexts/             # React contexts
-├── lib/                  # Utilities and services
-│   ├── mock-api.ts      # Mock API for frontend development
-│   └── mock-api.ts      # Mock data (development)
-└── styles/              # Global styles
+├── config/              # Firebase, FCM initialization
+├── lib/                 # Utilities and services
+│   ├── api-client.ts   # Authenticated fetch wrappers
+│   ├── auth.ts         # JWT verification
+│   ├── mongodb.ts      # Database connection
+│   └── ...
+└── models/              # Mongoose models
 ```
 
 ## 🎨 Design System
@@ -163,12 +175,16 @@ WORKOS_CLIENT_ID=client_...
 # JWT
 JWT_SECRET=your-super-secret-key
 
-# Email (Gmail SMTP)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_SECURE=false
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-16-digit-app-password
+# Email (Resend)
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=onboarding@resend.dev
+
+# Firebase (Push Notifications)
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=...
 
 # Zoom Integration (optional)
 ZOOM_ACCOUNT_ID=your_account_id
@@ -183,7 +199,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
 ```
 
-See `DOCUMENTATION.md` for detailed setup instructions.
+See `DOCUMENTATION.md` for detailed setup instructions. Additional docs: `PROJECT_STATUS.md`, `OPTIMIZATION_REFACTOR.md`.
 
 ## 📱 Responsive Design
 
@@ -206,17 +222,13 @@ See `DOCUMENTATION.md` for detailed setup instructions.
 
 ## 🧪 Testing
 
-### Demo Account
-Use the built-in demo account for testing:
-- **Email**: demo@sahay.com
-- **Password**: password
-
 ### Test Features
-- Complete onboarding flow
-- Take learning modules
+- Complete onboarding flow (magic link auth)
+- Take learning modules with quizzes
 - Ask questions in community
 - Book mentor sessions
 - Add projects to portfolio
+- Enable push notifications (browser permission)
 
 ## 🔒 Security
 
@@ -263,6 +275,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - ✅ Mentor booking
 - ✅ Portfolio management
 - ✅ Leaderboard system
+- ✅ FCM push notifications
+- ✅ Direct quiz route & validation
 
 ### Phase 2 (Planned)
 - 🔄 Video content integration
@@ -281,7 +295,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🙏 Acknowledgments
 
 - **Next.js Team** for the amazing framework
-- **Supabase Team** for the backend infrastructure
+- **MongoDB** for the database
+- **WorkOS** for authentication
 - **Tailwind CSS** for the utility-first CSS framework
 - **Lucide** for the beautiful icon set
 - **Vercel** for the deployment platform
