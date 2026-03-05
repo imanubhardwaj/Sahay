@@ -78,7 +78,8 @@ Sahay is a comprehensive learning platform designed to help students and profess
 | WorkOS | Magic link authentication |
 | Zoom API | Video meetings for mentor sessions |
 | OpenAI API | Evaluating subjective/code quiz answers |
-| Gmail SMTP | Email notifications |
+| Resend | Email notifications (replaced Gmail SMTP) |
+| Firebase Cloud Messaging | Push notifications (FCM) |
 
 ---
 
@@ -134,8 +135,8 @@ Sahay is a comprehensive learning platform designed to help students and profess
 sahay/
 ├── src/
 │   ├── app/                    # Next.js App Router
-│   │   ├── api/                # API routes (81 endpoints)
-│   │   │   ├── auth/           # Authentication (login, logout, verify-code, etc.)
+│   │   ├── api/                # API routes (91 endpoints)
+│   │   │   ├── auth/           # Authentication (login, logout, verify-code, me, etc.)
 │   │   │   ├── bookings/       # Mentor booking management
 │   │   │   ├── modules/        # Learning modules CRUD
 │   │   │   ├── get-lesson/     # Secure lesson fetching
@@ -144,6 +145,7 @@ sahay/
 │   │   │   ├── save-progress/  # Lesson completion & progression
 │   │   │   ├── coding-problems/# Coding practice problems
 │   │   │   ├── community-questions/ # Q&A community
+│   │   │   ├── notifications/  # FCM tokens, topics, preferences
 │   │   │   └── ...             # Many more endpoints
 │   │   ├── dashboard/          # Protected dashboard pages
 │   │   │   ├── modules/        # Learning modules
@@ -1004,12 +1006,9 @@ WORKOS_CLIENT_ID=client_...
 # JWT
 JWT_SECRET=your-super-secret-key
 
-# Email (Gmail SMTP)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_SECURE=false
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-16-digit-app-password
+# Email (Resend)
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=onboarding@resend.dev
 
 # Zoom Integration
 ZOOM_ACCOUNT_ID=your_account_id
@@ -1020,6 +1019,15 @@ ZOOM_CLIENT_SECRET=your_client_secret
 OPENAI_API_KEY=sk-...
 # or
 NEXT_OPEN_AI_API_KEY=sk-...
+
+# Firebase (Push Notifications)
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -1080,8 +1088,12 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/modules
 |------|---------|
 | `src/contexts/AuthContext.tsx` | Auth state management |
 | `src/lib/auth.ts` | JWT verification |
+| `src/lib/api-client.ts` | Authenticated fetch wrapper |
 | `src/lib/wallet.ts` | Points operations |
 | `src/lib/quiz-evaluation.ts` | Quiz grading logic |
+| `src/config/firebase.ts` | Firebase/FCM initialization |
+| `src/config/FCMTokenInitializer.tsx` | FCM token registration |
+| `public/firebase-messaging-sw.js` | Service worker for push notifications |
 | `src/app/api/get-lesson/route.ts` | Secure lesson fetch |
 | `src/app/api/save-progress/route.ts` | Lesson completion |
 | `src/app/api/submit-quiz/route.ts` | Quiz submission |
@@ -1119,7 +1131,42 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/modules
 
 ---
 
-*Documentation last updated: January 2025*
+---
+
+## 16. Recent Changes & Pending Fixes (Mar 2025)
+
+### ✅ Recently Completed
+| Feature | Description |
+|---------|-------------|
+| Alert/Notify System | `notify()` from `@/packages/ui` - toast notifications via AlertWrapper |
+| Direct Quiz Route | `dashboard/modules/[moduleId]/quiz/[quizId]` - deep link to quiz |
+| Quiz Validation | Alert shown when user tries to submit with incomplete answers |
+| FCM Push Notifications | Firebase Cloud Messaging via `firebase-messaging-sw.js` service worker |
+| FCM Token Registration | `FCMTokenInitializer` - registers token, subscribes to role-based topics |
+| Notification Topics API | Subscribe/unsubscribe to topics (`/api/notifications/subscribe-topics`, `my-topics`) |
+| Notification Preferences | User preferences API (`/api/notifications/preferences`) |
+| API Client | `src/lib/api-client.ts` - authenticatedFetch, authenticatedGet/Post/Put/Delete |
+| PWA Service Worker | Unified SW for PWA caching + FCM (icons, manifest) |
+| useQuizzes Hook | `useQuizzes(moduleId)`, `useQuiz(id)` in `src/hooks/useQuizzes.ts` |
+| ModuleProgressBar | Extracted component for module progress display |
+
+### ⚠️ Must Fix Before Production
+| Issue | Location | Fix |
+|-------|----------|-----|
+| Quiz bypass | `get-quiz/route.ts` | Return 403 when no module progress |
+| Passing score 0% | `submit-quiz/route.ts` | Set passingScore = 70 |
+| Console.logs | Multiple API files | Remove or use proper logger |
+
+### 📋 Not Complete
+- Session feedback (rating/review UI)
+- Real-time notifications (Socket.io)
+- Public shareable profiles
+- Admin dashboard
+- Advanced search
+
+---
+
+*Documentation last updated: March 2025*
 *Project Version: 0.1.0*
 
 

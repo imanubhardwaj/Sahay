@@ -59,6 +59,12 @@ Production Ready   ████████████░░░░░░░░�
 - ✅ Badges
 - ✅ Transaction history
 
+### Notifications
+- ✅ FCM push notifications (Firebase Cloud Messaging)
+- ✅ Service worker for PWA + FCM
+- ✅ Token registration & topic subscriptions
+- ✅ Notification preferences API
+
 ---
 
 ## 🔴 Critical Issues (Must Fix)
@@ -76,7 +82,7 @@ Production Ready   ████████████░░░░░░░░�
 | Feature | Completion | Remaining |
 |---------|------------|-----------|
 | Session feedback | 60% | Rating/review UI |
-| Notifications | 50% | Real-time via Socket.io |
+| Notifications | 75% | FCM push done; Socket.io in-app pending |
 | Public profiles | 40% | Shareable profile pages |
 | Admin dashboard | 20% | User/content management |
 | Search | 30% | Advanced search |
@@ -103,11 +109,11 @@ Production Ready   ████████████░░░░░░░░�
 
 | Metric | Count |
 |--------|-------|
-| API Endpoints | 81 |
+| API Endpoints | 91 |
 | Database Models | 44 |
 | Dashboard Pages | 18 |
-| React Hooks | 17 |
-| Lib Files | 15 |
+| React Hooks | 17+ |
+| Lib Files | 15+ |
 
 ---
 
@@ -136,6 +142,7 @@ http://localhost:3000
 |------|---------|
 | `DOCUMENTATION.md` | Complete project docs |
 | `TECHNICAL_DEBT.md` | Hacks to remove |
+| `OPTIMIZATION_REFACTOR.md` | Platform optimization & refactoring plan |
 | `BOOKING_FLOW_GUIDE.md` | Mentor booking flow |
 | `SECURE_LEARNING_FLOW.md` | Learning security |
 | `SECURE_MODULE_FLOW.md` | Module security |
@@ -178,7 +185,7 @@ http://localhost:3000
 - **Frontend:** Next.js 15, React 19, TypeScript, Tailwind
 - **Backend:** Next.js API Routes, MongoDB, Mongoose
 - **Auth:** WorkOS, JWT
-- **Integrations:** Zoom, OpenAI, Nodemailer
+- **Integrations:** Zoom, OpenAI, Resend (email), Firebase (FCM push)
 
 ---
 
@@ -206,6 +213,33 @@ http://localhost:3000
 
 ---
 
-*Last Updated: January 2025*
+---
+
+## 📝 Recent Updates (Mar 2025)
+
+### ✅ Completed
+- Alert component with `notify()` for toast-style notifications
+- Direct quiz route: `dashboard/modules/[id]/quiz/[quizId]` for deep linking
+- Quiz incomplete submission warning (alert when user tries to submit without answering all questions)
+- FCM push notifications: service worker (`firebase-messaging-sw.js`), token registration, topic subscriptions
+- FCMTokenInitializer: auto-registers token, subscribes to role-based topics
+- Notification APIs: `/api/notifications/fcm-token`, `subscribe-topics`, `my-topics`, `preferences`
+- API client: `src/lib/api-client.ts` (authenticatedFetch, authenticatedGet/Post/Put/Delete)
+- useQuizzes, useQuiz hooks
+- ModuleProgressBar extracted component
+- PWA service worker (unified with FCM for icons, manifest caching)
+
+### 🔄 In Progress
+- Documentation updates
+- Platform optimization roadmap
+
+### ⚠️ Needs Fix
+- Quiz bypass in get-quiz (testing only)
+- Quiz passing score (0% - should be 70%)
+- Console.log cleanup in production
+
+---
+
+*Last Updated: March 2025*
 
 
