@@ -1,28 +1,28 @@
 "use client";
 
-import { Button } from "../../packages/ui/components/Button/Button";
+import { Button } from "../../packages/ui";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  ArrowRight,
-  CheckCircle2,
-  Star,
-  Users,
-  Trophy,
-  BookOpen,
-  Zap,
-  TrendingUp,
-  Award,
-  Code,
-  MessageSquare,
-  Briefcase,
-  ChevronRight,
-  Sparkles,
-  Rocket,
-  GraduationCap,
-  Menu,
-  X,
-} from "lucide-react";
+  LuArrowRight as ArrowRight,
+  LuCircleCheck as CheckCircle2,
+  LuStar as Star,
+  LuUsers as Users,
+  LuTrophy as Trophy,
+  LuBookOpen as BookOpen,
+  LuZap as Zap,
+  LuTrendingUp as TrendingUp,
+  LuAward as Award,
+  LuCode as Code,
+  LuMessageSquare as MessageSquare,
+  LuBriefcase as Briefcase,
+  LuChevronRight as ChevronRight,
+  LuSparkles as Sparkles,
+  LuRocket as Rocket,
+  LuGraduationCap as GraduationCap,
+  LuMenu as Menu,
+  LuX as X,
+} from "react-icons/lu";
 import { useState } from "react";
 
 // Top tech companies for mentor showcase

@@ -1,20 +1,22 @@
-import CloseIcon from "@mui/icons-material/Close";
-import DoneIcon from "@mui/icons-material/Done";
-import EditIcon from "@mui/icons-material/Edit";
-import PendingIcon from "@mui/icons-material/Pending";
-import SearchIcon from "@mui/icons-material/Search";
-import Arrow from "@mui/icons-material/ArrowBackIos";
-import CommentIcon from "@mui/icons-material/AddComment";
+import {
+  MdClose,
+  MdDone,
+  MdEdit,
+  MdPending,
+  MdSearch,
+  MdArrowBackIos,
+  MdAddComment,
+} from "react-icons/md";
 import { SideBarCloseIcon, SideBarOpenIcon } from "./SideBarIcons";
 
 export {
-  CloseIcon,
-  SearchIcon,
-  DoneIcon,
-  PendingIcon,
-  EditIcon,
-  Arrow,
-  CommentIcon,
+  MdClose as CloseIcon,
+  MdSearch as SearchIcon,
+  MdDone as DoneIcon,
+  MdPending as PendingIcon,
+  MdEdit as EditIcon,
+  MdArrowBackIos as Arrow,
+  MdAddComment as CommentIcon,
   SideBarCloseIcon,
   SideBarOpenIcon,
 };

@@ -23,9 +23,14 @@ export default function ModuleProgressBar({
   progress,
 }: ModuleProgressBarProps) {
   if (!moduleData) return null;
+  const sidebarCollapsed = JSON.parse(
+    localStorage.getItem("sidebarCollapsed") || "false",
+  );
 
   return (
-    <div className="fixed bottom-0 right-0 bg-gray-900 border-t border-gray-800 shadow-lg transition-all duration-300 z-30 lg:left-52 left-0">
+    <div
+      className={`fixed bottom-0 right-0 bg-gray-900 border-t border-gray-800 shadow-lg transition-all duration-300 z-30 ${sidebarCollapsed ? "lg:left-20" : "lg:left-52"} left-0`}
+    >
       <div className="w-full mx-auto px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
         <div className="flex flex-col gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">

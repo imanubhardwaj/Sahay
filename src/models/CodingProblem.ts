@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface ICodingProblem extends Document {
+export interface ICodingProblem {
   title: string;
   description: string;
   difficulty: "easy" | "medium" | "hard";
@@ -25,7 +25,7 @@ export interface ICodingProblem extends Document {
   updatedAt: Date;
 }
 
-const CodingProblemSchema = new Schema<ICodingProblem>(
+const CodingProblemSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -56,9 +56,8 @@ const CodingProblemSchema = new Schema<ICodingProblem>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.models.CodingProblem ||
-  mongoose.model<ICodingProblem>("CodingProblem", CodingProblemSchema);
-
+  mongoose.model("CodingProblem", CodingProblemSchema);

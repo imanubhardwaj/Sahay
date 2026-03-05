@@ -6,7 +6,6 @@ import User from "@/models/User";
 import MentorProfile from "@/models/MentorProfile";
 import Wallet from "@/models/Wallet";
 import Transaction from "@/models/Transaction";
-import { deleteZoomMeeting } from "@/lib/zoom";
 import {
   sendCancellationEmail,
   sendApprovalRequest,
@@ -158,7 +157,7 @@ export async function POST(request: NextRequest) {
     // Get mentor profile with level info (required for pricing)
     const mentorProfile = await MentorProfile.findOne({
       userId: professionalId,
-    }).select("+zoomAccessToken +zoomRefreshToken +level +customPointRate");
+    }).select("+level +customPointRate");
 
     if (!student) {
       return NextResponse.json(
@@ -574,20 +573,6 @@ export async function PATCH(request: NextRequest) {
         );
 
         booking.paymentStatus = "refunded";
-      }
-
-      // Delete Zoom meeting
-      if (booking.zoomMeetingId) {
-        const mentorProfile = await MentorProfile.findOne({
-          userId: booking.professionalId._id,
-        }).select("+zoomAccessToken");
-
-        if (mentorProfile?.zoomAccessToken) {
-          await deleteZoomMeeting(
-            booking.zoomMeetingId,
-            mentorProfile.zoomAccessToken
-          );
-        }
       }
 
       // Update schedule

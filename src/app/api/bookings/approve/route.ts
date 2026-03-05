@@ -4,7 +4,7 @@ import Booking from '@/models/Booking';
 import MentorProfile from '@/models/MentorProfile';
 import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
-import { createZoomMeeting } from '@/lib/zoom';
+import { createGoogleMeetEvent } from '@/lib/google-calendar';
 import { sendBookingConfirmation, sendCancellationEmail } from '@/lib/email';
 import { notifyBookingEvent } from '@/lib/notification-service';
 import { TRANSACTION_TYPE, TRANSACTION_SOURCE } from '@/lib/constants';
@@ -129,38 +129,44 @@ export async function GET(request: NextRequest) {
     if (action === 'approve') {
       // Approve the booking
       try {
-        // Get mentor profile for Zoom access
+        // Get mentor profile for meeting creation (Google Meet)
         const mentorProfile = await MentorProfile.findOne({ 
           userId: booking.professionalId._id 
-        }).select('+zoomAccessToken +zoomRefreshToken');
+        }).select('+googleConnected +googleAccessToken +googleRefreshToken');
 
         if (!mentorProfile) {
           throw new Error('Mentor profile not found');
         }
 
-        // Create Zoom meeting
         const sessionDateTime = new Date(`${booking.sessionDate.toISOString().split('T')[0]}T${booking.sessionTime}`);
-        const zoomMeeting = await createZoomMeeting({
-          topic: `Mentorship Session: ${booking.professionalId.firstName} ${booking.professionalId.lastName} & ${booking.studentId.firstName} ${booking.studentId.lastName}`,
+        const endDateTime = new Date(sessionDateTime.getTime() + booking.duration * 60000);
+        const sessionTitle = `Mentorship Session: ${booking.professionalId.firstName} ${booking.professionalId.lastName} & ${booking.studentId.firstName} ${booking.studentId.lastName}`;
+
+        if (!mentorProfile.googleConnected || !mentorProfile.googleAccessToken || !mentorProfile.googleRefreshToken) {
+          throw new Error('Please connect Google in your mentor profile to create meeting links.');
+        }
+
+        const meetEvent = await createGoogleMeetEvent({
+          summary: sessionTitle,
+          description: booking.studentNotes || 'Mentorship session',
           startTime: sessionDateTime,
-          duration: booking.duration,
+          endTime: endDateTime,
           timezone: mentorProfile.timezone || 'Asia/Kolkata',
-          agenda: booking.studentNotes || 'Mentorship session',
-          accessToken: mentorProfile.zoomAccessToken,
+          accessToken: mentorProfile.googleAccessToken,
+          refreshToken: mentorProfile.googleRefreshToken,
         });
 
-        if (!zoomMeeting) {
-          throw new Error('Failed to create Zoom meeting');
+        if (!meetEvent) {
+          throw new Error('Failed to create Google Meet link. Please try again.');
         }
+
+        const meetingLink = meetEvent.hangoutLink;
 
         // Update booking
         booking.approvalStatus = 'approved';
         booking.approvedAt = new Date();
         booking.status = 'confirmed';
-        booking.zoomMeetingId = zoomMeeting.id.toString();
-        booking.zoomJoinUrl = zoomMeeting.join_url;
-        booking.zoomStartUrl = zoomMeeting.start_url;
-        booking.zoomPassword = zoomMeeting.password;
+        booking.meetingLink = meetingLink;
         await booking.save();
 
         // Send confirmation emails to both parties
@@ -177,7 +183,7 @@ export async function GET(request: NextRequest) {
           }),
           sessionTime: booking.sessionTime,
           duration: booking.duration,
-          zoomJoinUrl: zoomMeeting.join_url,
+          meetingLink,
           sessionType: booking.sessionType || 'one-on-one',
           price: booking.price,
         };
@@ -230,7 +236,7 @@ export async function GET(request: NextRequest) {
               <div class="icon">✅</div>
               <h1>Session Approved!</h1>
               <p>You've successfully approved the mentorship session with <strong>${booking.studentId.firstName} ${booking.studentId.lastName}</strong>.</p>
-              <p>A Zoom meeting has been created and the meeting link has been sent to both you and the student via email.</p>
+              <p>A meeting has been created and the meeting link has been sent to both you and the student via email.</p>
               <p><strong>Session Date:</strong> ${new Date(booking.sessionDate).toLocaleDateString()}</p>
               <p><strong>Session Time:</strong> ${booking.sessionTime}</p>
               <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/sessions" class="button">View Your Sessions</a>

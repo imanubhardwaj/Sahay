@@ -2,7 +2,11 @@ import CodingProblem from "../../src/models/CodingProblem";
 
 export const seedCodingProblems = async () => {
   // Clear existing problems
-  await CodingProblem.deleteMany({});
+  await (
+    CodingProblem as {
+      deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+    }
+  ).deleteMany({});
 
   const problems = [
     // ========== DSA - ARRAY PROBLEMS ==========
@@ -3635,7 +3639,9 @@ Use with async with statement.`,
     },
   ];
 
-  await CodingProblem.insertMany(problems);
+  await (
+    CodingProblem as { insertMany: (docs: object[]) => Promise<unknown> }
+  ).insertMany(problems);
   console.log(`✅ Seeded ${problems.length} coding problems`);
 
   return problems;

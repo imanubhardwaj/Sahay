@@ -1,22 +1,15 @@
 /**
- * Simple email sending wrapper for notifications.
- * Uses nodemailer (via email.ts) for Sahay.
+ * Email sending via Resend API.
  */
 
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const EMAIL_SENDER =
-  process.env.EMAIL_USER || "bhardwaj93karriekey@gmail.com";
+  process.env.EMAIL_FROM ||
+  process.env.EMAIL_USER ||
+  "onboarding@resend.dev";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.EMAIL_PORT || "587"),
-  secure: process.env.EMAIL_SECURE === "true",
-  auth: {
-    user: EMAIL_SENDER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export interface SendEmailOptions {
   to: string;
@@ -29,18 +22,22 @@ export async function sendEmail(options: SendEmailOptions): Promise<{
   error?: string;
 }> {
   try {
-    await transporter.sendMail({
-      from: `"Sahay" <${EMAIL_SENDER}>`,
+    const { error } = await resend.emails.send({
+      from: `Sahay <${EMAIL_SENDER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
     });
+    if (error) {
+      console.error("Resend error:", error);
+      return { success: false, error: error.message };
+    }
     return { success: true };
-  } catch (error) {
-    console.error("Error sending email:", error);
+  } catch (err) {
+    console.error("Error sending email:", err);
     return {
       success: false,
-      error: (error as Error).message,
+      error: (err as Error).message,
     };
   }
 }

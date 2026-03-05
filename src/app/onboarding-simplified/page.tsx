@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/Input";
 import Loader from "@/components/Loader";
-import { Button } from "@mui/material";
+import { Button } from "../../../packages/ui";
 
 const USER_TYPES = [
   {

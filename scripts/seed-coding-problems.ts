@@ -6,7 +6,6 @@ import path from "path";
 dotenv.config({ path: path.join(process.cwd(), ".env") });
 
 import CodingProblem from "../src/models/CodingProblem";
-
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI;
@@ -23,7 +22,7 @@ const connectDB = async () => {
 
 const seedCodingProblems = async () => {
   // Clear existing problems
-  await CodingProblem.deleteMany({});
+  await (CodingProblem as { deleteMany: (filter?: object) => Promise<{ deletedCount: number }> }).deleteMany({});
 
   const problems = [
     // Easy Problems
@@ -432,7 +431,7 @@ Output: 6`,
     },
   ];
 
-  await CodingProblem.insertMany(problems);
+  await (CodingProblem as { insertMany: (docs: object[]) => Promise<unknown> }).insertMany(problems);
 
   return problems;
 };

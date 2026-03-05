@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -10,7 +11,9 @@ import {
   FaGithub,
   FaGlobe,
   FaTimes,
+  FaCheck,
 } from "react-icons/fa";
+import { SiGooglemeet } from "react-icons/si";
 
 interface MentorProfile {
   _id: string;
@@ -37,13 +40,30 @@ interface MentorProfile {
   completedSessions: number;
   averageRating: number;
   totalEarnings: number;
+  googleConnected?: boolean;
 }
+
+const DEFAULT_SESSION_TYPES = [
+  {
+    name: "30 Min Session",
+    duration: 30,
+    price: 50,
+    description: "Quick consultation",
+  },
+  {
+    name: "1 Hour Session",
+    duration: 60,
+    price: 100,
+    description: "In-depth discussion",
+  },
+];
 
 export default function MentorSetupPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [mentorProfile, setMentorProfile] = useState<MentorProfile | null>(
-    null
+    null,
   );
   const [formData, setFormData] = useState({
     bio: "",
@@ -62,20 +82,7 @@ export default function MentorSetupPage() {
       description?: string;
     }>,
     hourlyRate: 100,
-    sessionTypes: [
-      {
-        name: "30 Min Session",
-        duration: 30,
-        price: 50,
-        description: "Quick consultation",
-      },
-      {
-        name: "1 Hour Session",
-        duration: 60,
-        price: 100,
-        description: "In-depth discussion",
-      },
-    ],
+    sessionTypes: [...DEFAULT_SESSION_TYPES],
     linkedIn: "",
     twitter: "",
     github: "",
@@ -91,6 +98,8 @@ export default function MentorSetupPage() {
     isCurrent: false,
     description: "",
   });
+
+  const hasFetchedForUser = useRef<string | null>(null);
 
   const fetchMentorProfile = useCallback(async () => {
     try {
@@ -112,7 +121,7 @@ export default function MentorSetupPage() {
           sessionTypes:
             result.data.sessionTypes?.length > 0
               ? result.data.sessionTypes
-              : formData.sessionTypes,
+              : DEFAULT_SESSION_TYPES,
           linkedIn: result.data.linkedIn || "",
           twitter: result.data.twitter || "",
           github: result.data.github || "",
@@ -122,16 +131,73 @@ export default function MentorSetupPage() {
     } catch (error) {
       console.error("Error fetching mentor profile:", error);
     }
-  }, [formData.sessionTypes, user?._id]);
+  }, [user?._id]);
 
+  // Fetch once per user; ref prevents re-running when deps (e.g. user object ref) change
   useEffect(() => {
-    if (user) {
-      fetchMentorProfile();
+    const userId = user?._id ?? null;
+    if (!userId) {
+      hasFetchedForUser.current = null;
+      return;
     }
-  }, [fetchMentorProfile, user]);
+    if (hasFetchedForUser.current === userId) return;
+    hasFetchedForUser.current = userId;
+    fetchMentorProfile();
+  }, [user?._id, fetchMentorProfile]);
+
+  // Handle Google OAuth callback once (success/error from redirect)
+  const handledGoogleCallback = useRef(false);
+  useEffect(() => {
+    const googleConnected = searchParams.get("google_connected");
+    const googleError = searchParams.get("google_error");
+    if (googleConnected === "true" && !handledGoogleCallback.current) {
+      handledGoogleCallback.current = true;
+      fetchMentorProfile();
+      window.history.replaceState({}, "", "/dashboard/mentor-setup");
+    }
+    if (googleError) {
+      console.error("Google OAuth error:", googleError);
+      window.history.replaceState({}, "", "/dashboard/mentor-setup");
+    }
+  }, [searchParams, fetchMentorProfile]);
+
+  const handleConnectGoogle = async () => {
+    try {
+      const response = await fetch(
+        `/api/mentor-profile/google?userId=${user?._id}`,
+      );
+      const result = await response.json();
+      if (result.success && result.data?.authUrl) {
+        window.location.href = result.data.authUrl;
+      } else {
+        alert(result.error || "Failed to connect Google. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error connecting Google:", error);
+      alert("Failed to connect Google. Please try again.");
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    try {
+      const response = await fetch(
+        `/api/mentor-profile/google?userId=${user?._id}`,
+        { method: "DELETE" },
+      );
+      const result = await response.json();
+      if (result.success) {
+        fetchMentorProfile();
+      } else {
+        alert(result.error || "Failed to disconnect Google.");
+      }
+    } catch (error) {
+      console.error("Error disconnecting Google:", error);
+      alert("Failed to disconnect Google.");
+    }
+  };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -174,12 +240,12 @@ export default function MentorSetupPage() {
   const updateSessionType = (
     index: number,
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setFormData((prev) => ({
       ...prev,
       sessionTypes: prev.sessionTypes.map((session, i) =>
-        i === index ? { ...session, [field]: value } : session
+        i === index ? { ...session, [field]: value } : session,
       ),
     }));
   };
@@ -249,6 +315,45 @@ export default function MentorSetupPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Google Calendar / Meet Integration */}
+            <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <SiGooglemeet className="text-emerald-400" size={24} />
+                Google Meet Integration
+              </h3>
+              <p className="text-sm text-gray-400 mb-4">
+                Connect your Google account to automatically create Google Meet
+                links when students book sessions. Students can join without a
+                Google account.
+              </p>
+              {mentorProfile?.googleConnected ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FaCheck className="text-emerald-400" />
+                    <span className="text-emerald-400 font-medium">
+                      Google Connected
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectGoogle}
+                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleConnectGoogle}
+                  className="px-4 py-2 cursor-pointer bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
+                >
+                  <SiGooglemeet size={20} />
+                  Connect Google Account
+                </button>
+              )}
+            </div>
+
             {/* Basic Info */}
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-2">
@@ -453,9 +558,7 @@ export default function MentorSetupPage() {
                       className="flex items-start justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg"
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-white">
-                          {exp.role}
-                        </div>
+                        <div className="font-medium text-white">{exp.role}</div>
                         <div className="text-sm text-gray-400">
                           {exp.company}
                         </div>
@@ -477,7 +580,7 @@ export default function MentorSetupPage() {
                           setFormData((prev) => ({
                             ...prev,
                             pastCompanies: prev.pastCompanies.filter(
-                              (_, i) => i !== index
+                              (_, i) => i !== index,
                             ),
                           }));
                         }}
@@ -613,7 +716,7 @@ export default function MentorSetupPage() {
                             updateSessionType(
                               index,
                               "duration",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                           className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"
@@ -631,7 +734,7 @@ export default function MentorSetupPage() {
                             updateSessionType(
                               index,
                               "price",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                           className="!bg-gray-800 !border-gray-700 !text-white placeholder:!text-gray-500"

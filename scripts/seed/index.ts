@@ -37,12 +37,36 @@ const clearDatabase = async () => {
   try {
     // Clear all collections
     await Promise.all([
-      Skill.deleteMany({}),
-      Module.deleteMany({}),
-      Course.deleteMany({}),
-      Lesson.deleteMany({}),
-      Quiz.deleteMany({}),
-      Question.deleteMany({}),
+      (
+        Skill as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
+      (
+        Module as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
+      (
+        Course as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
+      (
+        Lesson as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
+      (
+        Quiz as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
+      (
+        Question as {
+          deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+        }
+      ).deleteMany({}),
     ]);
   } catch (error) {
     console.error("❌ Error clearing database:", error);
@@ -54,9 +78,9 @@ const seedDatabase = async () => {
   try {
     // Seed in order of dependencies
     const skills = await seedModules([]);
-    const modules = await seedModules(skills);
-    const { lessons, quizzes, questions } =
-      await seedLessonsWithContent(modules);
+    const modules = await seedModules(
+      skills as { _id: unknown; name: string }[],
+    );
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     throw error;

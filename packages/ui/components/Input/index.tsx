@@ -1,57 +1,83 @@
-import { forwardRef } from 'react';
-import TextField, { type TextFieldProps } from '@mui/material/TextField';
-import { styled } from '@mui/material/styles';
-import { theme as themeConfig } from '../../theme';
+import { forwardRef } from "react";
+import { clsx } from "clsx";
 
-export type BaseInputProps = TextFieldProps & {
+export type BaseInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   borderColor?: string;
-} & React.InputHTMLAttributes<HTMLInputElement> & {
-    endAdornment?: React.ReactNode;
-  };
+  endAdornment?: React.ReactNode;
+  label?: string;
+  error?: boolean;
+  helperText?: string;
+  fullWidth?: boolean;
+  variant?: "outlined" | "standard" | "filled";
+  multiline?: boolean;
+  rows?: number;
+  sx?: unknown;
+  slotProps?: unknown;
+};
 
-const CustomTextField = styled(TextField)<{ borderColor?: string }>(
-  ({ theme, borderColor }) => ({
-    '& label': {
-      fontSize: theme.typography.caption.fontSize,
-      color: themeConfig.colors.secondary,
-      '&.Mui-focused': {
-        color: themeConfig.colors['secondary-focused'],
-        fontSize: theme.typography.fontSize,
-        fontWeight: theme.typography.fontWeightMedium,
-      },
+const Input = forwardRef<HTMLInputElement, BaseInputProps>(
+  (
+    {
+      className,
+      endAdornment,
+      label,
+      error,
+      helperText,
+      fullWidth,
+      variant,
+      borderColor,
+      multiline,
+      rows,
+      sx,
+      slotProps,
+      ...rest
     },
-    '& .MuiOutlinedInput-root': {
-      height: theme.spacing(6),
-      borderRadius: theme.spacing(1),
-      color: 'black',
-      '& fieldset': {
-        borderColor: borderColor || themeConfig.colors['input-border'],
-      },
-      '&:hover fieldset': {
-        borderColor: themeConfig.colors['secondary-focused'],
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: themeConfig.colors['secondary-focused'],
-      },
-    },
-    '& .MuiInputBase-input': {
-      fontSize: theme.typography.fontSize,
-    },
-  }),
+    ref,
+  ) => {
+    return (
+      <div className={clsx("relative", fullWidth && "w-full")}>
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          <input
+            ref={ref}
+            className={clsx(
+              "w-full h-12 px-3 text-sm rounded-lg border outline-none transition-colors",
+              "focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              error
+                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                : "border-gray-300 hover:border-gray-400",
+              endAdornment && "pr-10",
+              className,
+            )}
+            style={borderColor ? { borderColor } : undefined}
+            {...rest}
+          />
+          {endAdornment && (
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              {endAdornment}
+            </div>
+          )}
+        </div>
+        {helperText && (
+          <p
+            className={clsx(
+              "mt-1 text-xs",
+              error ? "text-red-500" : "text-gray-500",
+            )}
+          >
+            {helperText}
+          </p>
+        )}
+      </div>
+    );
+  },
 );
 
-const Input = forwardRef<HTMLInputElement, BaseInputProps>((props, ref) => {
-  const { endAdornment, variant = 'outlined', ...rest } = props;
-  return (
-    <CustomTextField
-      {...rest}
-      inputRef={ref}
-      variant={variant}
-      slotProps={{ input: { endAdornment } }}
-    />
-  );
-});
-
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export default Input;

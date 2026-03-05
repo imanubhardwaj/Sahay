@@ -4,9 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingContextProvider } from "@/contexts/LoadingContext";
 import { LoadingProvider } from "@/components/LoadingProvider";
-import FCMTokenInitializer from "@/config/FCMTokenInitializer";
-import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
 import { AlertWrapperClient } from "@/components/AlertWrapperClient";
+import { LazyFirebaseComponents } from "@/components/LazyFirebaseComponents";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,8 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <LoadingContextProvider>
             <LoadingProvider>
-              <FCMTokenInitializer />
-              <NotificationPermissionBanner />
+              <LazyFirebaseComponents />
               <AlertWrapperClient />
               {children}
             </LoadingProvider>

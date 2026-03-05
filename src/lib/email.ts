@@ -1,18 +1,24 @@
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
+import { sendEmail } from "./resend";
 
-// Email configuration
-const EMAIL_SENDER = process.env.EMAIL_USER || "bhardwaj93karriekey@gmail.com";
+// Email configuration - from address for Resend (use verified domain)
+const EMAIL_SENDER =
+  process.env.EMAIL_FROM ||
+  process.env.EMAIL_USER ||
+  "onboarding@resend.dev";
 
-const transporter: Transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.EMAIL_PORT || "587"),
-  secure: process.env.EMAIL_SECURE === "true",
-  auth: {
-    user: EMAIL_SENDER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+async function sendMail(opts: {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  const result = await sendEmail({
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+  });
+  if (!result.success) throw new Error(result.error);
+}
 
 interface BookingEmailData {
   studentName: string;
@@ -22,7 +28,7 @@ interface BookingEmailData {
   sessionDate: string;
   sessionTime: string;
   duration: number;
-  zoomJoinUrl: string;
+  meetingLink: string;
   sessionType: string;
   price: number;
 }
@@ -66,7 +72,7 @@ interface ReminderEmailData {
   recipientEmail: string;
   sessionDate: string;
   sessionTime: string;
-  zoomJoinUrl: string;
+  meetingLink: string;
   duration: number;
   role: "student" | "mentor";
 }
@@ -135,10 +141,10 @@ const bookingConfirmationStudentTemplate = (data: BookingEmailData) => `
       </div>
       
       <div style="text-align: center;">
-        <a href="${data.zoomJoinUrl}" class="button">Join Zoom Meeting</a>
+        <a href="${data.meetingLink}" class="button">Join Meeting</a>
       </div>
       
-      <p><strong>Meeting Link:</strong> <a href="${data.zoomJoinUrl}">${data.zoomJoinUrl}</a></p>
+      <p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>
       
       <p><strong>Tips for a great session:</strong></p>
       <ul>
@@ -216,10 +222,10 @@ const bookingConfirmationMentorTemplate = (data: BookingEmailData) => `
       </div>
       
       <div style="text-align: center;">
-        <a href="${data.zoomJoinUrl}" class="button">Start Zoom Meeting</a>
+        <a href="${data.meetingLink}" class="button">Start Meeting</a>
       </div>
       
-      <p><strong>Host Meeting Link:</strong> <a href="${data.zoomJoinUrl}">${data.zoomJoinUrl}</a></p>
+      <p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>
       
       <p><strong>Session preparation:</strong></p>
       <ul>
@@ -272,7 +278,7 @@ const reminderTemplate = (data: ReminderEmailData) => `
       </div>
       
       <div style="text-align: center;">
-        <a href="${data.zoomJoinUrl}" class="button">Join Now</a>
+        <a href="${data.meetingLink}" class="button">Join Now</a>
       </div>
       
       <p><strong>Quick reminders:</strong></p>
@@ -417,7 +423,7 @@ const approvalRequestTemplate = (data: ApprovalRequestEmailData) => `
       </div>
       
       <div class="alert">
-        <strong>⚠️ Important:</strong> If you approve, a Zoom meeting will be automatically created and the meeting link will be sent to both you and the student. Earnings will be credited after session completion.
+        <strong>⚠️ Important:</strong> If you approve, a Google Meet link will be automatically created and sent to both you and the student. Earnings will be credited after session completion.
       </div>
       
       <div class="footer">
@@ -437,7 +443,7 @@ export async function sendBookingConfirmation(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Send to student
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
       subject: "🎉 Your Mentorship Session is Confirmed!",
@@ -445,7 +451,7 @@ export async function sendBookingConfirmation(
     });
 
     // Send to mentor
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
       subject: "💼 New Session Booked!",
@@ -463,7 +469,7 @@ export async function sendSessionReminder(
   data: ReminderEmailData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
       subject: "⏰ Your Session Starts Soon!",
@@ -481,7 +487,7 @@ export async function sendCancellationEmail(
   data: CancellationEmailData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.recipientEmail,
       subject: "❌ Session Cancelled",
@@ -557,7 +563,7 @@ const bookingRequestConfirmationTemplate = (
         <strong>⏳ What's Next?</strong><br>
         • The mentor will review your request<br>
         • You'll receive an email notification with the decision<br>
-        • If approved, you'll get the Zoom meeting link<br>
+        • If approved, you'll get the meeting link<br>
         • If declined, your points will be automatically refunded
       </div>
       
@@ -578,7 +584,7 @@ export async function sendApprovalRequest(
   data: ApprovalRequestEmailData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
       subject: "📬 New Session Request - Action Required",
@@ -596,7 +602,7 @@ export async function sendBookingRequestConfirmation(
   data: BookingRequestConfirmationData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
       subject: "✅ Session Request Sent - Pending Approval",
@@ -739,7 +745,7 @@ export async function sendBookingCreatedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Send to student
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.studentEmail,
       subject: "🎉 Your Session is Booked!",
@@ -747,7 +753,7 @@ export async function sendBookingCreatedEmail(
     });
 
     // Send to mentor
-    await transporter.sendMail({
+    await sendMail({
       from: `"Sahay Mentorship" <${EMAIL_SENDER}>`,
       to: data.mentorEmail,
       subject: "💼 New Session Booked!",
@@ -761,13 +767,7 @@ export async function sendBookingCreatedEmail(
   }
 }
 
-// Verify email configuration
+// Verify email configuration (Resend: check API key is set)
 export async function verifyEmailConfig(): Promise<boolean> {
-  try {
-    await transporter.verify();
-    return true;
-  } catch (error) {
-    console.error("Email server verification failed:", error);
-    return false;
-  }
+  return !!process.env.RESEND_API_KEY;
 }

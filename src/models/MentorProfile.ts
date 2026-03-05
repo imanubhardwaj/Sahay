@@ -122,24 +122,22 @@ const mentorProfileSchema = new mongoose.Schema({
     type: String,
     default: "Asia/Kolkata",
   },
-  // Zoom Integration
-  zoomConnected: {
+  // Google Calendar Integration (for Google Meet links)
+  googleConnected: {
     type: Boolean,
     default: false,
   },
-  zoomAccessToken: {
-    type: String,
-    select: false, // Don't include in queries by default
-  },
-  zoomRefreshToken: {
+  googleAccessToken: {
     type: String,
     select: false,
   },
-  zoomTokenExpiry: {
-    type: Date,
-  },
-  zoomUserId: {
+  googleRefreshToken: {
     type: String,
+    select: false,
+  },
+  googleTokenExpiry: {
+    type: Date,
+    select: false,
   },
   // Stats
   totalSessions: {

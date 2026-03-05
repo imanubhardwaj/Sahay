@@ -12,7 +12,6 @@ import {
   EditIcon,
   SearchIcon,
 } from "../../../packages/ui";
-import {} from "../../../packages/ui/assets";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";

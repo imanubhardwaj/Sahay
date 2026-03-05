@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CodeEditor } from "@/components/ui/CodeEditor";
-import { Button } from "@mui/material";
+import { Button } from "../../../../packages/ui";
 
 interface CodingProblem {
   _id: string;

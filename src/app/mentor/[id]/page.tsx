@@ -45,7 +45,7 @@ interface MentorProfile {
   averageRating: number;
   totalReviews: number;
   completedSessions: number;
-  zoomConnected: boolean;
+  googleConnected?: boolean;
   linkedIn?: string;
   twitter?: string;
   github?: string;
@@ -186,7 +186,7 @@ export default function MentorProfilePage() {
                     height={160}
                     className="w-40 h-40 rounded-2xl ring-4 ring-slate-900 object-cover"
                   />
-                  {mentor.zoomConnected && (
+                  {mentor.googleConnected && (
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-slate-900 flex items-center justify-center">
                       <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
                     </div>

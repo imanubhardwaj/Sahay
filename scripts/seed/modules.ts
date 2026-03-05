@@ -435,7 +435,9 @@ export const seedModules = async (
     },
   ];
 
-  const modules = await Module.insertMany(modulesData);
+  const modules = await (
+    Module as { insertMany: (docs: object[]) => Promise<unknown> }
+  ).insertMany(modulesData);
 
   return modules;
 };

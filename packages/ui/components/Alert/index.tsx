@@ -1,7 +1,6 @@
-import React from 'react';
-import MuiAlert from '@mui/material/Alert';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { AlertVariant } from './Wrapper';
+import React from "react";
+import { clsx } from "clsx";
+import { AlertVariant } from "./Wrapper";
 
 export interface Props {
   className?: string;
@@ -12,25 +11,61 @@ export interface Props {
   children?: string | React.ReactNode;
 }
 
-const theme = createTheme({
-  palette: {
-    warning: {
-      main: '#F3BA2E',
-      contrastText: '#000',
-    },
-  },
-});
+const variantStyles: Record<string, string> = {
+  success: "bg-green-600 text-white",
+  info: "bg-blue-600 text-white",
+  error: "bg-red-600 text-white",
+  warning: "bg-yellow-500 text-black",
+};
 
-export default function Alert({ children, open, variant, ...props }: Props) {
-  if (!open) {
-    return null;
-  }
+const variantIcons: Record<string, string> = {
+  success: "\u2713",
+  info: "\u2139",
+  error: "\u2717",
+  warning: "\u26A0",
+};
+
+export default function Alert({
+  children,
+  open,
+  variant = AlertVariant.INFO,
+  onClose,
+  className,
+}: Props) {
+  if (!open) return null;
 
   return (
-    <ThemeProvider theme={theme}>
-      <MuiAlert {...props} severity={variant} variant="filled">
-        {children}
-      </MuiAlert>
-    </ThemeProvider>
+    <div
+      role="alert"
+      className={clsx(
+        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium shadow-lg",
+        variantStyles[variant],
+        className,
+      )}
+    >
+      <span className="text-lg leading-none">{variantIcons[variant]}</span>
+      <span className="flex-1 whitespace-pre-wrap">{children}</span>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="ml-2 opacity-70 hover:opacity-100 transition-opacity text-current"
+          aria-label="Close"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      )}
+    </div>
   );
 }

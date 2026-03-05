@@ -4,21 +4,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
-  Edit,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Star,
-  Users,
-  Award,
-  ExternalLink,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Plus,
-  Trash2,
-  Briefcase,
-} from "lucide-react";
+  LuPencil as Edit,
+  LuMapPin as MapPin,
+  LuCalendar as Calendar,
+  LuDollarSign as DollarSign,
+  LuStar as Star,
+  LuUsers as Users,
+  LuAward as Award,
+  LuExternalLink as ExternalLink,
+  LuCircleCheck as CheckCircle,
+  LuCircleX as XCircle,
+  LuClock as Clock,
+  LuPlus as Plus,
+  LuTrash2 as Trash2,
+  LuBriefcase as Briefcase,
+} from "react-icons/lu";
 import { Button, IconButton } from "../../../../packages/ui";
 
 interface MentorProfile {
@@ -58,7 +58,7 @@ interface MentorProfile {
   twitter?: string;
   github?: string;
   website?: string;
-  zoomConnected: boolean;
+  googleConnected?: boolean;
   averageRating: number;
   totalReviews: number;
   completedSessions: number;
@@ -886,16 +886,16 @@ export default function MentorProfilePage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">
-                      Zoom Connected
+                      Google Meet Connected
                     </span>
                     <div className="flex items-center gap-1">
-                      {profile.zoomConnected ? (
+                      {profile.googleConnected ? (
                         <CheckCircle className="h-4 w-4 text-emerald-400" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-400" />
                       )}
                       <span className="text-sm text-gray-300">
-                        {profile.zoomConnected ? "Connected" : "Not Connected"}
+                        {profile.googleConnected ? "Connected" : "Not Connected"}
                       </span>
                     </div>
                   </div>

@@ -21,7 +21,7 @@ interface BookingData {
   sessionType: string;
   paymentStatus: string;
   studentNotes?: string;
-  zoomJoinUrl?: string;
+  meetingLink?: string;
   feedback?: {
     studentRating?: number;
     studentReview?: string;
@@ -370,9 +370,9 @@ export default function SessionsPage() {
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2 mt-4">
                         {booking.status === "confirmed" &&
-                          booking.zoomJoinUrl && (
+                          booking.meetingLink && (
                             <a
-                              href={booking.zoomJoinUrl}
+                              href={booking.meetingLink}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"

@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/Input";
 import Loader from "@/components/Loader";
-import { Button } from "@mui/material";
+import { Button } from "../../../../packages/ui";
 
 interface Booking {
   _id: string;

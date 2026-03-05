@@ -12,7 +12,7 @@ import {
 import Image from "next/image";
 import Loader from "@/components/Loader";
 import { DEFAULT_MODULE_ICON } from "@/app/dashboard/utils/constants";
-import { Button } from "@mui/material";
+import { Button } from "../../../packages/ui";
 
 // Helper function to get time ago string
 const getTimeAgo = (date: Date): string => {

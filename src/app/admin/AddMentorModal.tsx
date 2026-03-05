@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Button } from "@mui/material";
+import { Button } from "../../../packages/ui";
 import { Switch } from "../../../packages/ui";
 
 interface AddMentorModalProps {

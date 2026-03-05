@@ -38,7 +38,7 @@ interface Booking {
   studentNotes?: string;
   professionalNotes?: string;
   meetingLink?: string;
-  zoomJoinUrl?: string;
+  meetingUrl?: string;
   location: "online" | "in-person";
   address?: string;
   sessionType: string;
@@ -108,7 +108,9 @@ export default function MySessionsPage() {
       }
     } catch (error) {
       console.error("Failed to load bookings:", error);
-      setError(error instanceof Error ? error.message : "Failed to load sessions");
+      setError(
+        error instanceof Error ? error.message : "Failed to load sessions",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +120,9 @@ export default function MySessionsPage() {
     if (authLoading) return;
 
     if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent("/dashboard/my-sessions")}`);
+      router.push(
+        `/login?redirect=${encodeURIComponent("/dashboard/my-sessions")}`,
+      );
       return;
     }
 
@@ -132,7 +136,11 @@ export default function MySessionsPage() {
 
   const handleMarkComplete = useCallback(
     async (bookingId: string) => {
-      if (!confirm("Mark this session as complete? Points will be credited to the mentor.")) {
+      if (
+        !confirm(
+          "Mark this session as complete? Points will be credited to the mentor.",
+        )
+      ) {
         return;
       }
 
@@ -163,8 +171,8 @@ export default function MySessionsPage() {
           prevBookings.map((booking) =>
             booking._id === bookingId
               ? { ...booking, status: "completed" as const }
-              : booking
-          )
+              : booking,
+          ),
         );
 
         if (refreshUser) {
@@ -172,13 +180,17 @@ export default function MySessionsPage() {
         }
       } catch (error) {
         console.error("Failed to mark session as complete:", error);
-        setError(error instanceof Error ? error.message : "Failed to mark session as complete");
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to mark session as complete",
+        );
         await loadBookings();
       } finally {
         setMarkingComplete(null);
       }
     },
-    [loadBookings, refreshUser]
+    [loadBookings, refreshUser],
   );
 
   const getStatusStyles = (status: string) => {
@@ -225,7 +237,9 @@ export default function MySessionsPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-1">My Sessions</h1>
-          <p className="text-sm text-gray-500">Manage your mentoring sessions</p>
+          <p className="text-sm text-gray-500">
+            Manage your mentoring sessions
+          </p>
         </div>
 
         {/* Stats */}
@@ -239,11 +253,15 @@ export default function MySessionsPage() {
             <div className="text-xs text-gray-500 mt-0.5">Pending</div>
           </div>
           <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <div className="text-2xl font-bold text-white">{stats.confirmed}</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.confirmed}
+            </div>
             <div className="text-xs text-gray-500 mt-0.5">Confirmed</div>
           </div>
           <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <div className="text-2xl font-bold text-white">{stats.completed}</div>
+            <div className="text-2xl font-bold text-white">
+              {stats.completed}
+            </div>
             <div className="text-xs text-gray-500 mt-0.5">Completed</div>
           </div>
         </div>
@@ -280,11 +298,23 @@ export default function MySessionsPage() {
         ) : bookings.length === 0 ? (
           <div className="bg-gray-900 rounded-xl p-12 text-center border border-gray-800">
             <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-700">
-              <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
-            <h3 className="text-base font-medium text-white mb-2">No Sessions</h3>
+            <h3 className="text-base font-medium text-white mb-2">
+              No Sessions
+            </h3>
             <p className="text-sm text-gray-500 mb-6">
               {filterStatus === "all"
                 ? "You haven't booked any sessions yet."
@@ -315,14 +345,20 @@ export default function MySessionsPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-0.5">
                             <h3 className="text-sm font-medium text-white">
-                              {booking.professionalId?.firstName} {booking.professionalId?.lastName}
+                              {booking.professionalId?.firstName}{" "}
+                              {booking.professionalId?.lastName}
                             </h3>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getStatusStyles(booking.status)}`}>
-                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getStatusStyles(booking.status)}`}
+                            >
+                              {booking.status.charAt(0).toUpperCase() +
+                                booking.status.slice(1)}
                             </span>
                           </div>
                           {booking.professionalId?.title && (
-                            <p className="text-xs text-gray-500">{booking.professionalId.title}</p>
+                            <p className="text-xs text-gray-500">
+                              {booking.professionalId.title}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -330,20 +366,36 @@ export default function MySessionsPage() {
                       {/* Session Details */}
                       <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
-                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Date</div>
-                          <div className="text-xs font-medium text-white">{formatDate(booking.sessionDate)}</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">
+                            Date
+                          </div>
+                          <div className="text-xs font-medium text-white">
+                            {formatDate(booking.sessionDate)}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Time</div>
-                          <div className="text-xs font-medium text-white">{booking.sessionTime}</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">
+                            Time
+                          </div>
+                          <div className="text-xs font-medium text-white">
+                            {booking.sessionTime}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Duration</div>
-                          <div className="text-xs font-medium text-white">{booking.duration} min</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">
+                            Duration
+                          </div>
+                          <div className="text-xs font-medium text-white">
+                            {booking.duration} min
+                          </div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Price</div>
-                          <div className="text-xs font-medium text-amber-400">{booking.price} pts</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">
+                            Price
+                          </div>
+                          <div className="text-xs font-medium text-amber-400">
+                            {booking.price} pts
+                          </div>
                         </div>
                       </div>
 
@@ -352,33 +404,46 @@ export default function MySessionsPage() {
                         <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
                           {booking.studentNotes && (
                             <p className="text-xs text-gray-400">
-                              <span className="text-gray-300">Notes:</span> {booking.studentNotes}
+                              <span className="text-gray-300">Notes:</span>{" "}
+                              {booking.studentNotes}
                             </p>
                           )}
                           {booking.professionalNotes && (
                             <p className="text-xs text-gray-400 mt-1">
-                              <span className="text-gray-300">Mentor:</span> {booking.professionalNotes}
+                              <span className="text-gray-300">Mentor:</span>{" "}
+                              {booking.professionalNotes}
                             </p>
                           )}
                         </div>
                       )}
 
                       {/* Meeting Link */}
-                      {(booking.meetingLink || booking.zoomJoinUrl) && booking.status === "confirmed" && (
-                        <div className="mt-4">
-                          <a
-                            href={booking.zoomJoinUrl || booking.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Join Meeting
-                          </a>
-                        </div>
-                      )}
+                      {booking.meetingLink &&
+                        booking.status === "confirmed" && (
+                          <div className="mt-4">
+                            <a
+                              href={booking.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"
+                            >
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                              Join Meeting
+                            </a>
+                          </div>
+                        )}
                     </div>
 
                     {/* Actions */}
@@ -396,8 +461,18 @@ export default function MySessionsPage() {
                             </>
                           ) : (
                             <>
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                               Complete
                             </>

@@ -37,7 +37,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Use select('+level +customPointRate') to include hidden fields
-    const mentors = await MentorProfile.find(query)
+    type MentorDoc = { toObject: () => Record<string, unknown> };
+    const mentors = await (
+      MentorProfile as {
+        find: (query: Record<string, unknown>) => {
+          select: (fields: string) => {
+            populate: (...args: string[]) => {
+              sort: (order: Record<string, number>) => Promise<MentorDoc[]>;
+            };
+          };
+        };
+      }
+    )
+      .find(query)
       .select("+level +customPointRate")
       .populate(
         "userId",
@@ -46,7 +58,7 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 });
 
     // Calculate effective rate for each mentor and convert to plain objects
-    let mentorsWithRates = mentors.map((mentor) => {
+    let mentorsWithRates: Record<string, unknown>[] = mentors.map((mentor) => {
       const mentorObj = mentor.toObject();
       const level = mentorObj.level || MENTOR_LEVEL.L3;
       const effectiveRate =
@@ -57,7 +69,7 @@ export async function GET(request: NextRequest) {
         ...mentorObj,
         level,
         effectiveRate,
-        levelDescription: getLevelDescription(level),
+        levelDescription: getLevelDescription(level as string),
       };
     });
 
@@ -65,7 +77,7 @@ export async function GET(request: NextRequest) {
     if (search && search.trim()) {
       const searchLower = search.toLowerCase().trim();
       mentorsWithRates = mentorsWithRates.filter((mentor) => {
-        const userId = mentor.userId;
+        const userId = mentor.userId as Record<string, unknown> | undefined;
 
         // Search in various fields
         const searchFields = [
@@ -77,12 +89,12 @@ export async function GET(request: NextRequest) {
           mentor.currentRole || "",
           mentor.currentCompany || "",
           mentor.headline || "",
-          (mentor.expertise || []).join(" "),
+          ((mentor.expertise as unknown[]) || []).join(" "),
         ];
 
         // Check if any field contains the search term
         return searchFields.some((field) =>
-          field.toLowerCase().includes(searchLower),
+          String(field).toLowerCase().includes(searchLower),
         );
       });
     }

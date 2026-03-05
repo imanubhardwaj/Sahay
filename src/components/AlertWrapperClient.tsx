@@ -3,7 +3,10 @@
 import dynamic from "next/dynamic";
 
 const AlertWrapper = dynamic(
-  () => import("../../packages/ui").then((m) => m.AlertWrapper),
+  () =>
+    import("../../packages/ui/components/Alert/Wrapper").then(
+      (m) => m.default,
+    ),
   { ssr: false },
 );
 

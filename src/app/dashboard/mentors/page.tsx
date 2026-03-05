@@ -541,7 +541,7 @@ export default function MentorsPage() {
           </div>
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-xl p-5">
             <div className="text-2xl font-bold text-emerald-400">
-              {mentors.filter((m) => m.zoomConnected).length}
+              {mentors.filter((m) => m.googleConnected).length}
             </div>
             <div className="text-sm text-slate-400">Available Now</div>
           </div>
@@ -670,7 +670,7 @@ export default function MentorsPage() {
                         height={80}
                         className="w-20 h-20 rounded-xl ring-2 ring-slate-700 object-cover"
                       />
-                      {selectedMentor.zoomConnected && (
+                      {selectedMentor.googleConnected && (
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
                           <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                         </div>

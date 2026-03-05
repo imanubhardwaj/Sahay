@@ -52,11 +52,6 @@ const bookingSchema = new mongoose.Schema({
     default: 'online'
   },
   address: String,
-  // Zoom Meeting Details
-  zoomMeetingId: String,
-  zoomJoinUrl: String,
-  zoomStartUrl: String,
-  zoomPassword: String,
   // Approval System
   approvalToken: String, // Token for mentor to approve/reject
   approvalStatus: {

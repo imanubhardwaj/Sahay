@@ -1,9 +1,8 @@
 import { Lesson, Quiz, Question } from "../../src/models";
 import { detailedLessonsContent, quizData } from "./detailed-lessons-content";
-import type { Document } from "mongoose";
 import type mongoose from "mongoose";
 
-type ModuleDocument = Document & {
+type ModuleDocument = {
   _id: mongoose.Types.ObjectId;
   name: string;
   skillId: mongoose.Types.ObjectId;
@@ -13,9 +12,21 @@ type ModuleDocument = Document & {
 
 export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
   // Clear existing data
-  await Lesson.deleteMany({});
-  await Quiz.deleteMany({});
-  await Question.deleteMany({});
+  await (
+    Lesson as {
+      deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+    }
+  ).deleteMany({});
+  await (
+    Quiz as {
+      deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+    }
+  ).deleteMany({});
+  await (
+    Question as {
+      deleteMany: (filter?: object) => Promise<{ deletedCount: number }>;
+    }
+  ).deleteMany({});
 
   const lessonsData: Array<{
     name: string;
@@ -143,12 +154,23 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
   }
 
   // Insert lessons first
-  const lessons = await Lesson.insertMany(lessonsData);
+  const lessons = await (
+    Lesson as { insertMany: (docs: object[]) => Promise<unknown> }
+  ).insertMany(lessonsData);
 
   // Update quizzes with actual lesson IDs and insert them
   const quizzesWithLessonIds = quizzesData
     .map((quizData) => {
-      const lesson = lessons.find(
+      const lesson = (
+        lessons as {
+          find: (
+            callback: (item: {
+              moduleId: mongoose.Types.ObjectId;
+              order: number;
+            }) => boolean,
+          ) => { _id: mongoose.Types.ObjectId } | undefined;
+        }
+      ).find(
         (l) =>
           l.moduleId.toString() === quizData.moduleId.toString() &&
           l.order === quizData.lessonOrder,
@@ -160,14 +182,20 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
     })
     .filter((quiz) => quiz.lessonId); // Only include quizzes with valid lesson IDs
 
-  const quizzes = await Quiz.insertMany(quizzesWithLessonIds);
+  const quizzes = await (
+    Quiz as { insertMany: (docs: object[]) => Promise<unknown> }
+  ).insertMany(quizzesWithLessonIds);
 
   // Update questions with actual quiz IDs and insert them
   const questionsWithQuizIds = questionsData
     .map((questionData) => {
-      const quiz = quizzes.find(
-        (q) => q.lessonOrder === questionData.quizLessonOrder,
-      );
+      const quiz = (
+        quizzes as {
+          find: (
+            callback: (item: { lessonOrder: number }) => boolean,
+          ) => { _id: mongoose.Types.ObjectId } | undefined;
+        }
+      ).find((q) => q.lessonOrder === questionData.quizLessonOrder);
       return {
         ...questionData,
         quizId: (quiz?._id as mongoose.Types.ObjectId) || null,
@@ -175,13 +203,19 @@ export const seedLessonsWithContent = async (modules: ModuleDocument[]) => {
     })
     .filter((question) => question.quizId); // Only include questions with valid quiz IDs
 
-  const questions = await Question.insertMany(questionsWithQuizIds);
+  const questions = await (
+    Question as { insertMany: (docs: object[]) => Promise<unknown> }
+  ).insertMany(questionsWithQuizIds);
 
   // Update modules with lessonsCount
   for (const moduleData of modules) {
-    const lessonCount = lessons.filter(
-      (l) => l.moduleId.toString() === moduleData._id.toString(),
-    ).length;
+    const lessonCount = (
+      lessons as {
+        filter: (
+          callback: (item: { moduleId: mongoose.Types.ObjectId }) => boolean,
+        ) => { length: number };
+      }
+    ).filter((l) => l.moduleId.toString() === moduleData._id.toString()).length;
     moduleData.lessonsCount = lessonCount;
     await moduleData.save();
   }

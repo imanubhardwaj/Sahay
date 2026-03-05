@@ -8,7 +8,16 @@ export async function GET() {
     await connectDB();
 
     // Find all module progress where completedLessonCount > 0
-    const progressRecords = await ModuleProgress.find({
+    type ProgressDoc = {
+      completedLessonCount: number;
+      nextLessonOrder: number;
+      userId: { toString(): string };
+      moduleId: { toString(): string };
+      save: () => Promise<unknown>;
+    };
+    const progressRecords = await (
+      ModuleProgress as { find: (filter: object) => Promise<ProgressDoc[]> }
+    ).find({
       completedLessonCount: { $gt: 0 },
     });
 

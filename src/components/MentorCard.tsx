@@ -139,7 +139,7 @@ export interface MentorProfile {
   averageRating: number;
   totalReviews: number;
   completedSessions: number;
-  zoomConnected: boolean;
+  googleConnected?: boolean;
   linkedIn?: string;
   twitter?: string;
   github?: string;
@@ -225,7 +225,7 @@ export default function MentorCard({
             height={64}
             className="w-16 h-16 rounded-xl ring-2 ring-slate-800 group-hover:ring-violet-500/50 transition-all object-cover"
           />
-          {mentor.zoomConnected && (
+          {mentor.googleConnected && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             </div>
